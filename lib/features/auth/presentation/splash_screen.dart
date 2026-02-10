@@ -1,8 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:job_portal_app/core/constants/app_colors.dart';
 import 'package:job_portal_app/core/constants/app_sizes.dart';
+import 'package:job_portal_app/features/auth/provider/auth_provider.dart';
+import 'package:job_portal_app/models/user_model.dart';
 import 'package:job_portal_app/routes/route_names.dart';
+import 'package:provider/provider.dart';
 
+// splash_screen.dart (Updated)
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
 
@@ -14,15 +18,25 @@ class _SplashScreenState extends State<SplashScreen> {
   @override
   void initState() {
     super.initState();
-    _navigateToNext();
+    _checkAuthStatus();
   }
 
-  void _navigateToNext() async {
+  Future<void> _checkAuthStatus() async {
     // Simulate loading time
     await Future.delayed(const Duration(seconds: 2));
-    
-    // For demo, always go to login
-    Navigator.pushReplacementNamed(context, RouteNames.login);
+
+    // Get auth provider
+    final auth = Provider.of<AuthProvider>(context, listen: false);
+
+    await auth.tryAutoLogin();
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final route = auth.isAuthenticated
+          ? auth.getRoleBasedRoute()
+          : RouteNames.login;
+
+      Navigator.pushReplacementNamed(context, route);
+    });
   }
 
   @override
@@ -68,16 +82,11 @@ class _SplashScreenState extends State<SplashScreen> {
             // Tagline
             const Text(
               'Find Your Dream Job',
-              style: TextStyle(
-                fontSize: 16,
-                color: Colors.white70,
-              ),
+              style: TextStyle(fontSize: 16, color: Colors.white70),
             ),
             const SizedBox(height: AppSizes.xl),
             // Loading Indicator
-            const CircularProgressIndicator(
-              color: Colors.white,
-            ),
+            const CircularProgressIndicator(color: Colors.white),
           ],
         ),
       ),

@@ -3,12 +3,13 @@ import 'package:job_portal_app/core/theme/app_theme.dart';
 import 'package:job_portal_app/core/theme/dark_theme.dart';
 import 'package:job_portal_app/features/auth/provider/auth_provider.dart';
 import 'package:job_portal_app/routes/app_router.dart';
+import 'package:job_portal_app/routes/route_names.dart';
 import 'package:provider/provider.dart';
 
 void main() {
   runApp(
     ChangeNotifierProvider(
-      create: (_) => AuthProvider(),
+      create: (_) => AuthProvider()..tryAutoLogin(),
       child: MyApp(),
     ),
   );
@@ -24,16 +25,14 @@ class MyApp extends StatelessWidget {
       darkTheme: getDarkTheme(),
       themeMode: ThemeMode.light,
       debugShowCheckedModeBanner: false,
-      initialRoute: '/splash',
+      initialRoute: RouteNames.splash,
       onGenerateRoute: AppRouter.generateRoute,
-      builder: (context, child) {
-        return MediaQuery(
-          data: MediaQuery.of(
-            context,
-          ).copyWith(textScaler: TextScaler.noScaling),
-          child: child!,
-        );
-      },
+      navigatorKey: NavigationService.navigatorKey,
     );
   }
+
+}
+
+class NavigationService {
+  static GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
 }

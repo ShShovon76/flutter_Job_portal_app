@@ -1,15 +1,21 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
+import 'package:job_portal_app/core/api/api_client.dart';
 import 'package:job_portal_app/core/api/auth_api.dart';
 import 'package:job_portal_app/core/services/storage_service.dart';
 import 'package:job_portal_app/models/auth_models.dart';
 import 'package:job_portal_app/models/user_model.dart';
+import 'package:job_portal_app/routes/route_names.dart';
 
-
+// auth_provider.dart
 class AuthProvider with ChangeNotifier {
   User? user;
   bool isLoading = false;
+  bool isInitialized = false;
 
   bool get isAuthenticated => user != null;
+  UserRole? get userRole => user?.role;
 
   Future<void> login(String email, String password) async {
     isLoading = true;
@@ -19,16 +25,19 @@ class AuthProvider with ChangeNotifier {
       AuthRequest(email: email, password: password),
     );
 
-    await TokenStorage.saveTokens(
-        response.accessToken, response.refreshToken);
+    await TokenStorage.saveTokens(response.accessToken, response.refreshToken);
 
     user = response.user;
+    await UserStorage.save(user!);
     isLoading = false;
     notifyListeners();
   }
 
   Future<void> registerJobSeeker(
-      String fullName, String email, String password) async {
+    String fullName,
+    String email,
+    String password,
+  ) async {
     isLoading = true;
     notifyListeners();
 
@@ -40,10 +49,11 @@ class AuthProvider with ChangeNotifier {
       ),
     );
 
-    await TokenStorage.saveTokens(
-        response.accessToken, response.refreshToken);
+    await TokenStorage.saveTokens(response.accessToken, response.refreshToken);
 
     user = response.user;
+    await UserStorage.save(user!);
+
     isLoading = false;
     notifyListeners();
   }
@@ -66,26 +76,53 @@ class AuthProvider with ChangeNotifier {
       ),
     );
 
-    await TokenStorage.saveTokens(
-        response.accessToken, response.refreshToken);
+    await TokenStorage.saveTokens(response.accessToken, response.refreshToken);
 
     user = response.user;
+    await UserStorage.save(user!);
+
     isLoading = false;
     notifyListeners();
   }
 
   Future<void> logout() async {
     await TokenStorage.clear();
+    await UserStorage.clear();
     user = null;
     notifyListeners();
   }
 
   Future<void> tryAutoLogin() async {
-  final token = await TokenStorage.getAccessToken();
-  if (token == null) return;
+    final token = await TokenStorage.getAccessToken();
 
-  // Optional: decode token or call /me API
-  notifyListeners();
-}
+    if (token == null) {
+      isInitialized = true;
+      notifyListeners();
+      return;
+    }
 
+    final storedUser = await UserStorage.get();
+    if (storedUser != null) {
+      user = storedUser;
+    }
+
+    isInitialized = true;
+    notifyListeners();
+  }
+
+  // Helper method for role-based navigation
+  String getRoleBasedRoute() {
+    if (!isAuthenticated) return RouteNames.login;
+
+    switch (user!.role) {
+      case UserRole.JOB_SEEKER:
+        return RouteNames.jobSeekerShell;
+      case UserRole.EMPLOYER:
+        return RouteNames.employerShell;
+      case UserRole.ADMIN:
+        return RouteNames.adminShell;
+      default:
+        return RouteNames.login;
+    }
+  }
 }
