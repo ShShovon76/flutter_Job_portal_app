@@ -118,7 +118,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                   child: Column(
                     children: [
                       CustomTextField(
-                        label: 'Email',
+                        labelText: 'Email',
                         hintText: 'Enter your email',
                         controller: _emailController,
                         keyboardType: TextInputType.emailAddress,

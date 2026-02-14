@@ -3,32 +3,38 @@ import 'dart:convert';
 import 'package:job_portal_app/models/user_model.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+
 class TokenStorage {
   static const _accessToken = 'accessToken';
   static const _refreshToken = 'refreshToken';
 
+  static final FlutterSecureStorage _storage =
+      const FlutterSecureStorage(
+    aOptions: AndroidOptions(encryptedSharedPreferences: true),
+  );
+
   static Future<void> saveTokens(
-      String accessToken, String refreshToken) async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setString(_accessToken, accessToken);
-    await prefs.setString(_refreshToken, refreshToken);
+    String accessToken,
+    String refreshToken,
+  ) async {
+    await _storage.write(key: _accessToken, value: accessToken);
+    await _storage.write(key: _refreshToken, value: refreshToken);
   }
 
   static Future<String?> getAccessToken() async {
-    final prefs = await SharedPreferences.getInstance();
-    return prefs.getString(_accessToken);
+    return _storage.read(key: _accessToken);
   }
 
   static Future<String?> getRefreshToken() async {
-    final prefs = await SharedPreferences.getInstance();
-    return prefs.getString(_refreshToken);
+    return _storage.read(key: _refreshToken);
   }
 
   static Future<void> clear() async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.clear();
+    await _storage.deleteAll();
   }
 }
+
 class UserStorage {
   static const _currentUserKey = 'currentUser';
 

@@ -190,15 +190,169 @@ enum ExperienceLevel {
   EXECUTIVE,
 }
 
+
+JobType? jobTypeFromString(String? value) {
+  if (value == null) return null;
+  return JobType.values.firstWhere(
+    (e) => e.name == value,
+  );
+}
+
+ExperienceLevel? experienceLevelFromString(String? value) {
+  if (value == null) return null;
+  return ExperienceLevel.values.firstWhere(
+    (e) => e.name == value,
+  );
+}
+
 enum SalaryType {
   MONTHLY,
   YEARLY,
   HOURLY,
   WEEKLY,
+  DAILY,
 }
 
 enum JobStatus {
   ACTIVE,
   CLOSED,
   DRAFT,
+}
+class JobCreateRequest {
+  final int companyId;
+  final int categoryId;
+
+  final String title;
+  final String description;
+
+  final JobType jobType;
+  final ExperienceLevel experienceLevel;
+
+  final double? minSalary;
+  final double? maxSalary;
+  final SalaryType salaryType;
+
+  final String location;
+  final bool remoteAllowed;
+  final List<String> skills;
+
+  final DateTime deadline;
+
+  JobCreateRequest({
+    required this.companyId,
+    required this.categoryId,
+    required this.title,
+    required this.description,
+    required this.jobType,
+    required this.experienceLevel,
+    this.minSalary,
+    this.maxSalary,
+    required this.salaryType,
+    required this.location,
+    required this.remoteAllowed,
+    required this.skills,
+    required this.deadline,
+  });
+
+  Map<String, dynamic> toJson() {
+    return {
+      'companyId': companyId,
+      'categoryId': categoryId,
+      'title': title,
+      'description': description,
+      'jobType': jobType.name,
+      'experienceLevel': experienceLevel.name,
+      'minSalary': minSalary,
+      'maxSalary': maxSalary,
+      'salaryType': salaryType.name,
+      'location': location,
+      'remoteAllowed': remoteAllowed,
+      'skills': skills,
+      // backend expects yyyy-MM-dd
+      'deadline': deadline.toIso8601String().split('T').first,
+    };
+  }
+}
+class JobUpdateRequest {
+  final String? title;
+  final String? description;
+  final int? categoryId;
+
+  final JobType? jobType;
+  final ExperienceLevel? experienceLevel;
+
+  final double? minSalary;
+  final double? maxSalary;
+  final SalaryType? salaryType;
+
+  final String? location;
+  final bool? remoteAllowed;
+  final List<String>? skills;
+
+  final DateTime? deadline;
+  final JobStatus? status;
+
+  JobUpdateRequest({
+    this.title,
+    this.description,
+    this.categoryId,
+    this.jobType,
+    this.experienceLevel,
+    this.minSalary,
+    this.maxSalary,
+    this.salaryType,
+    this.location,
+    this.remoteAllowed,
+    this.skills,
+    this.deadline,
+    this.status,
+  });
+
+  Map<String, dynamic> toJson() {
+    final Map<String, dynamic> data = {};
+
+    if (title != null) data['title'] = title;
+    if (description != null) data['description'] = description;
+    if (categoryId != null) data['categoryId'] = categoryId;
+
+    if (jobType != null) data['jobType'] = jobType!.name;
+    if (experienceLevel != null) {
+      data['experienceLevel'] = experienceLevel!.name;
+    }
+
+    if (minSalary != null) data['minSalary'] = minSalary;
+    if (maxSalary != null) data['maxSalary'] = maxSalary;
+    if (salaryType != null) data['salaryType'] = salaryType!.name;
+
+    if (location != null) data['location'] = location;
+    if (remoteAllowed != null) data['remoteAllowed'] = remoteAllowed;
+    if (skills != null) data['skills'] = skills;
+
+    if (deadline != null) {
+      data['deadline'] = deadline!.toIso8601String().split('T').first;
+    }
+
+    if (status != null) data['status'] = status!.name;
+
+    return data;
+  }
+}
+class JobViewRequest {
+  final int? viewerId;
+  final String? ipAddress;
+  final String? userAgent;
+
+  JobViewRequest({
+    this.viewerId,
+    this.ipAddress,
+    this.userAgent,
+  });
+
+  Map<String, dynamic> toJson() {
+    return {
+      'viewerId': viewerId,
+      'ipAddress': ipAddress,
+      'userAgent': userAgent,
+    };
+  }
 }

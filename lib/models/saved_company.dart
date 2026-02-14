@@ -23,8 +23,17 @@ class SavedCompany {
       companyId: json['companyId'],
       jobSeekerId: json['jobSeekerId'],
       savedAt: DateTime.parse(json['savedAt']),
-      company:
-          json['company'] != null ? Company.fromJson(json['company']) : null,
+      company: json['company'] != null
+          ? Company.fromJson(json['company'])
+          : null,
     );
   }
+
+  Map<String, dynamic> toJson() => {
+    'id': id,
+    'companyId': companyId,
+    'jobSeekerId': jobSeekerId,
+    'savedAt': savedAt.toIso8601String(),
+    'company': company?.toJson(),
+  };
 }

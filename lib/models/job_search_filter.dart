@@ -1,3 +1,5 @@
+import 'package:job_portal_app/models/job_model.dart';
+
 class SalaryRange {
   final double? min;
   final double? max;
@@ -76,31 +78,15 @@ class Pagination<T> {
       totalPages: json['totalPages'],
     );
   }
+
+  Map<String, dynamic> _springPage(Map<String, dynamic> json) {
+  return {
+    'items': json['content'],
+    'page': json['number'],
+    'size': json['size'],
+    'totalItems': json['totalElements'],
+    'totalPages': json['totalPages'],
+  };
 }
-enum JobType {
-  FULL_TIME,
-  PART_TIME,
-  CONTRACT,
-  INTERNSHIP,
-  FREELANCE,
 }
 
-enum ExperienceLevel {
-  ENTRY,
-  MID,
-  SENIOR,
-}
-
-JobType? jobTypeFromString(String? value) {
-  if (value == null) return null;
-  return JobType.values.firstWhere(
-    (e) => e.name == value,
-  );
-}
-
-ExperienceLevel? experienceLevelFromString(String? value) {
-  if (value == null) return null;
-  return ExperienceLevel.values.firstWhere(
-    (e) => e.name == value,
-  );
-}

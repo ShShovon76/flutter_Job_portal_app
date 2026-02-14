@@ -7,12 +7,9 @@ import 'package:connectivity_plus/connectivity_plus.dart';
 class NoInternetScreen extends StatefulWidget {
   final VoidCallback? onRetry;
   final bool allowManualRetry;
-  
-  const NoInternetScreen({
-    Key? key,
-    this.onRetry,
-    this.allowManualRetry = true,
-  }) : super(key: key);
+
+  const NoInternetScreen({Key? key, this.onRetry, this.allowManualRetry = true})
+    : super(key: key);
 
   @override
   State<NoInternetScreen> createState() => _NoInternetScreenState();
@@ -22,7 +19,7 @@ class _NoInternetScreenState extends State<NoInternetScreen> {
   bool _isChecking = false;
   bool _autoRetryEnabled = true;
   final Connectivity _connectivity = Connectivity();
-  
+
   @override
   void initState() {
     super.initState();
@@ -31,7 +28,7 @@ class _NoInternetScreenState extends State<NoInternetScreen> {
     }
     _setupConnectivityListener();
   }
-  
+
   void _setupConnectivityListener() {
     _connectivity.onConnectivityChanged.listen((result) {
       if (result != ConnectivityResult.none) {
@@ -39,7 +36,7 @@ class _NoInternetScreenState extends State<NoInternetScreen> {
       }
     });
   }
-  
+
   void _startAutoRetry() {
     Timer.periodic(const Duration(seconds: 3), (timer) async {
       final result = await _connectivity.checkConnectivity();
@@ -49,18 +46,18 @@ class _NoInternetScreenState extends State<NoInternetScreen> {
       }
     });
   }
-  
+
   Future<void> _retryConnection() async {
     if (_isChecking) return;
-    
+
     setState(() {
       _isChecking = true;
     });
-    
+
     try {
       // Check connectivity
       final result = await _connectivity.checkConnectivity();
-      
+
       if (result == ConnectivityResult.none) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
@@ -91,7 +88,7 @@ class _NoInternetScreenState extends State<NoInternetScreen> {
       }
     }
   }
-  
+
   @override
   Widget build(BuildContext context) {
     return WillPopScope(
@@ -122,9 +119,9 @@ class _NoInternetScreenState extends State<NoInternetScreen> {
                     color: Colors.grey,
                   ),
                 ),
-                
+
                 const SizedBox(height: 40),
-                
+
                 // Title
                 Text(
                   'No Internet Connection',
@@ -134,20 +131,20 @@ class _NoInternetScreenState extends State<NoInternetScreen> {
                   ),
                   textAlign: TextAlign.center,
                 ),
-                
+
                 const SizedBox(height: 16),
-                
+
                 // Description
                 Text(
                   'Please check your internet connection and try again.',
-                  style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                    color: Colors.grey[600],
-                  ),
+                  style: Theme.of(
+                    context,
+                  ).textTheme.bodyLarge?.copyWith(color: Colors.grey[600]),
                   textAlign: TextAlign.center,
                 ),
-                
+
                 const SizedBox(height: 32),
-                
+
                 // Tips
                 Container(
                   padding: const EdgeInsets.all(16),
@@ -167,15 +164,24 @@ class _NoInternetScreenState extends State<NoInternetScreen> {
                         ),
                       ),
                       const SizedBox(height: 10),
-                      _buildStep('1. Check your Wi-Fi or mobile data', Icons.wifi),
-                      _buildStep('2. Turn airplane mode on and off', Icons.airplanemode_active),
-                      _buildStep('3. Restart your router or device', Icons.power_settings_new),
+                      _buildStep(
+                        '1. Check your Wi-Fi or mobile data',
+                        Icons.wifi,
+                      ),
+                      _buildStep(
+                        '2. Turn airplane mode on and off',
+                        Icons.airplanemode_active,
+                      ),
+                      _buildStep(
+                        '3. Restart your router or device',
+                        Icons.power_settings_new,
+                      ),
                     ],
                   ),
                 ),
-                
+
                 const SizedBox(height: 40),
-                
+
                 // Retry Button
                 if (widget.allowManualRetry)
                   SizedBox(
@@ -204,9 +210,9 @@ class _NoInternetScreenState extends State<NoInternetScreen> {
                       ),
                     ),
                   ),
-                
+
                 const SizedBox(height: 16),
-                
+
                 // Settings Button
                 TextButton(
                   onPressed: () async {
@@ -227,26 +233,17 @@ class _NoInternetScreenState extends State<NoInternetScreen> {
       ),
     );
   }
-  
+
   Widget _buildStep(String text, IconData icon) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 6.0),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Icon(
-            icon,
-            size: 18,
-            color: Colors.blue[700],
-          ),
+          Icon(icon, size: 18, color: Colors.blue[700]),
           const SizedBox(width: 10),
           Expanded(
-            child: Text(
-              text,
-              style: TextStyle(
-                color: Colors.blue[800],
-              ),
-            ),
+            child: Text(text, style: TextStyle(color: Colors.blue[800])),
           ),
         ],
       ),

@@ -5,7 +5,7 @@ import 'package:job_portal_app/features/employer/presentation/company/company_pr
 
 import 'package:job_portal_app/features/employer/presentation/dashboard/employer_dashboard_screen.dart';
 import 'package:job_portal_app/features/employer/presentation/jobs/job_list_screen.dart';
-import 'package:job_portal_app/features/job_seeker/presentation/profile/profile_screen.dart';
+import 'package:job_portal_app/features/employer/presentation/jobs/manage_job_screen.dart';
 
 class EmployerShell extends StatefulWidget {
   const EmployerShell({super.key});
@@ -20,9 +20,8 @@ class _EmployerShellState extends State<EmployerShell> {
   final List<Widget> _screens = [
     const EmployerDashboardScreen(),
     const JobListScreen(),
-    const ApplicantsListScreen(),
+    const ManageJobsScreen(),
     const CompanyProfileScreen(),
-    const ProfileScreen(),
   ];
 
   final List<BottomNavigationBarItem> _bottomNavItems = [
@@ -37,14 +36,9 @@ class _EmployerShellState extends State<EmployerShell> {
       label: 'Jobs',
     ),
     const BottomNavigationBarItem(
-      icon: Icon(Icons.people_outline),
-      activeIcon: Icon(Icons.people),
-      label: 'Candidates',
-    ),
-    const BottomNavigationBarItem(
       icon: Icon(Icons.business_outlined),
       activeIcon: Icon(Icons.business),
-      label: 'Company',
+      label: 'Manage Jobs',
     ),
     const BottomNavigationBarItem(
       icon: Icon(Icons.person_outline),

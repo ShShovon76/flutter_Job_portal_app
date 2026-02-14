@@ -41,6 +41,7 @@ class RouteNames {
   static const String subscription = '/employer/subscription';
   static const String employerNotifications = '/employer/notifications';
   static const String employerSettings = '/employer/settings';
+  static const String manageJobs = '/employer/manage-jobs';
   
   // Chat Routes
   static const String chatList = '/chat-list';
@@ -51,7 +52,7 @@ class RouteNames {
   static const String adminDashboard = '/admin/dashboard';
   static const String manageUsers = '/admin/manage-users';
   static const String manageEmployers = '/admin/manage-employers';
-  static const String manageJobs = '/admin/manage-jobs';
+  static const String manageEmployerJobs = '/admin/manage-jobs';
   static const String approveJobs = '/admin/approve-jobs';
   static const String categories = '/admin/categories';
   static const String adminSkills = '/admin/skills';

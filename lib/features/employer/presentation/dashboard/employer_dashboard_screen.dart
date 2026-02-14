@@ -3,7 +3,6 @@ import 'package:job_portal_app/core/constants/app_colors.dart';
 import 'package:job_portal_app/core/constants/app_sizes.dart';
 import 'package:job_portal_app/routes/route_names.dart';
 
-
 class EmployerDashboardScreen extends StatelessWidget {
   const EmployerDashboardScreen({super.key});
 
@@ -12,6 +11,7 @@ class EmployerDashboardScreen extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Employer Dashboard'),
+        automaticallyImplyLeading: false,
         actions: [
           IconButton(
             onPressed: () {
@@ -229,7 +229,7 @@ class EmployerDashboardScreen extends StatelessWidget {
         borderRadius: BorderRadius.circular(AppSizes.radiusSm),
       ),
       child: Padding(
-        padding: const EdgeInsets.all(AppSizes.lg),
+        padding: const EdgeInsets.all(AppSizes.md),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           mainAxisAlignment:

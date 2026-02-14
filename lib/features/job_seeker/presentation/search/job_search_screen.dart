@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:job_portal_app/core/constants/app_sizes.dart';
 
 import 'package:job_portal_app/routes/route_names.dart';
 

@@ -28,4 +28,13 @@ class SavedJob {
       job: json['job'] != null ? Job.fromJson(json['job']) : null,
     );
   }
+
+  Map<String, dynamic> toJson() => {
+        'id': id,
+        'jobId': jobId,
+        'jobSeekerId': jobSeekerId,
+        'savedAt': savedAt.toIso8601String(),
+        'job': job?.toJson(),
+      };
+
 }

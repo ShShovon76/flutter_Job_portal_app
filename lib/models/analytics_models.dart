@@ -8,10 +8,7 @@ class DailyApplicationCount {
   final DateTime date;
   final int count;
 
-  DailyApplicationCount({
-    required this.date,
-    required this.count,
-  });
+  DailyApplicationCount({required this.date, required this.count});
 
   factory DailyApplicationCount.fromJson(Map<String, dynamic> json) {
     return DailyApplicationCount(
@@ -21,10 +18,7 @@ class DailyApplicationCount {
   }
 
   Map<String, dynamic> toJson() {
-    return {
-      'date': date.toIso8601String(),
-      'count': count,
-    };
+    return {'date': date.toIso8601String(), 'count': count};
   }
 }
 
@@ -32,23 +26,22 @@ class DailyViewCount {
   final DateTime date;
   final int count;
 
-  DailyViewCount({
-    required this.date,
-    required this.count,
-  });
+  DailyViewCount({required this.date, required this.count});
 
   factory DailyViewCount.fromJson(Map<String, dynamic> json) {
     return DailyViewCount(
-      date: DateTime.parse(json['date']),
-      count: json['count'],
+      // 1. Handle potential null/missing dates
+      date: json['date'] != null
+          ? (DateTime.tryParse(json['date'].toString()) ?? DateTime.now())
+          : DateTime.now(),
+
+      // 2. Handle potential null counts (Type 'Null' is not a subtype of 'int')
+      count: json['count'] ?? 0,
     );
   }
 
   Map<String, dynamic> toJson() {
-    return {
-      'date': date.toIso8601String(),
-      'count': count,
-    };
+    return {'date': date.toIso8601String(), 'count': count};
   }
 }
 
@@ -111,16 +104,27 @@ class JobViewsResponse {
 
   factory JobViewsResponse.fromJson(Map<String, dynamic> json) {
     return JobViewsResponse(
-      jobId: json['jobId'],
-      jobTitle: json['jobTitle'],
-      companyName: json['companyName'],
-      totalViews: json['totalViews'],
-      uniqueViews: json['uniqueViews'],
-      fromDate: DateTime.parse(json['fromDate']),
-      toDate: DateTime.parse(json['toDate']),
-      dailyViews: (json['dailyViews'] as List)
-          .map((e) => DailyViewCount.fromJson(e))
-          .toList(),
+      jobId: json['jobId'] ?? 0,
+      jobTitle: json['jobTitle'] ?? 'Unknown Job',
+      companyName: json['companyName'] ?? 'Unknown Company',
+      totalViews: json['totalViews'] ?? 0,
+      uniqueViews: json['uniqueViews'] ?? 0,
+
+      // Safety check for dates to prevent "Null is not a subtype of String"
+      fromDate: json['fromDate'] != null
+          ? DateTime.tryParse(json['fromDate'].toString()) ?? DateTime.now()
+          : DateTime.now(),
+
+      toDate: json['toDate'] != null
+          ? DateTime.tryParse(json['toDate'].toString()) ?? DateTime.now()
+          : DateTime.now(),
+
+      // Safety check for the list
+      dailyViews: json['dailyViews'] != null
+          ? (json['dailyViews'] as List)
+                .map((e) => DailyViewCount.fromJson(e))
+                .toList()
+          : [],
     );
   }
 
@@ -180,8 +184,7 @@ class ApplicationTrendsResponse {
           .map((e) => DailyApplicationCount.fromJson(e))
           .toList(),
       totalApplications: json['totalApplications'],
-      statusBreakdown:
-          Map<String, int>.from(json['statusBreakdown'] ?? {}),
+      statusBreakdown: Map<String, int>.from(json['statusBreakdown'] ?? {}),
     );
   }
 
@@ -194,8 +197,7 @@ class ApplicationTrendsResponse {
       'targetName': targetName,
       'fromDate': fromDate.toIso8601String(),
       'toDate': toDate.toIso8601String(),
-      'dailyApplications':
-          dailyApplications.map((e) => e.toJson()).toList(),
+      'dailyApplications': dailyApplications.map((e) => e.toJson()).toList(),
       'totalApplications': totalApplications,
       'statusBreakdown': statusBreakdown,
     };
@@ -246,8 +248,9 @@ class EmployerDashboardResponse {
       topViewedJobs: (json['topViewedJobs'] as List)
           .map((e) => JobViewStats.fromJson(e))
           .toList(),
-      applicationStatusBreakdown:
-          Map<String, int>.from(json['applicationStatusBreakdown']),
+      applicationStatusBreakdown: Map<String, int>.from(
+        json['applicationStatusBreakdown'],
+      ),
       hasActiveSubscription: json['hasActiveSubscription'],
     );
   }
@@ -402,8 +405,7 @@ class SiteMetricsResponse {
       'applicationsThisWeek': applicationsThisWeek,
       'activeSubscriptions': activeSubscriptions,
       'subscriptionsToday': subscriptionsToday,
-      'popularCategories':
-          popularCategories.map((e) => e.toJson()).toList(),
+      'popularCategories': popularCategories.map((e) => e.toJson()).toList(),
     };
   }
 }
@@ -471,8 +473,9 @@ class JobSeekerDashboardResponse {
       fullName: json['fullName'],
       totalApplications: json['totalApplications'],
       applicationsLast30Days: json['applicationsLast30Days'],
-      applicationStatusBreakdown:
-          Map<String, int>.from(json['applicationStatusBreakdown']),
+      applicationStatusBreakdown: Map<String, int>.from(
+        json['applicationStatusBreakdown'],
+      ),
       recentApplications: (json['recentApplications'] as List)
           .map((e) => RecentApplication.fromJson(e))
           .toList(),
@@ -486,8 +489,7 @@ class JobSeekerDashboardResponse {
       'totalApplications': totalApplications,
       'applicationsLast30Days': applicationsLast30Days,
       'applicationStatusBreakdown': applicationStatusBreakdown,
-      'recentApplications':
-          recentApplications.map((e) => e.toJson()).toList(),
+      'recentApplications': recentApplications.map((e) => e.toJson()).toList(),
     };
   }
 }

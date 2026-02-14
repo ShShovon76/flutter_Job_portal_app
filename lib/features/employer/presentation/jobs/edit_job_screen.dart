@@ -79,6 +79,4 @@ class _EditJobScreenState extends State<EditJobScreen> {
     );
   }
 
-  
-
 }

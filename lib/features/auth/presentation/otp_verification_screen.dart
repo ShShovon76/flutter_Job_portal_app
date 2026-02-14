@@ -9,10 +9,10 @@ class OtpVerificationScreen extends StatefulWidget {
   final VerificationType type;
   
   const OtpVerificationScreen({
-    Key? key,
+    super.key,
     required this.email,
     this.type = VerificationType.email,
-  }) : super(key: key);
+  });
 
   @override
   State<OtpVerificationScreen> createState() => _OtpVerificationScreenState();
@@ -125,13 +125,11 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
           break;
         case VerificationType.email:
         case VerificationType.phone:
-        default:
-          // Navigate to role selection or dashboard
-          // You can add your navigation logic here
           Navigator.pushReplacementNamed(
             context,
-            RouteNames.roleSelection,
+            RouteNames.login,
           );
+          break;
       }
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(

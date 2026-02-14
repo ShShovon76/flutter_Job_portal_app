@@ -4,12 +4,14 @@ import 'package:job_portal_app/features/auth/presentation/forgot_password_screen
 import 'package:job_portal_app/features/auth/presentation/login_screen.dart';
 import 'package:job_portal_app/features/auth/presentation/otp_verification_screen.dart';
 import 'package:job_portal_app/features/auth/presentation/register_screen.dart';
-import 'package:job_portal_app/features/auth/presentation/role_selection_screen.dart';
 import 'package:job_portal_app/features/auth/presentation/splash_screen.dart';
 import 'package:job_portal_app/features/employer/presentation/candidates/applicants_list_screen.dart';
 import 'package:job_portal_app/features/employer/presentation/company/company_profile_screen.dart';
 import 'package:job_portal_app/features/employer/presentation/dashboard/employer_dashboard_screen.dart';
+import 'package:job_portal_app/features/employer/presentation/jobs/job_details_screen.dart';
 import 'package:job_portal_app/features/employer/presentation/jobs/job_list_screen.dart';
+import 'package:job_portal_app/features/employer/presentation/jobs/manage_job_screen.dart';
+import 'package:job_portal_app/features/employer/presentation/jobs/post_job_screen.dart';
 import 'package:job_portal_app/features/employer/presentation/shell/employer_shell.dart';
 import 'package:job_portal_app/features/job_seeker/presentation/home/job_feed_screen.dart';
 import 'package:job_portal_app/features/job_seeker/presentation/job/saved_jobs_screen.dart';
@@ -29,7 +31,9 @@ class AppRouter {
       case RouteNames.login:
         return MaterialPageRoute(builder: (_) => const LoginScreen());
       case RouteNames.register:
-        return MaterialPageRoute(builder: (_) => const RegisterJobSeekerScreen());
+        return MaterialPageRoute(
+          builder: (_) => const RegisterJobSeekerScreen(),
+        );
       // case RouteNames.roleSelection:
       //   return MaterialPageRoute(builder: (_) => const RoleSelectionScreen());
       case RouteNames.forgotPassword:
@@ -67,7 +71,7 @@ class AppRouter {
             iconColor: args['iconColor'],
           ),
         );
-      
+
       // Job Seeker Routes
       case RouteNames.jobSeekerShell:
         return MaterialPageRoute(builder: (_) => const JobSeekerShell());
@@ -79,21 +83,46 @@ class AppRouter {
         return MaterialPageRoute(builder: (_) => const ProfileScreen());
       case RouteNames.appliedJobs:
         return MaterialPageRoute(builder: (_) => const AppliedJobsScreen());
+      case RouteNames.jobDetails:
+        final jobId = settings.arguments as int;
+        return MaterialPageRoute(
+          builder: (_) => JobDetailsScreen(jobId: jobId),
+        );
+
       // Add other job seeker routes here...
-      
+
       // Employer Routes
       case RouteNames.employerShell:
         return MaterialPageRoute(builder: (_) => const EmployerShell());
       case RouteNames.employerDashboard:
-        return MaterialPageRoute(builder: (_) => const EmployerDashboardScreen());
+        return MaterialPageRoute(
+          builder: (_) => const EmployerDashboardScreen(),
+        );
       case RouteNames.jobList:
         return MaterialPageRoute(builder: (_) => const JobListScreen());
+      case RouteNames.manageJobs:
+        return MaterialPageRoute(builder: (_) => const ManageJobsScreen());
       case RouteNames.applicantsList:
-        return MaterialPageRoute(builder: (_) => const ApplicantsListScreen());
+        final jobId = settings.arguments as int;
+        return MaterialPageRoute(
+          builder: (_) => ApplicantsListScreen(jobId: jobId),
+        );
       case RouteNames.companyProfile:
         return MaterialPageRoute(builder: (_) => const CompanyProfileScreen());
+      case RouteNames.postJob:
+        return MaterialPageRoute(
+          builder: (_) => const JobPostScreen(), // Create mode only
+          settings: settings,
+        );
+
+      case RouteNames.editJob:
+        final jobId = settings.arguments as int;
+        return MaterialPageRoute(
+          builder: (_) => JobPostScreen(jobId: jobId), // Edit mode
+          settings: settings,
+        );
       // Add other employer routes here...
-      
+
       // Admin Routes
       case RouteNames.adminShell:
         return MaterialPageRoute(builder: (_) => const AdminShell());
@@ -102,12 +131,9 @@ class AppRouter {
       default:
         return MaterialPageRoute(
           builder: (_) => Scaffold(
-            body: Center(
-              child: Text('No route defined for ${settings.name}'),
-            ),
+            body: Center(child: Text('No route defined for ${settings.name}')),
           ),
         );
     }
   }
 }
-

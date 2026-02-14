@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:job_portal_app/core/constants/app_colors.dart';
 import 'package:job_portal_app/core/constants/app_sizes.dart';
 import 'package:job_portal_app/features/auth/provider/auth_provider.dart';
-import 'package:job_portal_app/models/user_model.dart';
 import 'package:job_portal_app/routes/route_names.dart';
 import 'package:provider/provider.dart';
 

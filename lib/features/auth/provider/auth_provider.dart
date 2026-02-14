@@ -1,7 +1,6 @@
-import 'dart:convert';
+
 
 import 'package:flutter/material.dart';
-import 'package:job_portal_app/core/api/api_client.dart';
 import 'package:job_portal_app/core/api/auth_api.dart';
 import 'package:job_portal_app/core/services/storage_service.dart';
 import 'package:job_portal_app/models/auth_models.dart';
@@ -21,16 +20,22 @@ class AuthProvider with ChangeNotifier {
     isLoading = true;
     notifyListeners();
 
-    final response = await AuthApi.login(
-      AuthRequest(email: email, password: password),
-    );
+    try {
+      final response = await AuthApi.login(
+        AuthRequest(email: email, password: password),
+      );
 
-    await TokenStorage.saveTokens(response.accessToken, response.refreshToken);
+      await TokenStorage.saveTokens(
+        response.accessToken,
+        response.refreshToken,
+      );
 
-    user = response.user;
-    await UserStorage.save(user!);
-    isLoading = false;
-    notifyListeners();
+      user = response.user;
+      await UserStorage.save(user!);
+    } finally {
+      isLoading = false;
+      notifyListeners();
+    }
   }
 
   Future<void> registerJobSeeker(
@@ -41,21 +46,26 @@ class AuthProvider with ChangeNotifier {
     isLoading = true;
     notifyListeners();
 
-    final response = await AuthApi.registerJobSeeker(
-      RegisterJobSeekerRequest(
-        fullName: fullName,
-        email: email,
-        password: password,
-      ),
-    );
+    try {
+      final response = await AuthApi.registerJobSeeker(
+        RegisterJobSeekerRequest(
+          fullName: fullName,
+          email: email,
+          password: password,
+        ),
+      );
 
-    await TokenStorage.saveTokens(response.accessToken, response.refreshToken);
+      await TokenStorage.saveTokens(
+        response.accessToken,
+        response.refreshToken,
+      );
 
-    user = response.user;
-    await UserStorage.save(user!);
-
-    isLoading = false;
-    notifyListeners();
+      user = response.user;
+      await UserStorage.save(user!);
+    } finally {
+      isLoading = false;
+      notifyListeners();
+    }
   }
 
   Future<void> registerEmployer(
@@ -67,22 +77,27 @@ class AuthProvider with ChangeNotifier {
     isLoading = true;
     notifyListeners();
 
-    final response = await AuthApi.registerEmployer(
-      RegisterEmployerRequest(
-        fullName: fullName,
-        email: email,
-        password: password,
-        companyName: companyName,
-      ),
-    );
+    try {
+      final response = await AuthApi.registerEmployer(
+        RegisterEmployerRequest(
+          fullName: fullName,
+          email: email,
+          password: password,
+          companyName: companyName,
+        ),
+      );
 
-    await TokenStorage.saveTokens(response.accessToken, response.refreshToken);
+      await TokenStorage.saveTokens(
+        response.accessToken,
+        response.refreshToken,
+      );
 
-    user = response.user;
-    await UserStorage.save(user!);
-
-    isLoading = false;
-    notifyListeners();
+      user = response.user;
+      await UserStorage.save(user!);
+    } finally {
+      isLoading = false;
+      notifyListeners();
+    }
   }
 
   Future<void> logout() async {
@@ -96,13 +111,15 @@ class AuthProvider with ChangeNotifier {
     final token = await TokenStorage.getAccessToken();
 
     if (token == null) {
+      await logout();
       isInitialized = true;
-      notifyListeners();
       return;
     }
 
     final storedUser = await UserStorage.get();
-    if (storedUser != null) {
+    if (storedUser == null) {
+      await logout();
+    } else {
       user = storedUser;
     }
 
@@ -110,7 +127,6 @@ class AuthProvider with ChangeNotifier {
     notifyListeners();
   }
 
-  // Helper method for role-based navigation
   String getRoleBasedRoute() {
     if (!isAuthenticated) return RouteNames.login;
 
@@ -121,8 +137,9 @@ class AuthProvider with ChangeNotifier {
         return RouteNames.employerShell;
       case UserRole.ADMIN:
         return RouteNames.adminShell;
-      default:
+        default:
         return RouteNames.login;
     }
   }
 }
+
