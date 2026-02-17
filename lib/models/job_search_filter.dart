@@ -6,12 +6,8 @@ class SalaryRange {
 
   SalaryRange({this.min, this.max});
 
-  Map<String, dynamic> toJson() => {
-        'min': min,
-        'max': max,
-      };
+  Map<String, dynamic> toJson() => {'min': min, 'max': max};
 }
-
 
 class JobSearchFilter {
   final String? keyword;
@@ -39,18 +35,19 @@ class JobSearchFilter {
   });
 
   Map<String, dynamic> toJson() => {
-        'keyword': keyword,
-        'location': location,
-        'categoryId': categoryId,
-        'jobType': jobType?.name,
-        'salaryRange': salaryRange?.toJson(),
-        'experienceLevel': experienceLevel?.name,
-        'remote': remote,
-        'page': page,
-        'size': size,
-        'companyId': companyId,
-      };
+    'keyword': keyword,
+    'location': location,
+    'categoryId': categoryId,
+    'jobType': jobType?.name,
+    'salaryRange': salaryRange?.toJson(),
+    'experienceLevel': experienceLevel?.name,
+    'remote': remote,
+    'page': page,
+    'size': size,
+    'companyId': companyId,
+  };
 }
+
 class Pagination<T> {
   final List<T> items;
   final int page;
@@ -71,22 +68,21 @@ class Pagination<T> {
     T Function(dynamic) fromJsonT,
   ) {
     return Pagination(
-      items: (json['items'] as List).map(fromJsonT).toList(),
-      page: json['page'],
-      size: json['size'],
-      totalItems: json['totalItems'],
-      totalPages: json['totalPages'],
+      items: (json['items'] as List? ?? []).map(fromJsonT).toList(),
+      page: json['page'] ?? 0,
+      size: json['size'] ?? 10,
+      totalItems: json['totalItems'] ?? 0,
+      totalPages: json['totalPages'] ?? 0,
     );
   }
 
   Map<String, dynamic> _springPage(Map<String, dynamic> json) {
-  return {
-    'items': json['content'],
-    'page': json['number'],
-    'size': json['size'],
-    'totalItems': json['totalElements'],
-    'totalPages': json['totalPages'],
-  };
+    return {
+      'items': json['content'],
+      'page': json['number'],
+      'size': json['size'],
+      'totalItems': json['totalElements'],
+      'totalPages': json['totalPages'],
+    };
+  }
 }
-}
-

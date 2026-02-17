@@ -78,7 +78,6 @@ class _ManageJobsScreenState extends State<ManageJobsScreen> {
     _debounceTimer?.cancel();
     super.dispose();
   }
-  
 
   // ===================== AUTH CHECK =====================
   void _checkAuthAndLoadJobs() {
@@ -592,6 +591,7 @@ class _ManageJobsScreenState extends State<ManageJobsScreen> {
       isLoading: _isLoading && _jobs.isEmpty,
       child: Scaffold(
         appBar: AppBar(
+          automaticallyImplyLeading: false,
           title: const Text(
             'Manage Jobs',
             style: TextStyle(fontSize: 20, fontWeight: FontWeight.w600),

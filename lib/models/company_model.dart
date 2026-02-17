@@ -27,8 +27,9 @@ class SocialLink {
 
   factory SocialLink.fromJson(Map<String, dynamic> json) {
     return SocialLink(
-      // Added null check and fallback for type and url
-      type: SocialLinkTypeExtension.fromString(json['type'] ?? 'WEBSITE'),
+      type: json['type'] != null
+          ? SocialLinkTypeExtension.fromString(json['type'])
+          : SocialLinkType.WEBSITE,
       url: json['url'] ?? '',
     );
   }
@@ -41,28 +42,24 @@ class SocialLink {
 // ---------------------------
 class Company {
   final int id;
-
-  final SimpleUser owner;
-
+  final SimpleUser? owner;
   final String name;
   final String industry;
   final String? companySize;
-
   final String? logoUrl;
   final String? coverImageUrl;
-
   final String? about;
   final String? website;
   final String? email;
   final String? phone;
   final String? address;
-
   final int? foundedYear;
   final double? rating;
-  final bool? verified;
+  final bool verified;
   final int? reviewCount;
-  final List<SocialLink> socialLinks;
 
+  /// Relations
+  final List<SocialLink> socialLinks;
   final DateTime? createdAt;
   final int? activeJobCount;
   final bool? featured;
@@ -82,7 +79,7 @@ class Company {
     this.address,
     this.foundedYear,
     this.rating,
-    this.verified,
+    required this.verified,
     this.reviewCount,
     required this.socialLinks,
     this.createdAt,
@@ -90,13 +87,15 @@ class Company {
     this.featured,
   });
 
+  /// ---------- FROM JSON ----------
   factory Company.fromJson(Map<String, dynamic> json) {
     return Company(
       id: json['id'] ?? 0,
-      // Provide an empty map if owner is null to avoid crash
-      owner: SimpleUser.fromJson(json['owner'] ?? {}),
-      name: json['name'] ?? 'No Name',
-      industry: json['industry'] ?? 'Unknown',
+      owner: json['owner'] != null ? SimpleUser.fromJson(json['owner']) : null,
+
+      name: json['name'] ?? '',
+      industry: json['industry'] ?? '',
+
       companySize: json['companySize'],
       logoUrl: json['logoUrl'],
       coverImageUrl: json['coverImageUrl'],
@@ -106,28 +105,37 @@ class Company {
       phone: json['phone'],
       address: json['address'],
       foundedYear: json['foundedYear'],
-      rating: (json['rating'] != null)
-          ? (json['rating'] as num).toDouble()
+
+      // ✅ BigDecimal safe parsing
+      rating: json['rating'] != null
+          ? double.tryParse(json['rating'].toString())
           : null,
+
+      // ✅ Backend primitive boolean → non-nullable
       verified: json['verified'] ?? false,
+
       reviewCount: json['reviewCount'],
-      socialLinks: json['socialLinks'] != null
-          ? List<SocialLink>.from(
-              (json['socialLinks'] as List).map((x) => SocialLink.fromJson(x)),
-            )
-          : [],
-      // CRITICAL FIX: Only parse if the key exists and is not null
+
+      socialLinks:
+          (json['socialLinks'] as List?)
+              ?.map((e) => SocialLink.fromJson(e))
+              .toList() ??
+          [],
+
+      // Optional / future-safe
       createdAt: json['createdAt'] != null
           ? DateTime.tryParse(json['createdAt'].toString())
           : null,
+
       activeJobCount: json['activeJobCount'],
       featured: json['featured'],
     );
   }
 
+  /// ---------- TO JSON ----------
   Map<String, dynamic> toJson() => {
     'id': id,
-    'owner': owner.toJson(),
+    'owner': owner?.toJson(),
     'name': name,
     'industry': industry,
     'companySize': companySize,
@@ -142,11 +150,60 @@ class Company {
     'rating': rating,
     'verified': verified,
     'reviewCount': reviewCount,
-    'socialLinks': socialLinks.map((x) => x.toJson()).toList(),
+    'socialLinks': socialLinks.map((e) => e.toJson()).toList(),
+
+    // Extra frontend fields (ignored by backend safely)
     'createdAt': createdAt?.toIso8601String(),
     'activeJobCount': activeJobCount,
     'featured': featured,
   };
+
+  /// ---------- COPY WITH ----------
+  Company copyWith({
+    int? id,
+    SimpleUser? owner,
+    String? name,
+    String? industry,
+    String? companySize,
+    String? logoUrl,
+    String? coverImageUrl,
+    String? about,
+    String? website,
+    String? email,
+    String? phone,
+    String? address,
+    int? foundedYear,
+    double? rating,
+    bool? verified,
+    int? reviewCount,
+    List<SocialLink>? socialLinks,
+    DateTime? createdAt,
+    int? activeJobCount,
+    bool? featured,
+  }) {
+    return Company(
+      id: id ?? this.id,
+      owner: owner ?? this.owner,
+      name: name ?? this.name,
+      industry: industry ?? this.industry,
+      companySize: companySize ?? this.companySize,
+      logoUrl: logoUrl ?? this.logoUrl,
+      coverImageUrl: coverImageUrl ?? this.coverImageUrl,
+      about: about ?? this.about,
+      website: website ?? this.website,
+      email: email ?? this.email,
+      phone: phone ?? this.phone,
+      address: address ?? this.address,
+      foundedYear: foundedYear ?? this.foundedYear,
+      rating: rating ?? this.rating,
+      verified: verified ?? this.verified,
+      reviewCount: reviewCount ?? this.reviewCount,
+      socialLinks: socialLinks ?? this.socialLinks,
+      createdAt: createdAt ?? this.createdAt,
+      activeJobCount: activeJobCount ?? this.activeJobCount,
+      featured: featured ?? this.featured,
+    );
+  }
 }
 
 // ---------------------------
@@ -166,4 +223,44 @@ class SimpleUser {
   }
 
   Map<String, dynamic> toJson() => {'id': id, 'fullName': fullName};
+}
+class CompanyUpdateRequest {
+  final String? name;
+  final String? industry;
+  final String? companySize;
+  final String? about;
+  final String? website;
+  final String? email;
+  final String? phone;
+  final String? address;
+  final int? foundedYear;
+  final List<SocialLink>? socialLinks;
+
+  CompanyUpdateRequest({
+    this.name,
+    this.industry,
+    this.companySize,
+    this.about,
+    this.website,
+    this.email,
+    this.phone,
+    this.address,
+    this.foundedYear,
+    this.socialLinks,
+  });
+
+  /// 🔁 Convert to JSON (only what backend expects)
+  Map<String, dynamic> toJson() => {
+        if (name != null) 'name': name,
+        if (industry != null) 'industry': industry,
+        if (companySize != null) 'companySize': companySize,
+        if (about != null) 'about': about,
+        if (website != null) 'website': website,
+        if (email != null) 'email': email,
+        if (phone != null) 'phone': phone,
+        if (address != null) 'address': address,
+        if (foundedYear != null) 'foundedYear': foundedYear,
+        if (socialLinks != null)
+          'socialLinks': socialLinks!.map((e) => e.toJson()).toList(),
+      };
 }

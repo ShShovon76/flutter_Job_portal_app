@@ -12,8 +12,8 @@ class DailyApplicationCount {
 
   factory DailyApplicationCount.fromJson(Map<String, dynamic> json) {
     return DailyApplicationCount(
-      date: DateTime.parse(json['date']),
-      count: json['count'],
+      date: DateTime.tryParse(json['date']?.toString() ?? '') ?? DateTime.now(),
+      count: json['count'] ?? 0,
     );
   }
 
@@ -178,12 +178,15 @@ class ApplicationTrendsResponse {
       employerId: json['employerId'],
       employerName: json['employerName'],
       targetName: json['targetName'],
-      fromDate: DateTime.parse(json['fromDate']),
-      toDate: DateTime.parse(json['toDate']),
-      dailyApplications: (json['dailyApplications'] as List)
+      fromDate:
+          DateTime.tryParse(json['fromDate']?.toString() ?? '') ??
+          DateTime.now(),
+      toDate:
+          DateTime.tryParse(json['toDate']?.toString() ?? '') ?? DateTime.now(),
+      dailyApplications: (json['dailyApplications'] as List? ?? [])
           .map((e) => DailyApplicationCount.fromJson(e))
           .toList(),
-      totalApplications: json['totalApplications'],
+      totalApplications: json['totalApplications'] ?? 0,
       statusBreakdown: Map<String, int>.from(json['statusBreakdown'] ?? {}),
     );
   }
@@ -237,21 +240,25 @@ class EmployerDashboardResponse {
 
   factory EmployerDashboardResponse.fromJson(Map<String, dynamic> json) {
     return EmployerDashboardResponse(
-      employerId: json['employerId'],
-      employerName: json['employerName'],
-      companyName: json['companyName'],
-      totalJobs: json['totalJobs'],
-      activeJobs: json['activeJobs'],
-      profileViews: json['profileViews'],
-      totalApplications: json['totalApplications'],
-      recentApplicationsCount: json['recentApplicationsCount'],
-      topViewedJobs: (json['topViewedJobs'] as List)
+      employerId: json['employerId'] ?? 0,
+      employerName: json['employerName'] ?? '',
+      companyName: json['companyName'] ?? '',
+
+      totalJobs: json['totalJobs'] ?? 0,
+      activeJobs: json['activeJobs'] ?? 0,
+      profileViews: json['profileViews'] ?? 0,
+      totalApplications: json['totalApplications'] ?? 0,
+      recentApplicationsCount: json['recentApplicationsCount'] ?? 0,
+
+      topViewedJobs: (json['topViewedJobs'] as List? ?? [])
           .map((e) => JobViewStats.fromJson(e))
           .toList(),
+
       applicationStatusBreakdown: Map<String, int>.from(
-        json['applicationStatusBreakdown'],
+        json['applicationStatusBreakdown'] ?? {},
       ),
-      hasActiveSubscription: json['hasActiveSubscription'],
+
+      hasActiveSubscription: json['hasActiveSubscription'] ?? false,
     );
   }
 
@@ -361,12 +368,14 @@ class SiteMetricsResponse {
 
   factory SiteMetricsResponse.fromJson(Map<String, dynamic> json) {
     return SiteMetricsResponse(
-      timestamp: DateTime.parse(json['timestamp']),
-      totalUsers: json['totalUsers'],
+      timestamp:
+          DateTime.tryParse(json['timestamp']?.toString() ?? '') ??
+          DateTime.now(),
+      totalUsers: json['totalUsers'] ?? 0,
       newUsersToday: json['newUsersToday'],
       newUsersThisWeek: json['newUsersThisWeek'],
       newUsersThisMonth: json['newUsersThisMonth'],
-      usersByRole: Map<String, int>.from(json['usersByRole']),
+      usersByRole: Map<String, int>.from(json['usersByRole'] ?? {}),
       totalJobs: json['totalJobs'],
       activeJobs: json['activeJobs'],
       jobsPostedToday: json['jobsPostedToday'],
@@ -435,7 +444,7 @@ class RecentApplication {
       jobTitle: json['jobTitle'],
       companyName: json['companyName'],
       status: json['status'],
-      appliedAt: json['appliedAt'],
+      appliedAt: json['appliedAt'] ?? '',
     );
   }
 

@@ -2,88 +2,127 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:job_portal_app/core/api/company_api.dart';
 import 'package:job_portal_app/models/company_model.dart';
-
+import 'package:job_portal_app/models/company_review.dart';
 
 class CompanyProvider extends ChangeNotifier {
   final CompanyApi _api = CompanyApi();
 
-  // =====================
-  // STATE
-  // =====================
   bool loading = false;
   String? error;
 
-  Company? _myCompany;
-  Company? get myCompany => _myCompany;
+  Company? myCompany;
+  List<CompanyReview> reviews = [];
 
-  // =====================
-  // HELPERS
-  // =====================
-  Future<T?> _safeCall<T>(Future<T> Function() action) async {
+  // ----------------------------
+  // Core safe call
+  // ----------------------------
+  Future<T?> _run<T>(Future<T> Function() action) async {
+    loading = true;
+    error = null;
+
+    // 🔒 notify only if widget already built
+    if (hasListeners) notifyListeners();
+
     try {
-      loading = true;
-      error = null;
-      notifyListeners();
       return await action();
     } catch (e) {
       error = e.toString();
       rethrow;
     } finally {
       loading = false;
-      notifyListeners();
+      if (hasListeners) notifyListeners();
     }
   }
 
-  // =====================
-  // COMPANY OPERATIONS
-  // =====================
-
-  /// Load the current user's company
+  // ----------------------------
+  // Company
+  // ----------------------------
   Future<void> loadMyCompany(int ownerId) async {
-    final page = await _safeCall(
-      () => _api.getCompaniesByOwner(ownerId: ownerId),
-    );
-
-    if (page != null && page.items.isNotEmpty) {
-      _myCompany = page.items.first; // assuming user has only one company
-    } else {
-      _myCompany = null;
-    }
-    notifyListeners();
+    final page = await _run(() => _api.getCompaniesByOwner(ownerId: ownerId));
+    myCompany = page?.items.isNotEmpty == true ? page!.items.first : null;
   }
 
-  /// Create a new company
-  Future<Company?> createCompany(Company company, {File? logo}) async {
-    final c = await _safeCall(
+  Future<void> createCompany(Company company, {File? logo}) async {
+    myCompany = await _run(
       () => _api.createCompany(company: company, logo: logo),
     );
-    if (c != null) _myCompany = c;
-    return c;
   }
 
-  /// Update the current company
-  Future<Company?> updateCompany(
-    Map<String, dynamic> data, {
+  Future<void> updateCompany(
+    CompanyUpdateRequest request, {
     File? logo,
     File? cover,
   }) async {
-    if (_myCompany == null) return null;
+    if (myCompany == null) return;
 
-    final updated = await _safeCall(
+    myCompany = await _run(
       () => _api.updateCompany(
-        id: _myCompany!.id,
-        updateData: data,
+        id: myCompany!.id,
+        request: request,
         logo: logo,
         cover: cover,
       ),
     );
-
-    if (updated != null) _myCompany = updated;
-    return updated;
   }
 
-  /// Refresh the company
-  Future<void> refreshCompany(int ownerId) async {
-    await loadMyCompany(ownerId);
+  Future<void> uploadLogo(File file) async {
+    if (myCompany == null) return;
+    myCompany = await _run(() => _api.uploadLogo(myCompany!.id, file));
+  }
+
+  Future<void> uploadCover(File file) async {
+    if (myCompany == null) return;
+    myCompany = await _run(() => _api.uploadCover(myCompany!.id, file));
+  }
+
+  Future<void> deleteLogo() async {
+    if (myCompany == null) return;
+    await _run(() => _api.deleteLogo(myCompany!.id));
+    myCompany = myCompany!.copyWith(logoUrl: null);
+  }
+
+  Future<void> deleteCover() async {
+    if (myCompany == null) return;
+    await _run(() => _api.deleteCover(myCompany!.id));
+    myCompany = myCompany!.copyWith(coverImageUrl: null);
+  }
+
+  // ----------------------------
+  // Reviews
+  // ----------------------------
+  Future<void> loadReviews(int companyId) async {
+    final page = await _run(() => _api.getReviews(companyId: companyId));
+    reviews = page?.items ?? [];
+  }
+
+  Future<void> addReview(
+    int companyId,
+    int reviewerId,
+    CompanyReview review,
+  ) async {
+    await _run(
+      () => _api.addReview(
+        companyId: companyId,
+        reviewerId: reviewerId,
+        review: review,
+      ),
+    );
+    await loadReviews(companyId);
+  }
+
+  // ----------------------------
+  // Admin
+  // ----------------------------
+  Future<void> verifyCompany(int companyId, int adminId) async {
+    await _run(
+      () => _api.verifyCompany(companyId: companyId, adminId: adminId),
+    );
+  }
+
+  Future<void> deleteCompany(int companyId, int ownerId) async {
+    await _run(
+      () => _api.deleteCompany(companyId: companyId, ownerId: ownerId),
+    );
+    myCompany = null;
   }
 }

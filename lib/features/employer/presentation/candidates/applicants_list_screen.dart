@@ -1,5 +1,3 @@
-
-
 // features/employer/presentation/candidates/applicants_list_screen.dart
 import 'dart:async';
 import 'dart:convert';
@@ -15,11 +13,8 @@ import 'package:job_portal_app/models/application_model.dart';
 import 'package:job_portal_app/models/job_model.dart';
 import 'package:job_portal_app/models/job_search_filter.dart';
 import 'package:job_portal_app/routes/route_names.dart';
-import 'package:job_portal_app/shared/widgets/common/confirmation_dialog.dart';
-import 'package:job_portal_app/shared/widgets/common/empty_state_widget.dart';
+import 'package:job_portal_app/shared/widgets/buttons/primary_button.dart';
 import 'package:job_portal_app/shared/widgets/common/loading_overlay.dart';
-import 'package:job_portal_app/shared/widgets/common/notification_widget.dart';
-import 'package:job_portal_app/shared/widgets/inputs/error_screen.dart';
 import 'package:provider/provider.dart';
 
 
@@ -57,7 +52,6 @@ class _ApplicantsListScreenState extends State<ApplicantsListScreen> {
   // ===================== PAGINATION =====================
   int _currentPage = 0;
   int _pageSize = 10;
-  final List<int> _pageSizeOptions = [5, 10, 20, 50];
   int _totalPages = 0;
   int _totalApplications = 0;
   bool _hasMore = true;
@@ -69,12 +63,10 @@ class _ApplicantsListScreenState extends State<ApplicantsListScreen> {
   final Set<int> _selectedApplications = {};
   bool _selectAll = false;
 
-  // ===================== VIEW MODE =====================
-  bool _isGridView = false;
-
   // ===================== UI STATE =====================
   final Map<int, bool> _updatingStatus = {};
   final Map<int, bool> _downloadingResume = {};
+  bool _showFilterBottomSheet = false;
 
   // ===================== NOTIFICATION STATE =====================
   bool _showNotification = false;
@@ -82,10 +74,8 @@ class _ApplicantsListScreenState extends State<ApplicantsListScreen> {
   String _notificationType = 'info';
   Timer? _notificationTimer;
 
-  // ===================== MODAL STATE =====================
+  // ===================== COVER LETTER MODAL =====================
   JobApplication? _selectedCoverLetter;
-  String? _pdfPreviewUrl;
-  bool _showPdfModal = false;
 
   @override
   void initState() {
@@ -118,18 +108,20 @@ class _ApplicantsListScreenState extends State<ApplicantsListScreen> {
 
   // ===================== DATA LOADING =====================
   Future<void> _loadJob() async {
-    setState(() => _loadingJob = true);
-
     try {
       final job = await JobApi.getJobById(widget.jobId);
-      setState(() {
-        _job = job;
-        _loadingJob = false;
-      });
+      if (mounted) {
+        setState(() {
+          _job = job;
+          _loadingJob = false;
+        });
+      }
     } catch (e) {
       debugPrint('Failed to load job: $e');
-      setState(() => _loadingJob = false);
-      _showNotificationMessage('Failed to load job details', 'error');
+      if (mounted) {
+        setState(() => _loadingJob = false);
+        _showNotificationMessage('Failed to load job details', 'error');
+      }
     }
   }
 
@@ -155,29 +147,33 @@ class _ApplicantsListScreenState extends State<ApplicantsListScreen> {
         size: _pageSize,
       );
 
-      setState(() {
-        if (refresh) {
-          _applications = response.items;
-        } else {
-          _applications.addAll(response.items);
-        }
-        _pagination = response;
-        _totalPages = response.totalPages;
-        _totalApplications = response.totalItems;
-        _hasMore = _currentPage + 1 < response.totalPages;
-        _currentPage++;
-        _calculateStats();
-        _error = null;
-        _isLoading = false;
-        _isFetchingMore = false;
-      });
+      if (mounted) {
+        setState(() {
+          if (refresh) {
+            _applications = response.items;
+          } else {
+            _applications.addAll(response.items);
+          }
+          _pagination = response;
+          _totalPages = response.totalPages;
+          _totalApplications = response.totalItems;
+          _hasMore = _currentPage + 1 < response.totalPages;
+          _currentPage++;
+          _calculateStats();
+          _error = null;
+          _isLoading = false;
+          _isFetchingMore = false;
+        });
+      }
     } catch (e) {
-      setState(() {
-        _error = e.toString();
-        _isLoading = false;
-        _isFetchingMore = false;
-      });
-      _showNotificationMessage('Failed to load applications', 'error');
+      if (mounted) {
+        setState(() {
+          _error = e.toString();
+          _isLoading = false;
+          _isFetchingMore = false;
+        });
+        _showNotificationMessage('Failed to load applications', 'error');
+      }
     }
   }
 
@@ -186,8 +182,10 @@ class _ApplicantsListScreenState extends State<ApplicantsListScreen> {
     _searchController.addListener(() {
       if (_debounceTimer?.isActive ?? false) _debounceTimer!.cancel();
       _debounceTimer = Timer(const Duration(milliseconds: 300), () {
-        _currentPage = 0;
-        _loadApplications(refresh: true);
+        if (mounted) {
+          _currentPage = 0;
+          _loadApplications(refresh: true);
+        }
       });
     });
   }
@@ -198,48 +196,165 @@ class _ApplicantsListScreenState extends State<ApplicantsListScreen> {
     for (var app in _applications) {
       stats[app.status.value] = (stats[app.status.value] ?? 0) + 1;
     }
-    setState(() => _stats = stats);
+    _stats = stats;
   }
 
   // ===================== FILTER HANDLERS =====================
-  void _onStatusFilterChanged(ApplicationStatus? status) {
-    setState(() => _selectedStatus = status);
-    _currentPage = 0;
-    _loadApplications(refresh: true);
+  void _openFilterBottomSheet() {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (context) => _buildFilterBottomSheet(),
+    );
   }
 
-  Future<void> _selectDateRange() async {
-    final DateTimeRange? range = await showDateRangePicker(
-      context: context,
-      firstDate: DateTime(2020),
-      lastDate: DateTime.now(),
-      builder: (context, child) {
-        return Theme(
-          data: Theme.of(context).copyWith(
-            colorScheme: const ColorScheme.light(
-              primary: AppColors.primary,
-            ),
+  Widget _buildFilterBottomSheet() {
+    return Container(
+      padding: const EdgeInsets.all(20),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text(
+            'Filter Applicants',
+            style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
           ),
-          child: child!,
-        );
-      },
+          const SizedBox(height: 20),
+          
+          // Status Filter
+          const Text('Status', style: TextStyle(fontWeight: FontWeight.w600)),
+          const SizedBox(height: 8),
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: [
+              FilterChip(
+                label: const Text('All'),
+                selected: _selectedStatus == null,
+                onSelected: (_) {
+                  Navigator.pop(context);
+                  setState(() => _selectedStatus = null);
+                  _currentPage = 0;
+                  _loadApplications(refresh: true);
+                },
+              ),
+              ...ApplicationStatus.values.map((status) {
+                return FilterChip(
+                  label: Text(_getStatusLabel(status)),
+                  selected: _selectedStatus == status,
+                  onSelected: (_) {
+                    Navigator.pop(context);
+                    setState(() => _selectedStatus = status);
+                    _currentPage = 0;
+                    _loadApplications(refresh: true);
+                  },
+                  backgroundColor: Colors.grey.shade100,
+                  selectedColor: _getStatusColor(status).withOpacity(0.2),
+                  checkmarkColor: _getStatusColor(status),
+                );
+              }),
+            ],
+          ),
+          
+          const SizedBox(height: 16),
+          
+          // Date Range
+          const Text('Date Range', style: TextStyle(fontWeight: FontWeight.w600)),
+          const SizedBox(height: 8),
+          Row(
+            children: [
+              Expanded(
+                child: OutlinedButton(
+                  onPressed: () async {
+                    final date = await showDatePicker(
+                      context: context,
+                      initialDate: _dateFrom ?? DateTime.now().subtract(const Duration(days: 30)),
+                      firstDate: DateTime(2020),
+                      lastDate: DateTime.now(),
+                    );
+                    if (date != null) {
+                      setState(() => _dateFrom = date);
+                    }
+                  },
+                  style: OutlinedButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(vertical: 12),
+                  ),
+                  child: Text(
+                    _dateFrom == null
+                        ? 'From Date'
+                        : DateFormat('MMM d, yyyy').format(_dateFrom!),
+                  ),
+                ),
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: OutlinedButton(
+                  onPressed: () async {
+                    final date = await showDatePicker(
+                      context: context,
+                      initialDate: _dateTo ?? DateTime.now(),
+                      firstDate: DateTime(2020),
+                      lastDate: DateTime.now(),
+                    );
+                    if (date != null) {
+                      setState(() => _dateTo = date);
+                    }
+                  },
+                  style: OutlinedButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(vertical: 12),
+                  ),
+                  child: Text(
+                    _dateTo == null
+                        ? 'To Date'
+                        : DateFormat('MMM d, yyyy').format(_dateTo!),
+                  ),
+                ),
+              ),
+            ],
+          ),
+          
+          const SizedBox(height: 20),
+          
+          // Apply and Clear Buttons
+          Row(
+            children: [
+              Expanded(
+                child: OutlinedButton(
+                  onPressed: () {
+                    Navigator.pop(context);
+                    setState(() {
+                      _dateFrom = null;
+                      _dateTo = null;
+                      _selectedStatus = null;
+                      _currentPage = 0;
+                    });
+                    _loadApplications(refresh: true);
+                  },
+                  child: const Text('Clear Filters'),
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: ElevatedButton(
+                  onPressed: () {
+                    Navigator.pop(context);
+                    _currentPage = 0;
+                    _loadApplications(refresh: true);
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppColors.primary,
+                  ),
+                  child: const Text('Apply'),
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
     );
-
-    if (range != null) {
-      if (range.start.isAfter(range.end)) {
-        _showNotificationMessage(
-          '"Date From" cannot be after "Date To"',
-          'warning',
-        );
-        return;
-      }
-      setState(() {
-        _dateFrom = range.start;
-        _dateTo = range.end;
-      });
-      _currentPage = 0;
-      _loadApplications(refresh: true);
-    }
   }
 
   void _clearFilters() {
@@ -261,8 +376,7 @@ class _ApplicantsListScreenState extends State<ApplicantsListScreen> {
         final searchTerm = _searchController.text.toLowerCase();
         final nameMatch = (app.jobSeekerName ?? '').toLowerCase().contains(searchTerm);
         final emailMatch = (app.jobSeekerEmail ?? '').toLowerCase().contains(searchTerm);
-        final coverLetterMatch = (app.coverLetter ?? '').toLowerCase().contains(searchTerm);
-        if (!(nameMatch || emailMatch || coverLetterMatch)) return false;
+        if (!(nameMatch || emailMatch)) return false;
       }
 
       // Status filter
@@ -286,15 +400,6 @@ class _ApplicantsListScreenState extends State<ApplicantsListScreen> {
 
   // ===================== APPLICATION ACTIONS =====================
   Future<void> _updateApplicationStatus(int applicationId, ApplicationStatus status) async {
-    final confirmed = await showConfirmationDialog(
-      context: context,
-      title: 'Update Status',
-      message: 'Are you sure you want to update this application status?',
-      confirmText: 'Update',
-    );
-
-    if (!confirmed) return;
-
     setState(() => _updatingStatus[applicationId] = true);
 
     try {
@@ -308,19 +413,22 @@ class _ApplicantsListScreenState extends State<ApplicantsListScreen> {
         changedByUserId: userId,
       );
 
-      setState(() {
-        final index = _applications.indexWhere((a) => a.id == applicationId);
-        if (index != -1) {
-          _applications[index] = updated;
-        }
-        _updatingStatus[applicationId] = false;
-        _calculateStats();
-      });
-
-      _showNotificationMessage('Status updated successfully', 'success');
+      if (mounted) {
+        setState(() {
+          final index = _applications.indexWhere((a) => a.id == applicationId);
+          if (index != -1) {
+            _applications[index] = updated;
+          }
+          _updatingStatus[applicationId] = false;
+          _calculateStats();
+        });
+        _showNotificationMessage('Status updated successfully', 'success');
+      }
     } catch (e) {
-      setState(() => _updatingStatus[applicationId] = false);
-      _showNotificationMessage('Failed to update status', 'error');
+      if (mounted) {
+        setState(() => _updatingStatus[applicationId] = false);
+        _showNotificationMessage('Failed to update status', 'error');
+      }
     }
   }
 
@@ -330,11 +438,9 @@ class _ApplicantsListScreenState extends State<ApplicantsListScreen> {
       return;
     }
 
-    final confirmed = await showConfirmationDialog(
-      context: context,
-      title: 'Bulk Update',
-      message: 'Update ${_selectedApplications.length} application(s) to ${status.value}?',
-      confirmText: 'Update',
+    final confirmed = await _showConfirmDialog(
+      'Bulk Update',
+      'Update ${_selectedApplications.length} application(s) to ${_getStatusLabel(status)}?',
     );
 
     if (!confirmed) return;
@@ -365,16 +471,18 @@ class _ApplicantsListScreenState extends State<ApplicantsListScreen> {
       }
     }
 
-    setState(() {
-      _selectedApplications.clear();
-      _selectAll = false;
-      _calculateStats();
-    });
+    if (mounted) {
+      setState(() {
+        _selectedApplications.clear();
+        _selectAll = false;
+        _calculateStats();
+      });
 
-    if (failCount == 0) {
-      _showNotificationMessage('Updated $successCount application(s)', 'success');
-    } else {
-      _showNotificationMessage('Updated $successCount, failed $failCount', 'warning');
+      if (failCount == 0) {
+        _showNotificationMessage('Updated $successCount application(s)', 'success');
+      } else {
+        _showNotificationMessage('Updated $successCount, failed $failCount', 'warning');
+      }
     }
   }
 
@@ -386,7 +494,6 @@ class _ApplicantsListScreenState extends State<ApplicantsListScreen> {
     );
   }
 
-  // ===================== RESUME ACTIONS =====================
   Future<void> _downloadResume(JobApplication application) async {
     if (application.resumeId == null) {
       _showNotificationMessage('No resume available', 'warning');
@@ -397,54 +504,43 @@ class _ApplicantsListScreenState extends State<ApplicantsListScreen> {
 
     try {
       final bytes = await ResumeApi.downloadResume(application.resumeId!);
-      
-      // Save file using share_plus or file_picker
-      // For Flutter web/mobile, you'd use different approaches
-      // This is a simplified version - you may need to add share_plus package
-      
       _showNotificationMessage('Resume downloaded successfully', 'success');
     } catch (e) {
       _showNotificationMessage('Failed to download resume', 'error');
     } finally {
-      setState(() => _downloadingResume[application.id] = false);
+      if (mounted) {
+        setState(() => _downloadingResume[application.id] = false);
+      }
     }
   }
 
-  Future<void> _previewResume(JobApplication application) async {
-    if (application.resumeId == null) {
-      _showNotificationMessage('No resume available', 'warning');
-      return;
-    }
-
-    try {
-      final bytes = await ResumeApi.downloadResume(application.resumeId!);
-      
-      // For PDF preview, you'd create a temporary file or use a PDF viewer
-      // This is a simplified version - you may need to add pdf_viewer plugin
-      
-      setState(() {
-        _pdfPreviewUrl = 'data:application/pdf;base64,${base64Encode(bytes)}';
-        _showPdfModal = true;
-      });
-    } catch (e) {
-      _showNotificationMessage('Unable to preview resume', 'error');
-    }
-  }
-
-  void _closePdfPreview() {
-    setState(() {
-      _pdfPreviewUrl = null;
-      _showPdfModal = false;
-    });
-  }
-
-  // ===================== COVER LETTER ACTIONS =====================
   void _viewCoverLetter(JobApplication application) {
     setState(() => _selectedCoverLetter = application);
+    _showCoverLetterModal(application);
   }
 
-  void _closeCoverLetter() {
-    setState(() => _selectedCoverLetter = null);
+  void _showCoverLetterModal(JobApplication application) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Cover Letter'),
+        content: SingleChildScrollView(
+          child: Text(
+            application.coverLetter ?? 'No cover letter provided',
+            style: const TextStyle(fontSize: 14),
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () {
+              Navigator.pop(context);
+              setState(() => _selectedCoverLetter = null);
+            },
+            child: const Text('Close'),
+          ),
+        ],
+      ),
+    );
   }
 
   // ===================== SELECTION ACTIONS =====================
@@ -472,7 +568,7 @@ class _ApplicantsListScreenState extends State<ApplicantsListScreen> {
   }
 
   // ===================== NOTIFICATION =====================
-  void _showNotificationMessage(String message, String type, {int duration = 5000}) {
+  void _showNotificationMessage(String message, String type, {int duration = 3000}) {
     _notificationTimer?.cancel();
 
     setState(() {
@@ -490,35 +586,16 @@ class _ApplicantsListScreenState extends State<ApplicantsListScreen> {
 
   void _hideNotification() {
     _notificationTimer?.cancel();
-    setState(() => _showNotification = false);
+    if (mounted) {
+      setState(() => _showNotification = false);
+    }
   }
 
   // ===================== PAGINATION =====================
-  void _onPageChanged(int page) {
-    setState(() => _currentPage = page);
-    _loadApplications(refresh: true);
-  }
-
-  void _onPageSizeChanged(int? newSize) {
-    if (newSize != null) {
-      setState(() {
-        _pageSize = newSize;
-        _currentPage = 0;
-      });
-      _loadApplications(refresh: true);
+  void _loadMore() {
+    if (_hasMore && !_isFetchingMore) {
+      _loadApplications();
     }
-  }
-
-  List<int> _getPageNumbers() {
-    const int maxVisible = 5;
-    int start = (_currentPage - 1).clamp(0, _totalPages - maxVisible);
-    int end = (start + maxVisible - 1).clamp(0, _totalPages - 1);
-
-    if (end - start < maxVisible - 1) {
-      start = (end - maxVisible + 1).clamp(0, _totalPages - 1);
-    }
-
-    return List.generate(end - start + 1, (i) => start + i);
   }
 
   // ===================== UTILITY METHODS =====================
@@ -552,27 +629,37 @@ class _ApplicantsListScreenState extends State<ApplicantsListScreen> {
 
     if (difference.inDays == 0) {
       if (difference.inHours == 0) {
-        return difference.inMinutes <= 1 ? 'Just now' : '${difference.inMinutes} minutes ago';
+        return difference.inMinutes <= 1 ? 'Just now' : '${difference.inMinutes}m ago';
       }
-      return difference.inHours == 1 ? '1 hour ago' : '${difference.inHours} hours ago';
+      return '${difference.inHours}h ago';
     }
     if (difference.inDays == 1) return 'Yesterday';
-    if (difference.inDays < 7) return '${difference.inDays} days ago';
-    if (difference.inDays < 30) {
-      final weeks = (difference.inDays / 7).floor();
-      return weeks == 1 ? '1 week ago' : '$weeks weeks ago';
-    }
-    if (difference.inDays < 365) {
-      final months = (difference.inDays / 30).floor();
-      return months == 1 ? '1 month ago' : '$months months ago';
-    }
-    final years = (difference.inDays / 365).floor();
-    return years == 1 ? '1 year ago' : '$years years ago';
+    if (difference.inDays < 7) return '${difference.inDays}d ago';
+    if (difference.inDays < 30) return '${(difference.inDays / 7).floor()}w ago';
+    if (difference.inDays < 365) return '${(difference.inDays / 30).floor()}mo ago';
+    return '${(difference.inDays / 365).floor()}y ago';
   }
 
-  String _getFormattedDate(String dateString) {
-    final date = DateTime.parse(dateString);
-    return DateFormat('MMM d, yyyy').format(date);
+  Future<bool> _showConfirmDialog(String title, String message) async {
+    final result = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Text(title),
+        content: Text(message),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            style: TextButton.styleFrom(foregroundColor: Colors.red),
+            child: const Text('Confirm'),
+          ),
+        ],
+      ),
+    );
+    return result ?? false;
   }
 
   // ===================== BUILD UI =====================
@@ -583,13 +670,19 @@ class _ApplicantsListScreenState extends State<ApplicantsListScreen> {
       child: Scaffold(
         appBar: AppBar(
           title: _loadingJob
-              ? const Text('Loading...')
-              : Text('Applicants - ${_job?.title ?? ''}'),
+              ? const Text('Applicants')
+              : Text('${_job?.title ?? ''} - Applicants'),
           elevation: 0,
           leading: IconButton(
             icon: const Icon(Icons.arrow_back),
             onPressed: _navigateBack,
           ),
+          actions: [
+            IconButton(
+              icon: const Icon(Icons.filter_list),
+              onPressed: _openFilterBottomSheet,
+            ),
+          ],
         ),
         body: Stack(
           children: [
@@ -597,83 +690,109 @@ class _ApplicantsListScreenState extends State<ApplicantsListScreen> {
               children: [
                 // Notification
                 if (_showNotification)
-                  NotificationWidget(
-                    message: _notificationMessage,
-                    type: _notificationType,
-                    onDismiss: _hideNotification,
-                  ),
+                  _buildNotification(),
 
-                // Job Summary Card
-                if (_job != null) _buildJobSummaryCard(),
+                // Job Summary
+                if (_job != null) _buildJobSummary(),
 
-                // Stats Cards
-                _buildStatsSection(),
+                // Stats Chips
+                _buildStatsChips(),
 
-                // Filters Bar
-                _buildFiltersBar(),
+                // Search Bar
+                _buildSearchBar(),
 
                 // Bulk Actions Bar
                 if (_selectedApplications.isNotEmpty)
                   _buildBulkActionsBar(),
 
-                // View Mode Toggle and Page Size
-                _buildViewControls(),
-
-                // Applications List/Grid
+                // Applications List
                 Expanded(
                   child: _error != null && _applications.isEmpty
-                      ? ErrorScreen(
-                          message: _error!,
-                          onRetry: () => _loadApplications(refresh: true),
-                        )
+                      ? _buildErrorState()
                       : _applications.isEmpty && !_isLoading
-                          ? EmptyStateWidget(
-                              icon: Icons.people_outline,
-                              message: 'No applications yet',
-                              subtitle: 'Applications will appear here when candidates apply',
-                              buttonText: 'Back to Jobs',
-                              onButtonPressed: _navigateBack,
-                            )
-                          : _isGridView
-                              ? _buildGridView()
-                              : _buildListView(),
+                          ? _buildEmptyState()
+                          : _buildApplicationsList(),
                 ),
 
-                // Pagination
-                if (_totalPages > 1) _buildPagination(),
+                // Loading More Indicator
+                if (_isFetchingMore)
+                  const Padding(
+                    padding: EdgeInsets.all(16),
+                    child: Center(
+                      child: CircularProgressIndicator(),
+                    ),
+                  ),
               ],
             ),
-
-            // Loading More Indicator
-            if (_isFetchingMore)
-              const Positioned(
-                bottom: 16,
-                left: 0,
-                right: 0,
-                child: Center(
-                  child: CircularProgressIndicator(),
-                ),
-              ),
           ],
         ),
       ),
     );
   }
 
-  Widget _buildJobSummaryCard() {
+  Widget _buildNotification() {
+    Color bgColor;
+    IconData icon;
+    
+    switch (_notificationType) {
+      case 'success':
+        bgColor = Colors.green;
+        icon = Icons.check_circle;
+        break;
+      case 'error':
+        bgColor = Colors.red;
+        icon = Icons.error;
+        break;
+      case 'warning':
+        bgColor = Colors.orange;
+        icon = Icons.warning;
+        break;
+      default:
+        bgColor = Colors.blue;
+        icon = Icons.info;
+    }
+
+    return Container(
+      margin: const EdgeInsets.all(8),
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      decoration: BoxDecoration(
+        color: bgColor.withOpacity(0.1),
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: bgColor.withOpacity(0.3)),
+      ),
+      child: Row(
+        children: [
+          Icon(icon, color: bgColor, size: 18),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Text(
+              _notificationMessage,
+              style: TextStyle(color: bgColor, fontSize: 13),
+            ),
+          ),
+          IconButton(
+            onPressed: _hideNotification,
+            icon: const Icon(Icons.close, size: 16),
+            color: bgColor,
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildJobSummary() {
     return Container(
       margin: const EdgeInsets.all(AppSizes.md),
       padding: const EdgeInsets.all(AppSizes.md),
       decoration: BoxDecoration(
         color: AppColors.primary.withOpacity(0.1),
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: AppColors.primary.withOpacity(0.2)),
       ),
       child: Row(
         children: [
           Container(
-            width: 48,
-            height: 48,
+            width: 40,
+            height: 40,
             decoration: BoxDecoration(
               color: Colors.white,
               borderRadius: BorderRadius.circular(8),
@@ -703,11 +822,11 @@ class _ApplicantsListScreenState extends State<ApplicantsListScreen> {
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                 ),
-                const SizedBox(height: 4),
+                const SizedBox(height: 2),
                 Text(
                   _job!.company.name,
                   style: const TextStyle(
-                    fontSize: 14,
+                    fontSize: 13,
                     color: AppColors.textSecondary,
                   ),
                 ),
@@ -715,16 +834,16 @@ class _ApplicantsListScreenState extends State<ApplicantsListScreen> {
             ),
           ),
           Container(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
             decoration: BoxDecoration(
               color: Colors.white,
-              borderRadius: BorderRadius.circular(20),
+              borderRadius: BorderRadius.circular(16),
             ),
             child: Text(
-              '$_totalApplications Applicants',
+              '$_totalApplications',
               style: const TextStyle(
-                fontSize: 12,
-                fontWeight: FontWeight.w600,
+                fontSize: 14,
+                fontWeight: FontWeight.bold,
                 color: AppColors.primary,
               ),
             ),
@@ -734,9 +853,9 @@ class _ApplicantsListScreenState extends State<ApplicantsListScreen> {
     );
   }
 
-  Widget _buildStatsSection() {
+  Widget _buildStatsChips() {
     return Container(
-      height: 80,
+      height: 50,
       padding: const EdgeInsets.symmetric(horizontal: AppSizes.md),
       child: ListView.builder(
         scrollDirection: Axis.horizontal,
@@ -747,34 +866,40 @@ class _ApplicantsListScreenState extends State<ApplicantsListScreen> {
           final color = _getStatusColor(status);
           
           return Container(
-            width: 100,
             margin: const EdgeInsets.only(right: 8),
-            padding: const EdgeInsets.all(8),
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
             decoration: BoxDecoration(
               color: color.withOpacity(0.1),
-              borderRadius: BorderRadius.circular(8),
+              borderRadius: BorderRadius.circular(20),
               border: Border.all(color: color.withOpacity(0.3)),
             ),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
               children: [
+                Container(
+                  width: 8,
+                  height: 8,
+                  decoration: BoxDecoration(
+                    color: color,
+                    shape: BoxShape.circle,
+                  ),
+                ),
+                const SizedBox(width: 6),
                 Text(
-                  count.toString(),
+                  _getStatusLabel(status),
                   style: TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
+                    fontSize: 12,
                     color: color,
                   ),
                 ),
-                const SizedBox(height: 2),
+                const SizedBox(width: 4),
                 Text(
-                  _getStatusLabel(status),
-                  style: const TextStyle(
-                    fontSize: 10,
-                    color: AppColors.textSecondary,
+                  count.toString(),
+                  style: TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.bold,
+                    color: color,
                   ),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
                 ),
               ],
             ),
@@ -784,125 +909,29 @@ class _ApplicantsListScreenState extends State<ApplicantsListScreen> {
     );
   }
 
-  Widget _buildFiltersBar() {
+  Widget _buildSearchBar() {
     return Container(
       padding: const EdgeInsets.all(AppSizes.md),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        boxShadow: [
-          BoxShadow(
-            color: Colors.grey.shade200,
-            offset: const Offset(0, 1),
-            blurRadius: 2,
+      child: TextField(
+        controller: _searchController,
+        decoration: InputDecoration(
+          hintText: 'Search by name or email...',
+          prefixIcon: const Icon(Icons.search),
+          suffixIcon: _searchController.text.isNotEmpty
+              ? IconButton(
+                  onPressed: () {
+                    _searchController.clear();
+                    _currentPage = 0;
+                    _loadApplications(refresh: true);
+                  },
+                  icon: const Icon(Icons.clear),
+                )
+              : null,
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(8),
           ),
-        ],
-      ),
-      child: Column(
-        children: [
-          // Search
-          TextField(
-            controller: _searchController,
-            decoration: InputDecoration(
-              hintText: 'Search by name, email, cover letter...',
-              prefixIcon: const Icon(Icons.search),
-              suffixIcon: _searchController.text.isNotEmpty
-                  ? IconButton(
-                      onPressed: () {
-                        _searchController.clear();
-                        _currentPage = 0;
-                        _loadApplications(refresh: true);
-                      },
-                      icon: const Icon(Icons.clear),
-                    )
-                  : null,
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(8),
-              ),
-              contentPadding: const EdgeInsets.symmetric(vertical: 0),
-            ),
-          ),
-          const SizedBox(height: AppSizes.sm),
-
-          // Filter Chips
-          SingleChildScrollView(
-            scrollDirection: Axis.horizontal,
-            child: Row(
-              children: [
-                // Status Filter
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8),
-                  decoration: BoxDecoration(
-                    border: Border.all(color: AppColors.border),
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: DropdownButton<ApplicationStatus?>(
-                    value: _selectedStatus,
-                    hint: const Text('All Status'),
-                    underline: const SizedBox(),
-                    icon: const Icon(Icons.arrow_drop_down),
-                    items: [
-                      const DropdownMenuItem(
-                        value: null,
-                        child: Text('All Status'),
-                      ),
-                      ...ApplicationStatus.values.map((status) {
-                        return DropdownMenuItem(
-                          value: status,
-                          child: Row(
-                            children: [
-                              Container(
-                                width: 12,
-                                height: 12,
-                                decoration: BoxDecoration(
-                                  color: _getStatusColor(status),
-                                  shape: BoxShape.circle,
-                                ),
-                              ),
-                              const SizedBox(width: 8),
-                              Text(_getStatusLabel(status)),
-                            ],
-                          ),
-                        );
-                      }),
-                    ],
-                    onChanged: _onStatusFilterChanged,
-                  ),
-                ),
-                const SizedBox(width: 8),
-
-                // Date Range Filter
-                OutlinedButton.icon(
-                  onPressed: _selectDateRange,
-                  icon: const Icon(Icons.date_range),
-                  label: Text(
-                    _dateFrom != null && _dateTo != null
-                        ? '${DateFormat('MMM d').format(_dateFrom!)} - ${DateFormat('MMM d').format(_dateTo!)}'
-                        : 'Date Range',
-                  ),
-                  style: OutlinedButton.styleFrom(
-                    padding: const EdgeInsets.symmetric(horizontal: 12),
-                  ),
-                ),
-
-                // Clear Filters Button
-                if (_searchController.text.isNotEmpty ||
-                    _selectedStatus != null ||
-                    _dateFrom != null)
-                  Padding(
-                    padding: const EdgeInsets.only(left: 8),
-                    child: TextButton.icon(
-                      onPressed: _clearFilters,
-                      icon: const Icon(Icons.clear, size: 18),
-                      label: const Text('Clear'),
-                      style: TextButton.styleFrom(
-                        foregroundColor: AppColors.textSecondary,
-                      ),
-                    ),
-                  ),
-              ],
-            ),
-          ),
-        ],
+          contentPadding: const EdgeInsets.symmetric(vertical: 0),
+        ),
       ),
     );
   }
@@ -942,20 +971,20 @@ class _ApplicantsListScreenState extends State<ApplicantsListScreen> {
               );
             }).toList(),
             child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
               decoration: BoxDecoration(
                 color: AppColors.primary,
-                borderRadius: BorderRadius.circular(8),
+                borderRadius: BorderRadius.circular(20),
               ),
               child: const Row(
                 children: [
-                  Icon(Icons.edit, color: Colors.white, size: 18),
+                  Icon(Icons.edit, color: Colors.white, size: 16),
                   SizedBox(width: 4),
                   Text(
-                    'Update Status',
+                    'Update',
                     style: TextStyle(
                       color: Colors.white,
-                      fontSize: 14,
+                      fontSize: 13,
                       fontWeight: FontWeight.w600,
                     ),
                   ),
@@ -968,107 +997,18 @@ class _ApplicantsListScreenState extends State<ApplicantsListScreen> {
     );
   }
 
-  Widget _buildViewControls() {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: AppSizes.md, vertical: AppSizes.sm),
-      child: Row(
-        children: [
-          // Page Size Selector
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 8),
-            decoration: BoxDecoration(
-              border: Border.all(color: AppColors.border),
-              borderRadius: BorderRadius.circular(8),
-            ),
-            child: DropdownButton<int>(
-              value: _pageSize,
-              underline: const SizedBox(),
-              items: _pageSizeOptions.map((size) {
-                return DropdownMenuItem(
-                  value: size,
-                  child: Text('$size per page'),
-                );
-              }).toList(),
-              onChanged: _onPageSizeChanged,
-            ),
-          ),
-          const Spacer(),
-          
-          // View Mode Toggle
-          Container(
-            decoration: BoxDecoration(
-              border: Border.all(color: AppColors.border),
-              borderRadius: BorderRadius.circular(8),
-            ),
-            child: Row(
-              children: [
-                InkWell(
-                  onTap: () => setState(() => _isGridView = false),
-                  child: Container(
-                    padding: const EdgeInsets.all(8),
-                    decoration: BoxDecoration(
-                      color: !_isGridView ? AppColors.primary : Colors.transparent,
-                      borderRadius: const BorderRadius.horizontal(left: Radius.circular(8)),
-                    ),
-                    child: Icon(
-                      Icons.list,
-                      size: 20,
-                      color: !_isGridView ? Colors.white : AppColors.textPrimary,
-                    ),
-                  ),
-                ),
-                InkWell(
-                  onTap: () => setState(() => _isGridView = true),
-                  child: Container(
-                    padding: const EdgeInsets.all(8),
-                    decoration: BoxDecoration(
-                      color: _isGridView ? AppColors.primary : Colors.transparent,
-                      borderRadius: const BorderRadius.horizontal(right: Radius.circular(8)),
-                    ),
-                    child: Icon(
-                      Icons.grid_view,
-                      size: 20,
-                      color: _isGridView ? Colors.white : AppColors.textPrimary,
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ],
+  Widget _buildApplicationsList() {
+    return RefreshIndicator(
+      onRefresh: () => _loadApplications(refresh: true),
+      color: AppColors.primary,
+      child: ListView.builder(
+        padding: const EdgeInsets.all(AppSizes.md),
+        itemCount: _filteredApplications.length,
+        itemBuilder: (context, index) {
+          final application = _filteredApplications[index];
+          return _buildApplicationCard(application);
+        },
       ),
-    );
-  }
-
-  Widget _buildListView() {
-    final filtered = _filteredApplications;
-    
-    return ListView.builder(
-      padding: const EdgeInsets.all(AppSizes.md),
-      itemCount: filtered.length,
-      itemBuilder: (context, index) {
-        final application = filtered[index];
-        return _buildApplicationCard(application);
-      },
-    );
-  }
-
-  Widget _buildGridView() {
-    final filtered = _filteredApplications;
-    
-    return GridView.builder(
-      padding: const EdgeInsets.all(AppSizes.md),
-      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-        crossAxisCount: 2,
-        childAspectRatio: 0.85,
-        crossAxisSpacing: 12,
-        mainAxisSpacing: 12,
-      ),
-      itemCount: filtered.length,
-      itemBuilder: (context, index) {
-        final application = filtered[index];
-        return _buildApplicationGridCard(application);
-      },
     );
   }
 
@@ -1116,7 +1056,7 @@ class _ApplicantsListScreenState extends State<ApplicantsListScreen> {
                           child: application.jobSeekerProfilePicture == null
                               ? Text(
                                   application.jobSeekerName?[0].toUpperCase() ?? '?',
-                                  style: const TextStyle(fontSize: 18),
+                                  style: const TextStyle(fontSize: 16),
                                 )
                               : null,
                         ),
@@ -1136,7 +1076,7 @@ class _ApplicantsListScreenState extends State<ApplicantsListScreen> {
                                 maxLines: 1,
                                 overflow: TextOverflow.ellipsis,
                               ),
-                              const SizedBox(height: 4),
+                              const SizedBox(height: 2),
                               Text(
                                 application.jobSeekerEmail ?? '',
                                 style: const TextStyle(
@@ -1157,7 +1097,7 @@ class _ApplicantsListScreenState extends State<ApplicantsListScreen> {
               
               const SizedBox(height: 12),
               
-              // Status Badge and Date
+              // Status and Date Row
               Row(
                 children: [
                   Container(
@@ -1204,12 +1144,13 @@ class _ApplicantsListScreenState extends State<ApplicantsListScreen> {
               
               const SizedBox(height: 12),
               
-              // Action Buttons
+              // Action Buttons Row
               Row(
                 children: [
                   // Status Update Dropdown
                   Expanded(
                     child: Container(
+                      height: 40,
                       padding: const EdgeInsets.symmetric(horizontal: 8),
                       decoration: BoxDecoration(
                         border: Border.all(color: AppColors.border),
@@ -1245,21 +1186,20 @@ class _ApplicantsListScreenState extends State<ApplicantsListScreen> {
                   
                   // Download Resume
                   Expanded(
-                    child: OutlinedButton.icon(
-                      onPressed: isDownloading
+                    child: OutlinedButton(
+                      onPressed: isDownloading || application.resumeId == null
                           ? null
                           : () => _downloadResume(application),
-                      icon: isDownloading
+                      style: OutlinedButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(vertical: 8),
+                      ),
+                      child: isDownloading
                           ? const SizedBox(
                               width: 16,
                               height: 16,
                               child: CircularProgressIndicator(strokeWidth: 2),
                             )
-                          : const Icon(Icons.download, size: 16),
-                      label: const Text('Resume', style: TextStyle(fontSize: 12)),
-                      style: OutlinedButton.styleFrom(
-                        padding: const EdgeInsets.symmetric(vertical: 8),
-                      ),
+                          : const Text('Resume', style: TextStyle(fontSize: 12)),
                     ),
                   ),
                 ],
@@ -1267,23 +1207,11 @@ class _ApplicantsListScreenState extends State<ApplicantsListScreen> {
               
               const SizedBox(height: 8),
               
-              // Additional Actions
+              // Additional Actions Row
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                 children: [
-                  // Preview Resume
-                  TextButton.icon(
-                    onPressed: application.resumeId == null
-                        ? null
-                        : () => _previewResume(application),
-                    icon: const Icon(Icons.visibility, size: 16),
-                    label: const Text('Preview', style: TextStyle(fontSize: 11)),
-                    style: TextButton.styleFrom(
-                      foregroundColor: AppColors.primary,
-                    ),
-                  ),
-                  
-                  // View Cover Letter
+                  // Cover Letter
                   if (application.coverLetter != null)
                     TextButton.icon(
                       onPressed: () => _viewCoverLetter(application),
@@ -1293,161 +1221,16 @@ class _ApplicantsListScreenState extends State<ApplicantsListScreen> {
                         foregroundColor: AppColors.primary,
                       ),
                     ),
-                ],
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildApplicationGridCard(JobApplication application) {
-    final isSelected = _selectedApplications.contains(application.id);
-    final isUpdating = _updatingStatus[application.id] ?? false;
-    final statusColor = _getStatusColor(application.status);
-
-    return Card(
-      elevation: 2,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12),
-        side: BorderSide(
-          color: isSelected ? AppColors.primary : Colors.transparent,
-          width: 2,
-        ),
-      ),
-      child: InkWell(
-        onTap: () => _viewApplicantProfile(application.jobSeekerId),
-        borderRadius: BorderRadius.circular(12),
-        child: Padding(
-          padding: const EdgeInsets.all(AppSizes.sm),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.center,
-            children: [
-              // Selection Checkbox
-              Align(
-                alignment: Alignment.topRight,
-                child: Checkbox(
-                  value: isSelected,
-                  onChanged: (_) => _toggleApplicationSelection(application.id),
-                  activeColor: AppColors.primary,
-                ),
-              ),
-              
-              // Profile Picture
-              CircleAvatar(
-                radius: 30,
-                backgroundImage: application.jobSeekerProfilePicture != null
-                    ? NetworkImage(application.jobSeekerProfilePicture!)
-                    : null,
-                child: application.jobSeekerProfilePicture == null
-                    ? Text(
-                        application.jobSeekerName?[0].toUpperCase() ?? '?',
-                        style: const TextStyle(fontSize: 20),
-                      )
-                    : null,
-              ),
-              
-              const SizedBox(height: 8),
-              
-              // Name
-              Text(
-                application.jobSeekerName ?? 'Unknown',
-                style: const TextStyle(
-                  fontSize: 14,
-                  fontWeight: FontWeight.w600,
-                ),
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                textAlign: TextAlign.center,
-              ),
-              
-              const SizedBox(height: 4),
-              
-              // Status Badge
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                decoration: BoxDecoration(
-                  color: statusColor.withOpacity(0.1),
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Text(
-                  _getStatusLabel(application.status),
-                  style: TextStyle(
-                    fontSize: 10,
-                    fontWeight: FontWeight.w600,
-                    color: statusColor,
-                  ),
-                ),
-              ),
-              
-              const SizedBox(height: 8),
-              
-              // Date
-              Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(Icons.access_time, size: 12, color: AppColors.textSecondary),
-                  const SizedBox(width: 4),
-                  Text(
-                    _getRelativeTime(application.appliedAt),
-                    style: const TextStyle(
-                      fontSize: 10,
-                      color: AppColors.textSecondary,
-                    ),
-                  ),
-                ],
-              ),
-              
-              const SizedBox(height: 8),
-              
-              // Actions
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                children: [
-                  // Status Update
-                  Expanded(
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 4),
-                      decoration: BoxDecoration(
-                        border: Border.all(color: AppColors.border),
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      child: DropdownButton<ApplicationStatus>(
-                        value: application.status,
-                        isExpanded: true,
-                        underline: const SizedBox(),
-                        icon: isUpdating
-                            ? const SizedBox(
-                                width: 12,
-                                height: 12,
-                                child: CircularProgressIndicator(strokeWidth: 2),
-                              )
-                            : const Icon(Icons.arrow_drop_down, size: 16),
-                        items: ApplicationStatus.values.map((status) {
-                          return DropdownMenuItem(
-                            value: status,
-                            child: Text(
-                              _getStatusLabel(status),
-                              style: const TextStyle(fontSize: 10),
-                            ),
-                          );
-                        }).toList(),
-                        onChanged: isUpdating
-                            ? null
-                            : (status) => _updateApplicationStatus(application.id, status!),
-                      ),
-                    ),
-                  ),
                   
-                  // Resume Preview
-                  if (application.resumeId != null)
-                    IconButton(
-                      onPressed: () => _previewResume(application),
-                      icon: const Icon(Icons.visibility, size: 18),
-                      color: AppColors.primary,
-                      tooltip: 'Preview Resume',
+                  // View Profile
+                  TextButton.icon(
+                    onPressed: () => _viewApplicantProfile(application.jobSeekerId),
+                    icon: const Icon(Icons.person, size: 16),
+                    label: const Text('Profile', style: TextStyle(fontSize: 11)),
+                    style: TextButton.styleFrom(
+                      foregroundColor: AppColors.primary,
                     ),
+                  ),
                 ],
               ),
             ],
@@ -1457,64 +1240,68 @@ class _ApplicantsListScreenState extends State<ApplicantsListScreen> {
     );
   }
 
-  Widget _buildPagination() {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        boxShadow: [
-          BoxShadow(
-            color: Colors.grey.shade200,
-            offset: const Offset(0, -1),
-            blurRadius: 2,
-          ),
-        ],
+  Widget _buildEmptyState() {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(32),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(
+              Icons.people_outline,
+              size: 80,
+              color: AppColors.textDisabled.withOpacity(0.5),
+            ),
+            const SizedBox(height: 24),
+            const Text(
+              'No applicants yet',
+              style: TextStyle(fontSize: 20, fontWeight: FontWeight.w600),
+            ),
+            const SizedBox(height: 8),
+            const Text(
+              'Applications will appear here when candidates apply',
+              textAlign: TextAlign.center,
+              style: TextStyle(fontSize: 14, color: AppColors.textSecondary),
+            ),
+            const SizedBox(height: 24),
+            PrimaryButton(
+              text: 'Back to Jobs',
+              onPressed: _navigateBack,
+              width: 200,
+            ),
+          ],
+        ),
       ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          // Previous button
-          IconButton(
-            onPressed: _currentPage > 0 ? () => _onPageChanged(_currentPage - 1) : null,
-            icon: const Icon(Icons.chevron_left),
-          ),
+    );
+  }
 
-          // Page numbers
-          ..._getPageNumbers().map((page) {
-            final isCurrentPage = page == _currentPage;
-            return Container(
-              margin: const EdgeInsets.symmetric(horizontal: 4),
-              child: Material(
-                color: isCurrentPage ? AppColors.primary : Colors.transparent,
-                borderRadius: BorderRadius.circular(20),
-                child: InkWell(
-                  onTap: () => _onPageChanged(page),
-                  borderRadius: BorderRadius.circular(20),
-                  child: Container(
-                    width: 36,
-                    height: 36,
-                    alignment: Alignment.center,
-                    child: Text(
-                      '${page + 1}',
-                      style: TextStyle(
-                        color: isCurrentPage ? Colors.white : AppColors.textPrimary,
-                        fontWeight: isCurrentPage ? FontWeight.bold : FontWeight.normal,
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-            );
-          }),
-
-          // Next button
-          IconButton(
-            onPressed: _currentPage < _totalPages - 1
-                ? () => _onPageChanged(_currentPage + 1)
-                : null,
-            icon: const Icon(Icons.chevron_right),
-          ),
-        ],
+  Widget _buildErrorState() {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(24),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const Icon(Icons.error_outline, size: 64, color: Colors.red),
+            const SizedBox(height: 16),
+            const Text(
+              'Something went wrong',
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              _error ?? 'Failed to load applications',
+              textAlign: TextAlign.center,
+              style: const TextStyle(color: AppColors.textSecondary),
+            ),
+            const SizedBox(height: 24),
+            PrimaryButton(
+              text: 'Try Again',
+              onPressed: () => _loadApplications(refresh: true),
+              width: 150,
+            ),
+          ],
+        ),
       ),
     );
   }

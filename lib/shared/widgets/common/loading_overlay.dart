@@ -35,7 +35,7 @@ class LoadingOverlay extends StatelessWidget {
                       const CircularProgressIndicator(),
                       const SizedBox(height: 16),
                       Text(
-                        loadingMessage ?? 'Posting job...',
+                        loadingMessage ?? '...',
                         style: const TextStyle(fontSize: 16),
                       ),
                     ],
