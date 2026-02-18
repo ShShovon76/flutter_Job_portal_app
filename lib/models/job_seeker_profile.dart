@@ -4,7 +4,8 @@ import 'package:job_portal_app/models/saved_job.dart';
 
 class JobSeekerProfile {
   final int id;
-  final int userId;
+  final int? userId; // ✅ FIX: nullable
+
   final String? headline;
   final String? summary;
 
@@ -24,7 +25,7 @@ class JobSeekerProfile {
 
   JobSeekerProfile({
     required this.id,
-    required this.userId,
+    this.userId,
     this.headline,
     this.summary,
     required this.skills,
@@ -42,36 +43,47 @@ class JobSeekerProfile {
 
   factory JobSeekerProfile.fromJson(Map<String, dynamic> json) {
     return JobSeekerProfile(
-      id: json['id'],
-      userId: json['userId'],
-      headline: json['headline'],
-      summary: json['summary'],
+      id: json['id'] as int,
+      userId: json['userId'] as int?, // ✅ SAFE
+      headline: json['headline'] as String?,
+      summary: json['summary'] as String?,
+
       skills: List<String>.from(json['skills'] ?? []),
+
       education: (json['education'] as List? ?? [])
           .map((e) => Education.fromJson(e))
           .toList(),
+
       experience: (json['experience'] as List? ?? [])
           .map((e) => Experience.fromJson(e))
           .toList(),
+
       certifications: (json['certifications'] as List? ?? [])
           .map((e) => Certification.fromJson(e))
           .toList(),
+
       portfolioLinks: List<String>.from(json['portfolioLinks'] ?? []),
+
       resumes: json['resumes'] != null
           ? (json['resumes'] as List).map((e) => Resume.fromJson(e)).toList()
           : null,
+
       preferredJobTypes: List<String>.from(json['preferredJobTypes'] ?? []),
+
       preferredLocations: List<String>.from(json['preferredLocations'] ?? []),
+
       applications: json['applications'] != null
           ? (json['applications'] as List)
                 .map((e) => JobApplication.fromJson(e))
                 .toList()
           : null,
+
       savedJobs: json['savedJobs'] != null
           ? (json['savedJobs'] as List)
                 .map((e) => SavedJob.fromJson(e))
                 .toList()
           : null,
+
       savedCompanies: json['savedCompanies'] != null
           ? (json['savedCompanies'] as List)
                 .map((e) => SavedCompany.fromJson(e))
@@ -312,7 +324,7 @@ extension CertificationCopy on Certification {
 }
 
 class ApplicantProfile {
-  final int userId;
+  final int? userId;
   final String fullName;
   final String email;
   final String? phone;
@@ -349,7 +361,7 @@ class ApplicantProfile {
 
   factory ApplicantProfile.fromJson(Map<String, dynamic> json) {
     return ApplicantProfile(
-      userId: json['userId'],
+      userId: json['userId'] as int?,
       fullName: json['fullName'],
       email: json['email'],
       phone: json['phone'],

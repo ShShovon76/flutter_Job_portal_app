@@ -60,52 +60,42 @@ class JobSeekerProfileProvider extends ChangeNotifier {
   }
 
   // ===================== PROFILE PICTURE UPLOAD =====================
-  Future<void> uploadProfilePicture({
-    required File file,
-    required AuthProvider authProvider,
-  }) async {
-    if (_profile == null) return;
+Future<void> uploadProfilePicture({
+  required File file,
+  required AuthProvider authProvider,
+}) async {
+  if (_profile == null) return;
 
-    _setLoading(true);
+  _setLoading(true);
 
-    try {
-      // 1️⃣ Upload file via API
-      final responseStr = await ProfileApi.uploadProfilePicture(
-        userId: _profile!.userId,
-        file: file,
-      );
+  try {
+    // 1️⃣ Upload & get UPDATED USER JSON
+    final responseStr = await ProfileApi.uploadProfilePicture(
+      userId: _profile!.userId!,
+      file: file,
+    );
 
-      // 2️⃣ Decode JSON string into Map
-      final updatedUserJson = jsonDecode(responseStr) as Map<String, dynamic>;
+    final Map<String, dynamic> updatedUserJson = jsonDecode(responseStr);
 
-      // 3️⃣ Extract profilePictureUrl
-      final updatedProfilePictureUrl =
-          updatedUserJson['profilePictureUrl'] as String?;
+    // 2️⃣ Parse updated user
+    final updatedUser = User.fromJson(updatedUserJson);
 
-      if (updatedProfilePictureUrl != null) {
-        // 4️⃣ Update global AuthProvider.user
-        final currentUser = authProvider.user;
-        if (currentUser != null && currentUser.id == _profile!.userId) {
-          authProvider.user = currentUser.copyWith(
-            profilePictureUrl: updatedProfilePictureUrl,
-          );
+    // 3️⃣ Update AuthProvider (single source of truth)
+    authProvider.user = updatedUser;
 
-          // 5️⃣ Persist to local storage
-          await UserStorage.save(authProvider.user!);
+    // 4️⃣ Persist locally
+    await UserStorage.save(updatedUser);
 
-          // 6️⃣ Notify listeners so AppBar, Drawer, Profile all refresh
-          authProvider.notifyListeners();
-        }
+    authProvider.notifyListeners();
+    notifyListeners();
 
-        notifyListeners();
-      }
-    } catch (e) {
-      _setError(e.toString());
-      rethrow;
-    } finally {
-      _setLoading(false);
-    }
+  } catch (e) {
+    _setError(e.toString());
+    rethrow;
+  } finally {
+    _setLoading(false);
   }
+}
 
   // ===================== EDUCATION =====================
   Future<void> addEducation(Education education) async {

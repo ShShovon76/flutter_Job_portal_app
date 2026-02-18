@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:job_portal_app/core/api/profile_api.dart';
 import 'package:job_portal_app/core/constants/app_colors.dart';
 import 'package:job_portal_app/core/constants/app_sizes.dart';
+import 'package:job_portal_app/core/constants/constants.dart';
 import 'package:job_portal_app/features/auth/provider/auth_provider.dart';
 import 'package:job_portal_app/features/job_seeker/provider/profile_provider.dart';
 import 'package:job_portal_app/models/analytics_models.dart';
@@ -211,6 +212,7 @@ class _JobSeekerProfileScreenState extends State<JobSeekerProfileScreen> {
       isLoading: profileProvider.isLoading || _isUploading,
       child: Scaffold(
         appBar: AppBar(
+          automaticallyImplyLeading: false,
           title: const Text('Profile'),
           actions: [
             IconButton(
@@ -222,8 +224,12 @@ class _JobSeekerProfileScreenState extends State<JobSeekerProfileScreen> {
         body: profileProvider.error != null
             ? _buildErrorState(profileProvider.error!)
             : profile == null
-                ? _buildEmptyState()
-                : _buildProfileContent(user: user!, profile: profile, dashboard: dashboard),
+            ? _buildEmptyState()
+            : _buildProfileContent(
+                user: user!,
+                profile: profile,
+                dashboard: dashboard,
+              ),
       ),
     );
   }
@@ -294,11 +300,13 @@ class _JobSeekerProfileScreenState extends State<JobSeekerProfileScreen> {
                       : 'Add your certifications',
                   onTap: () => _navigateToSection('certifications'),
                 ),
-                if (profile.portfolioLinks.isNotEmpty) _buildPortfolioSection(profile),
+                if (profile.portfolioLinks.isNotEmpty)
+                  _buildPortfolioSection(profile),
                 _buildProfileSection(
                   title: 'My Applications',
                   icon: Icons.send,
-                  subtitle: '$totalApplications applications ($last30Days in last 30 days)',
+                  subtitle:
+                      '$totalApplications applications ($last30Days in last 30 days)',
                   onTap: () => _navigateToSection('applications'),
                 ),
                 _buildProfileSection(
@@ -307,8 +315,10 @@ class _JobSeekerProfileScreenState extends State<JobSeekerProfileScreen> {
                   subtitle: '$savedJobs saved jobs',
                   onTap: () => _navigateToSection('saved'),
                 ),
-                if (profile.preferredJobTypes.isNotEmpty) _buildPreferredSection(profile),
-                if (profile.preferredLocations.isNotEmpty) _buildPreferredLocations(profile),
+                if (profile.preferredJobTypes.isNotEmpty)
+                  _buildPreferredSection(profile),
+                if (profile.preferredLocations.isNotEmpty)
+                  _buildPreferredLocations(profile),
               ],
             ),
           ),
@@ -353,7 +363,9 @@ class _JobSeekerProfileScreenState extends State<JobSeekerProfileScreen> {
                 CircleAvatar(
                   radius: 50,
                   backgroundImage: user.profilePictureUrl != null
-                      ? NetworkImage(user.profilePictureUrl!)
+                      ? NetworkImage(
+                          AppConstants.baseImageUrl + user.profilePictureUrl!,
+                        )
                       : null,
                   child: user.profilePictureUrl == null
                       ? Text(_getInitials(user.fullName))
@@ -364,13 +376,20 @@ class _JobSeekerProfileScreenState extends State<JobSeekerProfileScreen> {
                   child: CircleAvatar(
                     radius: 16,
                     backgroundColor: AppColors.primary,
-                    child: const Icon(Icons.camera_alt, size: 18, color: Colors.white),
+                    child: const Icon(
+                      Icons.camera_alt,
+                      size: 18,
+                      color: Colors.white,
+                    ),
                   ),
                 ),
               ],
             ),
             const SizedBox(height: 12),
-            Text(user.fullName, style: const TextStyle(fontWeight: FontWeight.bold)),
+            Text(
+              user.fullName,
+              style: const TextStyle(fontWeight: FontWeight.bold),
+            ),
             Text(user.email),
             if (profile.headline != null) Text(profile.headline!),
             SecondaryButton(
@@ -399,10 +418,30 @@ class _JobSeekerProfileScreenState extends State<JobSeekerProfileScreen> {
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceAround,
             children: [
-              _buildStatItem(label: 'Applied', value: totalApplications.toString(), icon: Icons.send, color: Colors.blue),
-              _buildStatItem(label: 'Viewed', value: viewed.toString(), icon: Icons.visibility, color: Colors.green),
-              _buildStatItem(label: 'Saved', value: savedJobs.toString(), icon: Icons.bookmark, color: Colors.orange),
-              _buildStatItem(label: 'Interviews', value: interviews.toString(), icon: Icons.video_call, color: Colors.purple),
+              _buildStatItem(
+                label: 'Applied',
+                value: totalApplications.toString(),
+                icon: Icons.send,
+                color: Colors.blue,
+              ),
+              _buildStatItem(
+                label: 'Viewed',
+                value: viewed.toString(),
+                icon: Icons.visibility,
+                color: Colors.green,
+              ),
+              _buildStatItem(
+                label: 'Saved',
+                value: savedJobs.toString(),
+                icon: Icons.bookmark,
+                color: Colors.orange,
+              ),
+              _buildStatItem(
+                label: 'Interviews',
+                value: interviews.toString(),
+                icon: Icons.video_call,
+                color: Colors.purple,
+              ),
             ],
           ),
         ),
@@ -420,12 +459,28 @@ class _JobSeekerProfileScreenState extends State<JobSeekerProfileScreen> {
       children: [
         Container(
           padding: const EdgeInsets.all(8),
-          decoration: BoxDecoration(color: color.withOpacity(0.1), shape: BoxShape.circle),
+          decoration: BoxDecoration(
+            color: color.withOpacity(0.1),
+            shape: BoxShape.circle,
+          ),
           child: Icon(icon, color: color, size: 20),
         ),
         const SizedBox(height: 4),
-        Text(value, style: TextStyle(fontSize: AppSizes.textLg, fontWeight: FontWeight.bold, color: color)),
-        Text(label, style: TextStyle(fontSize: AppSizes.textSm, color: AppColors.textSecondary)),
+        Text(
+          value,
+          style: TextStyle(
+            fontSize: AppSizes.textLg,
+            fontWeight: FontWeight.bold,
+            color: color,
+          ),
+        ),
+        Text(
+          label,
+          style: TextStyle(
+            fontSize: AppSizes.textSm,
+            color: AppColors.textSecondary,
+          ),
+        ),
       ],
     );
   }
@@ -450,8 +505,20 @@ class _JobSeekerProfileScreenState extends State<JobSeekerProfileScreen> {
           ),
           child: Icon(icon, color: AppColors.primary),
         ),
-        title: Text(title, style: const TextStyle(fontSize: AppSizes.textMd, fontWeight: FontWeight.w600)),
-        subtitle: Text(subtitle, style: TextStyle(fontSize: AppSizes.textSm, color: AppColors.textSecondary)),
+        title: Text(
+          title,
+          style: const TextStyle(
+            fontSize: AppSizes.textMd,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+        subtitle: Text(
+          subtitle,
+          style: TextStyle(
+            fontSize: AppSizes.textSm,
+            color: AppColors.textSecondary,
+          ),
+        ),
         trailing: trailing ?? const Icon(Icons.chevron_right),
         onTap: onTap,
       ),
@@ -465,8 +532,18 @@ class _JobSeekerProfileScreenState extends State<JobSeekerProfileScreen> {
       children: [
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-          decoration: BoxDecoration(color: AppColors.primary.withOpacity(0.1), borderRadius: BorderRadius.circular(12)),
-          child: Text('${profile.skills.length} skills', style: TextStyle(fontSize: AppSizes.textSm, color: AppColors.primary, fontWeight: FontWeight.w600)),
+          decoration: BoxDecoration(
+            color: AppColors.primary.withOpacity(0.1),
+            borderRadius: BorderRadius.circular(12),
+          ),
+          child: Text(
+            '${profile.skills.length} skills',
+            style: TextStyle(
+              fontSize: AppSizes.textSm,
+              color: AppColors.primary,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
         ),
         const SizedBox(width: 8),
         const Icon(Icons.chevron_right),
@@ -484,7 +561,13 @@ class _JobSeekerProfileScreenState extends State<JobSeekerProfileScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text('Portfolio Links', style: TextStyle(fontSize: AppSizes.textMd, fontWeight: FontWeight.w600)),
+            const Text(
+              'Portfolio Links',
+              style: TextStyle(
+                fontSize: AppSizes.textMd,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
             const SizedBox(height: AppSizes.sm),
             Wrap(
               spacing: 8,
@@ -492,7 +575,10 @@ class _JobSeekerProfileScreenState extends State<JobSeekerProfileScreen> {
               children: profile.portfolioLinks.map((link) {
                 return ActionChip(
                   avatar: const Icon(Icons.link, size: 14),
-                  label: Text(_getDomainFromUrl(link), style: const TextStyle(fontSize: 12)),
+                  label: Text(
+                    _getDomainFromUrl(link),
+                    style: const TextStyle(fontSize: 12),
+                  ),
                   onPressed: () => _launchUrl(link),
                   backgroundColor: AppColors.primary.withOpacity(0.1),
                 );
@@ -514,16 +600,34 @@ class _JobSeekerProfileScreenState extends State<JobSeekerProfileScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text('Preferred Job Types', style: TextStyle(fontSize: AppSizes.textMd, fontWeight: FontWeight.w600)),
+            const Text(
+              'Preferred Job Types',
+              style: TextStyle(
+                fontSize: AppSizes.textMd,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
             const SizedBox(height: AppSizes.sm),
             Wrap(
               spacing: 8,
               runSpacing: 8,
               children: profile.preferredJobTypes.map((type) {
                 return Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                  decoration: BoxDecoration(color: AppColors.primary.withOpacity(0.1), borderRadius: BorderRadius.circular(20)),
-                  child: Text(type.replaceAll('_', ' ').toUpperCase(), style: TextStyle(fontSize: AppSizes.textSm, color: AppColors.primary)),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 6,
+                  ),
+                  decoration: BoxDecoration(
+                    color: AppColors.primary.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                  child: Text(
+                    type.replaceAll('_', ' ').toUpperCase(),
+                    style: TextStyle(
+                      fontSize: AppSizes.textSm,
+                      color: AppColors.primary,
+                    ),
+                  ),
                 );
               }).toList(),
             ),
@@ -543,16 +647,34 @@ class _JobSeekerProfileScreenState extends State<JobSeekerProfileScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text('Preferred Locations', style: TextStyle(fontSize: AppSizes.textMd, fontWeight: FontWeight.w600)),
+            const Text(
+              'Preferred Locations',
+              style: TextStyle(
+                fontSize: AppSizes.textMd,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
             const SizedBox(height: AppSizes.sm),
             Wrap(
               spacing: 8,
               runSpacing: 8,
               children: profile.preferredLocations.map((location) {
                 return Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                  decoration: BoxDecoration(color: Colors.grey.shade100, borderRadius: BorderRadius.circular(20)),
-                  child: Text(location, style: const TextStyle(fontSize: AppSizes.textSm, color: AppColors.textPrimary)),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 6,
+                  ),
+                  decoration: BoxDecoration(
+                    color: Colors.grey.shade100,
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                  child: Text(
+                    location,
+                    style: const TextStyle(
+                      fontSize: AppSizes.textSm,
+                      color: AppColors.textPrimary,
+                    ),
+                  ),
                 );
               }).toList(),
             ),
@@ -574,21 +696,24 @@ class _JobSeekerProfileScreenState extends State<JobSeekerProfileScreen> {
   Widget _buildEmptyState() => const Center(child: CircularProgressIndicator());
 
   Widget _buildErrorState(String error) => Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            const Icon(Icons.error_outline, size: 64, color: Colors.red),
-            const SizedBox(height: AppSizes.md),
-            Text(error, textAlign: TextAlign.center),
-            const SizedBox(height: AppSizes.md),
-            PrimaryButton(text: 'Retry', onPressed: () {
-              final profileProvider = context.read<JobSeekerProfileProvider>();
-              final authProvider = context.read<AuthProvider>();
-              profileProvider.loadProfileAndDashboard(authProvider.user!.id);
-            }),
-          ],
+    child: Column(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        const Icon(Icons.error_outline, size: 64, color: Colors.red),
+        const SizedBox(height: AppSizes.md),
+        Text(error, textAlign: TextAlign.center),
+        const SizedBox(height: AppSizes.md),
+        PrimaryButton(
+          text: 'Retry',
+          onPressed: () {
+            final profileProvider = context.read<JobSeekerProfileProvider>();
+            final authProvider = context.read<AuthProvider>();
+            profileProvider.loadProfileAndDashboard(authProvider.user!.id);
+          },
         ),
-      );
+      ],
+    ),
+  );
 
   String _getDomainFromUrl(String url) {
     try {
@@ -599,4 +724,3 @@ class _JobSeekerProfileScreenState extends State<JobSeekerProfileScreen> {
     }
   }
 }
-
