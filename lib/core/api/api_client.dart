@@ -1,7 +1,7 @@
 import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
-
+import 'package:http_parser/http_parser.dart';
 import 'package:http/http.dart' as http;
 import 'package:job_portal_app/core/constants/constants.dart';
 import 'package:job_portal_app/core/services/storage_service.dart';
@@ -142,56 +142,56 @@ class ApiClient {
   // ---------------------------
   // MULTIPART
   // ---------------------------
-  static Future<http.StreamedResponse> multipart(
-    String method,
-    String endpoint, {
-    Map<String, String>? fields,
-    Map<String, File>? files,
-    bool auth = true,
-  }) async {
-    final uri = Uri.parse('${AppConstants.baseUrl}$endpoint');
-    final request = http.MultipartRequest(method, uri);
+ static Future<http.StreamedResponse> multipart(
+  String method,
+  String endpoint, {
+  Map<String, String>? fields,          // for @RequestParam String
+  Map<String, dynamic>? jsonData,       // for @RequestPart JSON
+  Map<String, File>? files,             // for MultipartFile
+  bool auth = true,
+}) async {
+  final uri = Uri.parse('${AppConstants.baseUrl}$endpoint');
+  final request = http.MultipartRequest(method, uri);
 
-    if (auth) {
-      final token = await TokenStorage.getAccessToken();
-      if (token != null) {
-        request.headers['Authorization'] = 'Bearer $token';
-      }
+  if (auth) {
+    final token = await TokenStorage.getAccessToken();
+    if (token != null) {
+      request.headers['Authorization'] = 'Bearer $token';
     }
-
-    if (fields != null) {
-      request.fields.addAll(fields);
-    }
-
-    if (files != null) {
-      for (final entry in files.entries) {
-        request.files.add(
-          await http.MultipartFile.fromPath(
-            entry.key,
-            entry.value.path,
-          ),
-        );
-      }
-    }
-
-    final response = await request.send();
-
-    // 🔁 Refresh retry
-    if (response.statusCode == 401 && auth) {
-      final refreshed = await _handleRefreshToken();
-      if (refreshed) {
-        return multipart(
-          method,
-          endpoint,
-          fields: fields,
-          files: files,
-          auth: auth,
-        );
-      }
-    }
-
-    return response;
   }
+
+  // @RequestParam fields
+  if (fields != null) {
+    request.fields.addAll(fields);
+  }
+
+  // @RequestPart JSON
+  if (jsonData != null) {
+    request.files.add(
+      http.MultipartFile.fromString(
+        'data',
+        jsonEncode(jsonData),
+        contentType: MediaType('application', 'json'),
+      ),
+    );
+  }
+
+  // Files
+  if (files != null) {
+    for (final entry in files.entries) {
+      request.files.add(
+        await http.MultipartFile.fromPath(
+          entry.key,
+          entry.value.path,
+        ),
+      );
+    }
+  }
+
+  final response = await request.send();
+  return response;
+}
+
 
   // ---------------------------
   // REFRESH TOKEN HANDLER

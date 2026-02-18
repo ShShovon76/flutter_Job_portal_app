@@ -80,7 +80,7 @@ class AppRouter {
       case RouteNames.savedJobs:
         return MaterialPageRoute(builder: (_) => const SavedJobsScreen());
       case RouteNames.profile:
-        return MaterialPageRoute(builder: (_) => const ProfileScreen());
+        return MaterialPageRoute(builder: (_) => const JobSeekerProfileScreen());
       case RouteNames.appliedJobs:
         return MaterialPageRoute(builder: (_) => const AppliedJobsScreen());
       case RouteNames.jobDetails:

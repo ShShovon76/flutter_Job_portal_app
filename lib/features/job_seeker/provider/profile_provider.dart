@@ -1,219 +1,239 @@
+import 'dart:convert';
+import 'dart:io';
 
 import 'package:flutter/foundation.dart';
 import 'package:job_portal_app/core/api/job-seeker_profile_api.dart';
+import 'package:job_portal_app/core/api/profile_api.dart';
+import 'package:job_portal_app/core/services/storage_service.dart';
+import 'package:job_portal_app/features/auth/provider/auth_provider.dart';
 import 'package:job_portal_app/models/analytics_models.dart';
-import 'package:job_portal_app/models/job_search_filter.dart';
 import 'package:job_portal_app/models/job_seeker_profile.dart';
+import 'package:job_portal_app/models/user_model.dart';
 
 class JobSeekerProfileProvider extends ChangeNotifier {
+  // ===================== STATE =====================
   JobSeekerProfile? _profile;
   JobSeekerDashboardResponse? _dashboard;
-  Pagination<JobSeekerProfile>? _searchResult;
   bool _isLoading = false;
   String? _error;
 
-  // ==========================
-  // GETTERS
-  // ==========================
+  // ===================== GETTERS =====================
   JobSeekerProfile? get profile => _profile;
   JobSeekerDashboardResponse? get dashboard => _dashboard;
-  Pagination<JobSeekerProfile>? get searchResult => _searchResult;
   bool get isLoading => _isLoading;
   String? get error => _error;
 
-  // ==========================
-  // INTERNAL LOADING STATE
-  // ==========================
-  void _setLoading(bool loading) {
-    _isLoading = loading;
+  // ===================== HELPERS =====================
+  void _setLoading(bool value) {
+    _isLoading = value;
     notifyListeners();
   }
 
-  void _setError(String? err) {
-    _error = err;
+  void _setError(String? message) {
+    _error = message;
     notifyListeners();
   }
 
-  void _setProfile(JobSeekerProfile profile) {
-    _profile = profile;
+  void clearError() {
+    _error = null;
     notifyListeners();
   }
 
-  void _setDashboard(JobSeekerDashboardResponse dashboard) {
-    _dashboard = dashboard;
-    notifyListeners();
-  }
-
-  void _setSearchResult(Pagination<JobSeekerProfile> result) {
-    _searchResult = result;
-    notifyListeners();
-  }
-
-  // ==========================
-  // LOAD PROFILE
-  // GET /profile/{userId}
-  // ==========================
-  Future<void> loadProfile(int userId) async {
+  // ===================== LOAD PROFILE + DASHBOARD =====================
+  Future<void> loadProfileAndDashboard(int userId) async {
     _setLoading(true);
-    _setError(null);
+    _error = null;
+
     try {
-      final result = await JobSeekerProfileApi.getProfile(userId);
-      _setProfile(result);
+      final results = await Future.wait([
+        JobSeekerProfileApi.getProfile(userId),
+        JobSeekerProfileApi.getDashboard(userId),
+      ]);
+
+      _profile = results[0] as JobSeekerProfile;
+      _dashboard = results[1] as JobSeekerDashboardResponse;
     } catch (e) {
       _setError(e.toString());
     }
+
     _setLoading(false);
   }
 
-  Future<void> saveProfile(int userId, JobSeekerProfile profile) async {
-    _setLoading(true);
-    _setError(null);
-    try {
-      final result = await JobSeekerProfileApi.saveProfile(userId, profile);
-      _setProfile(result);
-    } catch (e) {
-      _setError(e.toString());
-    }
-    _setLoading(false);
-  }
-
-  // ==========================
-  // DASHBOARD
-  // GET /{userId}/dashboard
-  // ==========================
-  Future<void> loadDashboard(int userId) async {
-    _setLoading(true);
-    _setError(null);
-    try {
-      final result = await JobSeekerProfileApi.getDashboard(userId);
-      _setDashboard(result);
-    } catch (e) {
-      _setError(e.toString());
-    }
-    _setLoading(false);
-  }
-
-  // ==========================
-  // SEARCH PROFILES
-  // GET /search
-  // ==========================
-  Future<void> searchProfiles({
-    String? keyword,
-    int page = 0,
-    int size = 10,
+  // ===================== PROFILE PICTURE UPLOAD =====================
+  Future<void> uploadProfilePicture({
+    required File file,
+    required AuthProvider authProvider,
   }) async {
+    if (_profile == null) return;
+
     _setLoading(true);
-    _setError(null);
-    try {
-      final result = await JobSeekerProfileApi.searchProfiles(
-        keyword: keyword,
-        page: page,
-        size: size,
-      );
-      _setSearchResult(result);
-    } catch (e) {
-      _setError(e.toString());
-    }
-    _setLoading(false);
-  }
 
-  // ==========================
-  // EDUCATION CRUD
-  // ==========================
-  Future<void> addEducation(int userId, Education edu) async {
     try {
-      final created = await JobSeekerProfileApi.addEducation(userId, edu);
-      _profile?.education.add(created);
-      notifyListeners();
-    } catch (e) {
-      _setError(e.toString());
-    }
-  }
-
-  Future<void> updateEducation(int userId, int eduId, Education edu) async {
-    try {
-      final updated = await JobSeekerProfileApi.updateEducation(
-        userId,
-        eduId,
-        edu,
+      // 1️⃣ Upload file via API
+      final responseStr = await ProfileApi.uploadProfilePicture(
+        userId: _profile!.userId,
+        file: file,
       );
-      final index = _profile!.education.indexWhere((e) => e.hashCode == eduId);
-      if (index != -1) {
-        _profile!.education[index] = updated;
+
+      // 2️⃣ Decode JSON string into Map
+      final updatedUserJson = jsonDecode(responseStr) as Map<String, dynamic>;
+
+      // 3️⃣ Extract profilePictureUrl
+      final updatedProfilePictureUrl =
+          updatedUserJson['profilePictureUrl'] as String?;
+
+      if (updatedProfilePictureUrl != null) {
+        // 4️⃣ Update global AuthProvider.user
+        final currentUser = authProvider.user;
+        if (currentUser != null && currentUser.id == _profile!.userId) {
+          authProvider.user = currentUser.copyWith(
+            profilePictureUrl: updatedProfilePictureUrl,
+          );
+
+          // 5️⃣ Persist to local storage
+          await UserStorage.save(authProvider.user!);
+
+          // 6️⃣ Notify listeners so AppBar, Drawer, Profile all refresh
+          authProvider.notifyListeners();
+        }
+
         notifyListeners();
       }
     } catch (e) {
       _setError(e.toString());
+      rethrow;
+    } finally {
+      _setLoading(false);
     }
   }
 
-  Future<void> loadEducations(int userId) async {
-    try {
-      final list = await JobSeekerProfileApi.getEducations(userId);
-      _profile = _profile?.copyWith(education: list) ?? _profile;
-      notifyListeners();
-    } catch (e) {
-      _setError(e.toString());
-    }
-  }
+  // ===================== EDUCATION =====================
+  Future<void> addEducation(Education education) async {
+    if (_profile == null) return;
 
-  // ==========================
-  // EXPERIENCE CRUD
-  // ==========================
-  Future<void> addExperience(int userId, Experience exp) async {
     try {
-      final created = await JobSeekerProfileApi.addExperience(userId, exp);
-      _profile?.experience.add(created);
-      notifyListeners();
-    } catch (e) {
-      _setError(e.toString());
-    }
-  }
-
-  Future<void> updateExperience(int userId, int expId, Experience exp) async {
-    try {
-      final updated = await JobSeekerProfileApi.updateExperience(
-        userId,
-        expId,
-        exp,
+      final created = await JobSeekerProfileApi.addEducation(
+        _profile!.id,
+        education,
       );
-      final index = _profile!.experience.indexWhere((e) => e.hashCode == expId);
-      if (index != -1) {
-        _profile!.experience[index] = updated;
-        notifyListeners();
-      }
-    } catch (e) {
-      _setError(e.toString());
-    }
-  }
 
-  Future<void> deleteExperience(int userId, int expId) async {
-    try {
-      await JobSeekerProfileApi.deleteExperience(userId, expId);
-      _profile?.experience.removeWhere((e) => e.hashCode == expId);
+      _profile = _profile!.copyWith(
+        education: [..._profile!.education, created],
+      );
       notifyListeners();
     } catch (e) {
       _setError(e.toString());
     }
   }
 
-  Future<void> loadExperiences(int userId) async {
+  Future<void> updateEducation(int educationId, Education updated) async {
+    if (_profile == null) return;
+
     try {
-      final list = await JobSeekerProfileApi.getExperiences(userId);
-      _profile = _profile?.copyWith(experience: list) ?? _profile;
+      final result = await JobSeekerProfileApi.updateEducation(
+        _profile!.id,
+        educationId,
+        updated,
+      );
+
+      _profile = _profile!.copyWith(
+        education: _profile!.education
+            .map((e) => e.id == educationId ? result : e)
+            .toList(),
+      );
       notifyListeners();
     } catch (e) {
       _setError(e.toString());
     }
   }
 
-  // ==========================
-  // CERTIFICATIONS CRUD
-  // ==========================
-  Future<void> addCertification(int userId, Certification cert) async {
+  Future<void> deleteEducation(int educationId) async {
+    if (_profile == null) return;
+
     try {
-      final created = await JobSeekerProfileApi.addCertification(userId, cert);
-      _profile?.certifications.add(created);
+      await JobSeekerProfileApi.deleteEducation(_profile!.id, educationId);
+
+      _profile = _profile!.copyWith(
+        education: _profile!.education
+            .where((e) => e.id != educationId)
+            .toList(),
+      );
+      notifyListeners();
+    } catch (e) {
+      _setError(e.toString());
+    }
+  }
+
+  // ===================== EXPERIENCE =====================
+  Future<void> addExperience(Experience experience) async {
+    if (_profile == null) return;
+
+    try {
+      final created = await JobSeekerProfileApi.addExperience(
+        _profile!.id,
+        experience,
+      );
+
+      _profile = _profile!.copyWith(
+        experience: [..._profile!.experience, created],
+      );
+      notifyListeners();
+    } catch (e) {
+      _setError(e.toString());
+    }
+  }
+
+  Future<void> updateExperience(int experienceId, Experience updated) async {
+    if (_profile == null) return;
+
+    try {
+      final result = await JobSeekerProfileApi.updateExperience(
+        _profile!.id,
+        experienceId,
+        updated,
+      );
+
+      _profile = _profile!.copyWith(
+        experience: _profile!.experience
+            .map((e) => e.id == experienceId ? result : e)
+            .toList(),
+      );
+      notifyListeners();
+    } catch (e) {
+      _setError(e.toString());
+    }
+  }
+
+  Future<void> deleteExperience(int experienceId) async {
+    if (_profile == null) return;
+
+    try {
+      await JobSeekerProfileApi.deleteExperience(_profile!.id, experienceId);
+
+      _profile = _profile!.copyWith(
+        experience: _profile!.experience
+            .where((e) => e.id != experienceId)
+            .toList(),
+      );
+      notifyListeners();
+    } catch (e) {
+      _setError(e.toString());
+    }
+  }
+
+  // ===================== CERTIFICATIONS =====================
+  Future<void> addCertification(Certification certification) async {
+    if (_profile == null) return;
+
+    try {
+      final created = await JobSeekerProfileApi.addCertification(
+        _profile!.id,
+        certification,
+      );
+
+      _profile = _profile!.copyWith(
+        certifications: [..._profile!.certifications, created],
+      );
       notifyListeners();
     } catch (e) {
       _setError(e.toString());
@@ -221,45 +241,55 @@ class JobSeekerProfileProvider extends ChangeNotifier {
   }
 
   Future<void> updateCertification(
-    int userId,
-    int certId,
-    Certification cert,
+    int certificationId,
+    Certification updated,
   ) async {
-    try {
-      final updated = await JobSeekerProfileApi.updateCertification(
-        userId,
-        certId,
-        cert,
-      );
-      final index = _profile!.certifications.indexWhere(
-        (c) => c.hashCode == certId,
-      );
-      if (index != -1) {
-        _profile!.certifications[index] = updated;
-        notifyListeners();
-      }
-    } catch (e) {
-      _setError(e.toString());
-    }
-  }
+    if (_profile == null) return;
 
-  Future<void> deleteCertification(int userId, int certId) async {
     try {
-      await JobSeekerProfileApi.deleteCertification(userId, certId);
-      _profile?.certifications.removeWhere((c) => c.hashCode == certId);
+      final result = await JobSeekerProfileApi.updateCertification(
+        _profile!.id,
+        certificationId,
+        updated,
+      );
+
+      _profile = _profile!.copyWith(
+        certifications: _profile!.certifications
+            .map((c) => c.id == certificationId ? result : c)
+            .toList(),
+      );
       notifyListeners();
     } catch (e) {
       _setError(e.toString());
     }
   }
 
-  Future<void> loadCertifications(int userId) async {
+  Future<void> deleteCertification(int certificationId) async {
+    if (_profile == null) return;
+
     try {
-      final list = await JobSeekerProfileApi.getCertifications(userId);
-      _profile = _profile?.copyWith(certifications: list) ?? _profile;
+      await JobSeekerProfileApi.deleteCertification(
+        _profile!.id,
+        certificationId,
+      );
+
+      _profile = _profile!.copyWith(
+        certifications: _profile!.certifications
+            .where((c) => c.id != certificationId)
+            .toList(),
+      );
       notifyListeners();
     } catch (e) {
       _setError(e.toString());
     }
+  }
+
+  // ===================== CLEAR =====================
+  void clearProfile() {
+    _profile = null;
+    _dashboard = null;
+    _error = null;
+    _isLoading = false;
+    notifyListeners();
   }
 }

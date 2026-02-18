@@ -1,4 +1,3 @@
-
 import 'package:job_portal_app/models/application_model.dart';
 import 'package:job_portal_app/models/saved_company.dart';
 import 'package:job_portal_app/models/saved_job.dart';
@@ -65,39 +64,39 @@ class JobSeekerProfile {
       preferredLocations: List<String>.from(json['preferredLocations'] ?? []),
       applications: json['applications'] != null
           ? (json['applications'] as List)
-              .map((e) => JobApplication.fromJson(e))
-              .toList()
+                .map((e) => JobApplication.fromJson(e))
+                .toList()
           : null,
       savedJobs: json['savedJobs'] != null
           ? (json['savedJobs'] as List)
-              .map((e) => SavedJob.fromJson(e))
-              .toList()
+                .map((e) => SavedJob.fromJson(e))
+                .toList()
           : null,
       savedCompanies: json['savedCompanies'] != null
           ? (json['savedCompanies'] as List)
-              .map((e) => SavedCompany.fromJson(e))
-              .toList()
+                .map((e) => SavedCompany.fromJson(e))
+                .toList()
           : null,
     );
   }
 
   Map<String, dynamic> toJson() => {
-        'id': id,
-        'userId': userId,
-        'headline': headline,
-        'summary': summary,
-        'skills': skills,
-        'education': education.map((e) => e.toJson()).toList(),
-        'experience': experience.map((e) => e.toJson()).toList(),
-        'certifications': certifications.map((e) => e.toJson()).toList(),
-        'portfolioLinks': portfolioLinks,
-        'resumes': resumes?.map((e) => e.toJson()).toList(),
-        'preferredJobTypes': preferredJobTypes,
-        'preferredLocations': preferredLocations,
-        'applications': applications?.map((e) => e.toJson()).toList(),
-        'savedJobs': savedJobs?.map((e) => e.toJson()).toList(),
-        'savedCompanies': savedCompanies?.map((e) => e.toJson()).toList(),
-      };
+    'id': id,
+    'userId': userId,
+    'headline': headline,
+    'summary': summary,
+    'skills': skills,
+    'education': education.map((e) => e.toJson()).toList(),
+    'experience': experience.map((e) => e.toJson()).toList(),
+    'certifications': certifications.map((e) => e.toJson()).toList(),
+    'portfolioLinks': portfolioLinks,
+    'resumes': resumes?.map((e) => e.toJson()).toList(),
+    'preferredJobTypes': preferredJobTypes,
+    'preferredLocations': preferredLocations,
+    'applications': applications?.map((e) => e.toJson()).toList(),
+    'savedJobs': savedJobs?.map((e) => e.toJson()).toList(),
+    'savedCompanies': savedCompanies?.map((e) => e.toJson()).toList(),
+  };
 
   JobSeekerProfile copyWith({
     int? id,
@@ -137,6 +136,7 @@ class JobSeekerProfile {
 }
 
 class Certification {
+  final int id;
   final String title;
   final String issuer;
   final DateTime issueDate;
@@ -144,6 +144,7 @@ class Certification {
   final String? credentialUrl;
 
   Certification({
+    required this.id,
     required this.title,
     required this.issuer,
     required this.issueDate,
@@ -153,6 +154,7 @@ class Certification {
 
   factory Certification.fromJson(Map<String, dynamic> json) {
     return Certification(
+      id: json['id'],
       title: json['title'],
       issuer: json['issuer'],
       issueDate: DateTime.parse(json['issueDate']),
@@ -164,6 +166,7 @@ class Certification {
   }
 
   Map<String, dynamic> toJson() => {
+    'id': id,
     'title': title,
     'issuer': issuer,
     'issueDate': issueDate.toIso8601String(),
@@ -173,6 +176,7 @@ class Certification {
 }
 
 class Experience {
+  final int id;
   final String companyName;
   final String jobTitle;
   final DateTime startDate;
@@ -180,6 +184,7 @@ class Experience {
   final String responsibilities;
 
   Experience({
+    required this.id,
     required this.companyName,
     required this.jobTitle,
     required this.startDate,
@@ -189,15 +194,17 @@ class Experience {
 
   factory Experience.fromJson(Map<String, dynamic> json) {
     return Experience(
+      id: json['id'],
       companyName: json['companyName'],
       jobTitle: json['jobTitle'],
-      startDate: DateTime.parse(json['startDate']),
+      startDate: DateTime.parse('${json['startDate']}T00:00:00'),
       endDate: json['endDate'] != null ? DateTime.parse(json['endDate']) : null,
       responsibilities: json['responsibilities'],
     );
   }
 
   Map<String, dynamic> toJson() => {
+    'id': id,
     'companyName': companyName,
     'jobTitle': jobTitle,
     'startDate': startDate.toIso8601String(),
@@ -207,6 +214,7 @@ class Experience {
 }
 
 class Education {
+  final int id;
   final String degree;
   final String institution;
   final DateTime startDate;
@@ -214,6 +222,7 @@ class Education {
   final String? grade;
 
   Education({
+    required this.id,
     required this.degree,
     required this.institution,
     required this.startDate,
@@ -223,6 +232,7 @@ class Education {
 
   factory Education.fromJson(Map<String, dynamic> json) {
     return Education(
+      id: json['id'],
       degree: json['degree'],
       institution: json['institution'],
       startDate: DateTime.parse(json['startDate']),
@@ -232,6 +242,7 @@ class Education {
   }
 
   Map<String, dynamic> toJson() => {
+    'id': id,
     'degree': degree,
     'institution': institution,
     'startDate': startDate.toIso8601String(),
@@ -242,6 +253,7 @@ class Education {
 
 extension EducationCopy on Education {
   Education copyWith({
+    int? id,
     String? degree,
     String? institution,
     DateTime? startDate,
@@ -249,6 +261,7 @@ extension EducationCopy on Education {
     String? grade,
   }) {
     return Education(
+      id: id ?? this.id,
       degree: degree ?? this.degree,
       institution: institution ?? this.institution,
       startDate: startDate ?? this.startDate,
@@ -260,6 +273,7 @@ extension EducationCopy on Education {
 
 extension ExperienceCopy on Experience {
   Experience copyWith({
+    int? id,
     String? companyName,
     String? jobTitle,
     DateTime? startDate,
@@ -267,6 +281,7 @@ extension ExperienceCopy on Experience {
     String? responsibilities,
   }) {
     return Experience(
+      id: id ?? this.id,
       companyName: companyName ?? this.companyName,
       jobTitle: jobTitle ?? this.jobTitle,
       startDate: startDate ?? this.startDate,
@@ -278,6 +293,7 @@ extension ExperienceCopy on Experience {
 
 extension CertificationCopy on Certification {
   Certification copyWith({
+    int? id,
     String? title,
     String? issuer,
     DateTime? issueDate,
@@ -285,6 +301,7 @@ extension CertificationCopy on Certification {
     String? credentialUrl,
   }) {
     return Certification(
+      id: id ?? this.id,
       title: title ?? this.title,
       issuer: issuer ?? this.issuer,
       issueDate: issueDate ?? this.issueDate,
@@ -293,6 +310,7 @@ extension CertificationCopy on Certification {
     );
   }
 }
+
 class ApplicantProfile {
   final int userId;
   final String fullName;
@@ -351,10 +369,8 @@ class ApplicantProfile {
       resumes: (json['resumes'] as List? ?? [])
           .map((e) => Resume.fromJson(e))
           .toList(),
-      preferredJobTypes:
-          List<String>.from(json['preferredJobTypes'] ?? []),
-      preferredLocations:
-          List<String>.from(json['preferredLocations'] ?? []),
+      preferredJobTypes: List<String>.from(json['preferredJobTypes'] ?? []),
+      preferredLocations: List<String>.from(json['preferredLocations'] ?? []),
     );
   }
 
@@ -370,8 +386,7 @@ class ApplicantProfile {
       'skills': skills,
       'education': education.map((e) => e.toJson()).toList(),
       'experience': experience.map((e) => e.toJson()).toList(),
-      'certifications':
-          certifications.map((e) => e.toJson()).toList(),
+      'certifications': certifications.map((e) => e.toJson()).toList(),
       'resumes': resumes.map((e) => e.toJson()).toList(),
       'preferredJobTypes': preferredJobTypes,
       'preferredLocations': preferredLocations,

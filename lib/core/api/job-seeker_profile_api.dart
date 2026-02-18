@@ -6,17 +6,14 @@ import 'package:job_portal_app/models/job_search_filter.dart';
 import 'package:job_portal_app/models/job_seeker_profile.dart';
 
 class JobSeekerProfileApi {
-  static const String _base = '/api/job-seekers';
+  static const String _base = '/job-seekers';
 
   // ==================================================
   // GET PROFILE BY USER ID
   // GET /api/job-seekers/profile/{userId}
   // ==================================================
   static Future<JobSeekerProfile> getProfile(int userId) async {
-    final res = await ApiClient.get(
-      '$_base/profile/$userId',
-      auth: true,
-    );
+    final res = await ApiClient.get('$_base/profile/$userId', auth: true);
 
     if (res.statusCode == 200) {
       return JobSeekerProfile.fromJson(jsonDecode(res.body));
@@ -29,10 +26,7 @@ class JobSeekerProfileApi {
   // GET /api/job-seekers/{userId}/dashboard
   // ==================================================
   static Future<JobSeekerDashboardResponse> getDashboard(int userId) async {
-    final res = await ApiClient.get(
-      '$_base/$userId/dashboard',
-      auth: true,
-    );
+    final res = await ApiClient.get('$_base/$userId/dashboard', auth: true);
 
     if (res.statusCode == 200) {
       return JobSeekerDashboardResponse.fromJson(jsonDecode(res.body));
@@ -45,10 +39,7 @@ class JobSeekerProfileApi {
   // GET /api/job-seekers/applicant/{userId}
   // ==================================================
   static Future<ApplicantProfile> getApplicantProfile(int userId) async {
-    final res = await ApiClient.get(
-      '$_base/applicant/$userId',
-      auth: true,
-    );
+    final res = await ApiClient.get('$_base/applicant/$userId', auth: true);
 
     if (res.statusCode == 200) {
       return ApplicantProfile.fromJson(jsonDecode(res.body));
@@ -74,10 +65,7 @@ class JobSeekerProfileApi {
 
     if (res.statusCode == 200) {
       final mapped = _springPage(jsonDecode(res.body));
-      return Pagination.fromJson(
-        mapped,
-        (e) => JobSeekerProfile.fromJson(e),
-      );
+      return Pagination.fromJson(mapped, (e) => JobSeekerProfile.fromJson(e));
     }
     throw Exception('Failed to search profiles');
   }
@@ -105,10 +93,7 @@ class JobSeekerProfileApi {
   // ==================================================
   // EDUCATION
   // ==================================================
-  static Future<Education> addEducation(
-    int userId,
-    Education education,
-  ) async {
+  static Future<Education> addEducation(int userId, Education education) async {
     final res = await ApiClient.post(
       '$_base/$userId/education',
       auth: true,
@@ -139,16 +124,24 @@ class JobSeekerProfileApi {
   }
 
   static Future<List<Education>> getEducations(int userId) async {
-    final res = await ApiClient.get(
-      '$_base/$userId/education',
-      auth: true,
-    );
+    final res = await ApiClient.get('$_base/$userId/education', auth: true);
 
     if (res.statusCode == 200) {
       final list = jsonDecode(res.body) as List;
       return list.map((e) => Education.fromJson(e)).toList();
     }
     throw Exception('Failed to load educations');
+  }
+
+  static Future<void> deleteEducation(int userId, int educationId) async {
+    final res = await ApiClient.delete(
+      '$_base/$userId/education/$educationId',
+      auth: true,
+    );
+
+    if (res.statusCode != 204) {
+      throw Exception('Failed to delete education');
+    }
   }
 
   // ==================================================
@@ -187,10 +180,7 @@ class JobSeekerProfileApi {
     throw Exception('Failed to update experience');
   }
 
-  static Future<void> deleteExperience(
-    int userId,
-    int experienceId,
-  ) async {
+  static Future<void> deleteExperience(int userId, int experienceId) async {
     final res = await ApiClient.delete(
       '$_base/$userId/experience/$experienceId',
       auth: true,
@@ -202,10 +192,7 @@ class JobSeekerProfileApi {
   }
 
   static Future<List<Experience>> getExperiences(int userId) async {
-    final res = await ApiClient.get(
-      '$_base/$userId/experience',
-      auth: true,
-    );
+    final res = await ApiClient.get('$_base/$userId/experience', auth: true);
 
     if (res.statusCode == 200) {
       final list = jsonDecode(res.body) as List;
@@ -276,10 +263,9 @@ class JobSeekerProfileApi {
     }
     throw Exception('Failed to load certifications');
   }
-  
 }
 
- Map<String, dynamic> _springPage(Map<String, dynamic> json) {
+Map<String, dynamic> _springPage(Map<String, dynamic> json) {
   return {
     'items': json['content'],
     'page': json['number'],

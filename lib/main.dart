@@ -5,6 +5,7 @@ import 'package:job_portal_app/features/auth/provider/auth_provider.dart';
 import 'package:job_portal_app/features/employer/presentation/company/provider/company_provider.dart';
 import 'package:job_portal_app/features/job_seeker/provider/application_provider.dart';
 import 'package:job_portal_app/features/job_seeker/provider/job_provider.dart';
+import 'package:job_portal_app/features/job_seeker/provider/profile_provider.dart';
 import 'package:job_portal_app/routes/app_router.dart';
 import 'package:job_portal_app/routes/route_names.dart';
 import 'package:provider/provider.dart';
@@ -17,6 +18,7 @@ void main() {
         ChangeNotifierProvider(create: (_) => JobProvider()),
         ChangeNotifierProvider(create: (_) => CompanyProvider()),
         ChangeNotifierProvider(create: (_) => JobApplicationProvider()),
+        ChangeNotifierProvider(create: (_) => JobSeekerProfileProvider()),
       ],
       child: const MyApp(),
     ),

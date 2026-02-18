@@ -23,7 +23,7 @@ class _JobSeekerShellState extends State<JobSeekerShell> {
     const JobSearchScreen(),
     const AppliedJobsScreen(),
     const SavedJobsScreen(),
-    const ProfileScreen(),
+    const JobSeekerProfileScreen(),
   ];
 
   final List<BottomNavigationBarItem> _bottomNavItems = [

@@ -7,7 +7,7 @@ class RouteNames {
   static const String roleSelection = '/role-selection';
   static const String forgotPassword = '/forgot-password';
   static const String otpVerification = '/otp-verification';
-  
+
   // Job Seeker Routes
   static const String jobSeekerShell = '/job-seeker';
   static const String jobFeed = '/job-seeker/home';
@@ -19,6 +19,7 @@ class RouteNames {
   static const String profile = '/job-seeker/profile';
   static const String editProfile = '/job-seeker/edit-profile';
   static const String resumeUpload = '/job-seeker/resume-upload';
+  static const String certifications = '/job-seeker/certifications';
   static const String skills = '/job-seeker/skills';
   static const String education = '/job-seeker/education';
   static const String experience = '/job-seeker/experience';
@@ -27,7 +28,7 @@ class RouteNames {
   static const String interviewSchedule = '/job-seeker/interview-schedule';
   static const String notifications = '/job-seeker/notifications';
   static const String settings = '/job-seeker/settings';
-  
+
   // Employer Routes
   static const String employerShell = '/employer';
   static const String employerDashboard = '/employer/dashboard';
@@ -42,11 +43,11 @@ class RouteNames {
   static const String employerNotifications = '/employer/notifications';
   static const String employerSettings = '/employer/settings';
   static const String manageJobs = '/employer/manage-jobs';
-  
+
   // Chat Routes
   static const String chatList = '/chat-list';
   static const String chat = '/chat';
-  
+
   // Admin Routes
   static const String adminShell = '/admin';
   static const String adminDashboard = '/admin/dashboard';
@@ -58,7 +59,7 @@ class RouteNames {
   static const String adminSkills = '/admin/skills';
   static const String analytics = '/admin/analytics';
   static const String pushNotifications = '/admin/push-notifications';
-  
+
   // Common Routes
   static const String noInternet = '/no-internet';
   static const String error = '/error';

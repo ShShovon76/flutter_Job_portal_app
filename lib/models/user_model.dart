@@ -70,4 +70,26 @@ class User {
       'enabled': enabled,
     };
   }
+
+  User copyWith({
+    int? id,
+    String? fullName,
+    String? email,
+    String? phone,
+    UserRole? role,
+    String? profilePictureUrl,
+    DateTime? createdAt,
+    bool? enabled,
+  }) {
+    return User(
+      id: id ?? this.id,
+      fullName: fullName ?? this.fullName,
+      email: email ?? this.email,
+      phone: phone ?? this.phone,
+      role: role ?? this.role,
+      profilePictureUrl: profilePictureUrl ?? this.profilePictureUrl,
+      createdAt: createdAt ?? this.createdAt,
+      enabled: enabled ?? this.enabled,
+    );
+  }
 }
