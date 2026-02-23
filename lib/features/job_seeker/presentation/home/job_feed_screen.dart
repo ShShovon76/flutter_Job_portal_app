@@ -248,7 +248,7 @@ class _JobFeedScreenState extends State<JobFeedScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        automaticallyImplyLeading: false,
+        
         title: const Text(
           'Job Feed',
           style: TextStyle(fontSize: 20, fontWeight: FontWeight.w600),

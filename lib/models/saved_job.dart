@@ -1,5 +1,3 @@
-
-
 // Saved Job Model
 
 import 'package:job_portal_app/models/job_model.dart';
@@ -30,11 +28,16 @@ class SavedJob {
   }
 
   Map<String, dynamic> toJson() => {
-        'id': id,
-        'jobId': jobId,
-        'jobSeekerId': jobSeekerId,
-        'savedAt': savedAt.toIso8601String(),
-        'job': job?.toJson(),
-      };
+    'id': id,
+    'jobId': jobId,
+    'jobSeekerId': jobSeekerId,
+    'savedAt': _formatDate(savedAt),
+    'job': job?.toJson(),
+  };
 
+  String _formatDate(DateTime date) {
+    return "${date.year.toString().padLeft(4, '0')}-"
+        "${date.month.toString().padLeft(2, '0')}-"
+        "${date.day.toString().padLeft(2, '0')}";
+  }
 }

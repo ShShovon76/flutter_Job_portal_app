@@ -212,7 +212,8 @@ class _ManageJobsScreenState extends State<ManageJobsScreen> {
   // ===================== JOB ACTIONS =====================
   void _editJob(int? jobId) {
     if (jobId != null) {
-      Navigator.pushNamed(context, RouteNames.editJob, arguments: jobId);
+      Navigator.pushNamed(context, RouteNames.editJob, arguments: jobId)
+          .then((_) => _loadJobs(refresh: true));
     }
   }
 
@@ -591,7 +592,6 @@ class _ManageJobsScreenState extends State<ManageJobsScreen> {
       isLoading: _isLoading && _jobs.isEmpty,
       child: Scaffold(
         appBar: AppBar(
-          automaticallyImplyLeading: false,
           title: const Text(
             'Manage Jobs',
             style: TextStyle(fontSize: 20, fontWeight: FontWeight.w600),

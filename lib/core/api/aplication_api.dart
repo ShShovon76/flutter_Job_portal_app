@@ -6,7 +6,7 @@ import 'package:job_portal_app/models/job_search_filter.dart';
 
 
 class JobApplicationApi {
-  static const String _base = '/api/applications';
+  static const String _base = '/applications';
 
   // ================================
   // GET Application by ID
@@ -56,7 +56,7 @@ class JobApplicationApi {
 
     final json = jsonDecode(res.body);
     return Pagination.fromJson(
-      _springPage(json),
+      json,
       (e) => JobApplication.fromJson(e),
     );
   }
@@ -77,7 +77,7 @@ class JobApplicationApi {
 
     final json = jsonDecode(res.body);
     return Pagination.fromJson(
-      _springPage(json),
+      json,
       (e) => JobApplication.fromJson(e),
     );
   }
@@ -98,7 +98,7 @@ class JobApplicationApi {
 
     final json = jsonDecode(res.body);
     return Pagination.fromJson(
-      _springPage(json),
+      json,
       (e) => JobApplication.fromJson(e),
     );
   }
@@ -210,18 +210,9 @@ class JobApplicationApi {
 
     final json = jsonDecode(res.body);
     return Pagination.fromJson(
-      _springPage(json),
+      json,
       (e) => JobApplication.fromJson(e),
     );
   }
 }
 
-  Map<String, dynamic> _springPage(Map<String, dynamic> json) {
-    return {
-      'items': json['content'],
-      'page': json['number'],
-      'size': json['size'],
-      'totalItems': json['totalElements'],
-      'totalPages': json['totalPages'],
-    };
-  }

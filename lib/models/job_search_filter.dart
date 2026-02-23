@@ -68,13 +68,16 @@ class Pagination<T> {
     T Function(dynamic) fromJsonT,
   ) {
     return Pagination(
-      items: (json['items'] as List? ?? []).map(fromJsonT).toList(),
-      page: json['page'] ?? 0,
+      items: (json['content'] as List? ?? [])
+          .map(fromJsonT)
+          .toList(),
+      page: json['number'] ?? 0,
       size: json['size'] ?? 10,
-      totalItems: json['totalItems'] ?? 0,
+      totalItems: json['totalElements'] ?? 0,
       totalPages: json['totalPages'] ?? 0,
     );
   }
+}
 
   Map<String, dynamic> _springPage(Map<String, dynamic> json) {
     return {
@@ -85,4 +88,4 @@ class Pagination<T> {
       'totalPages': json['totalPages'],
     };
   }
-}
+

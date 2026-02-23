@@ -7,18 +7,14 @@ import 'package:job_portal_app/core/constants/constants.dart';
 import 'package:job_portal_app/core/services/storage_service.dart';
 import 'package:job_portal_app/models/application_model.dart';
 
-
 class ResumeApi {
-  static const _base = '/api/resumes';
+  static const _base = '/resumes';
 
   // =============================
   // GET MY RESUMES
   // =============================
   static Future<List<Resume>> getMyResumes() async {
-    final res = await ApiClient.get(
-      _base,
-      auth: true,
-    );
+    final res = await ApiClient.get(_base, auth: true);
 
     if (res.statusCode != 200) {
       throw Exception('Failed to load resumes');
@@ -38,12 +34,8 @@ class ResumeApi {
     final response = await ApiClient.multipart(
       'POST',
       _base,
-      fields: {
-        if (title != null) 'title': title,
-      },
-      files: {
-        'file': file,
-      },
+      fields: {if (title != null) 'title': title},
+      files: {'file': file},
       auth: true,
     );
 
@@ -60,10 +52,7 @@ class ResumeApi {
   // SET PRIMARY RESUME
   // =============================
   static Future<void> setPrimaryResume(int resumeId) async {
-    final res = await ApiClient.put(
-      '$_base/$resumeId/primary',
-      auth: true,
-    );
+    final res = await ApiClient.put('$_base/$resumeId/primary', auth: true);
 
     if (res.statusCode != 200) {
       throw Exception('Failed to set primary resume');
@@ -74,10 +63,7 @@ class ResumeApi {
   // DELETE RESUME
   // =============================
   static Future<void> deleteResume(int resumeId) async {
-    final res = await ApiClient.delete(
-      '$_base/$resumeId',
-      auth: true,
-    );
+    final res = await ApiClient.delete('$_base/$resumeId', auth: true);
 
     if (res.statusCode != 204) {
       throw Exception('Failed to delete resume');
@@ -90,15 +76,11 @@ class ResumeApi {
   static Future<Uint8List> downloadResume(int resumeId) async {
     final token = await TokenStorage.getAccessToken();
 
-    final uri = Uri.parse(
-      '${AppConstants.baseUrl}$_base/$resumeId/download',
-    );
+    final uri = Uri.parse('${AppConstants.baseUrl}$_base/$resumeId/download');
 
     final response = await http.get(
       uri,
-      headers: {
-        if (token != null) 'Authorization': 'Bearer $token',
-      },
+      headers: {if (token != null) 'Authorization': 'Bearer $token'},
     );
 
     if (response.statusCode != 200) {

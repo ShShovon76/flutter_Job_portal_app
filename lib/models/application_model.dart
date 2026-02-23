@@ -4,8 +4,6 @@
 // Application Status Enum
 // --------------------
 
-
-
 import 'package:job_portal_app/models/user_model.dart';
 
 enum ApplicationStatus {
@@ -140,6 +138,22 @@ class Resume {
     );
   }
 
+  Resume copyWith({
+    int? id,
+    String? title,
+    String? fileUrl,
+    String? uploadedAt,
+    bool? primaryResume,
+  }) {
+    return Resume(
+      id: id ?? this.id,
+      title: title ?? this.title,
+      fileUrl: fileUrl ?? this.fileUrl,
+      uploadedAt: uploadedAt ?? this.uploadedAt,
+      primaryResume: primaryResume ?? this.primaryResume,
+    );
+  }
+
   Map<String, dynamic> toJson() {
     return {
       'id': id,
@@ -176,10 +190,8 @@ class ApplicationStatusHistory {
     return ApplicationStatusHistory(
       id: json['id'],
       applicationId: json['applicationId'],
-      fromStatus:
-          ApplicationStatusExtension.fromString(json['fromStatus']),
-      toStatus:
-          ApplicationStatusExtension.fromString(json['toStatus']),
+      fromStatus: ApplicationStatusExtension.fromString(json['fromStatus']),
+      toStatus: ApplicationStatusExtension.fromString(json['toStatus']),
       note: json['note'],
       changedAt: DateTime.parse(json['changedAt']),
       changedBy: json['changedBy'] != null
@@ -208,13 +220,9 @@ class ApplicationStatusHistory {
 class UpdateApplicationStatusRequest {
   final ApplicationStatus status;
 
-  UpdateApplicationStatusRequest({
-    required this.status,
-  });
+  UpdateApplicationStatusRequest({required this.status});
 
   Map<String, dynamic> toJson() {
-    return {
-      'status': status.value,
-    };
+    return {'status': status.value};
   }
 }

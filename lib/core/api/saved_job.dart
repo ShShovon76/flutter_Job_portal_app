@@ -26,17 +26,9 @@ class SavedJobApi {
     }
 
     final json = jsonDecode(res.body);
+     return Pagination.fromJson(json, (e) => SavedJob.fromJson(e));
 
-    return Pagination.fromJson(
-      {
-        'items': json['content'],
-        'page': json['page'],
-        'size': json['size'],
-        'totalItems': json['totalElements'],
-        'totalPages': json['totalPages'],
-      },
-      (e) => SavedJob.fromJson(e),
-    );
+
   }
 
   /* ======================================================

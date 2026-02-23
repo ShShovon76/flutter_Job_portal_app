@@ -11,7 +11,6 @@ class EmployerDashboardScreen extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Employer Dashboard'),
-        automaticallyImplyLeading: false,
         actions: [
           IconButton(
             onPressed: () {

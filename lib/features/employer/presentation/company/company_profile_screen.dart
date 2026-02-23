@@ -381,7 +381,6 @@ class _CompanyProfileScreenState extends State<CompanyProfileScreen> {
               ],
             ),
           ),
-          automaticallyImplyLeading: false,
           actions: [
             // Edit Profile Button
             IconButton(

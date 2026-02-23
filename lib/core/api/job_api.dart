@@ -5,8 +5,6 @@ import 'package:job_portal_app/models/analytics_models.dart';
 import 'package:job_portal_app/models/job_model.dart';
 import 'package:job_portal_app/models/job_search_filter.dart';
 
-
-
 class JobApi {
   static const String _base = '/jobs';
 
@@ -20,15 +18,10 @@ class JobApi {
     int size = 10,
     String sort = 'postedAt,desc',
   }) async {
-    final res = await ApiClient.get(
-      '$_base?page=$page&size=$size&sort=$sort',
-    );
+    final res = await ApiClient.get('$_base?page=$page&size=$size&sort=$sort');
 
     final json = jsonDecode(res.body);
-    return Pagination.fromJson(
-      _springPage(json),
-      (e) => Job.fromJson(e),
-    );
+    return Pagination.fromJson(json, (e) => Job.fromJson(e));
   }
 
   // POST /jobs/search
@@ -44,10 +37,7 @@ class JobApi {
     );
 
     final json = jsonDecode(res.body);
-    return Pagination.fromJson(
-      _springPage(json),
-      (e) => Job.fromJson(e),
-    );
+    return Pagination.fromJson(json, (e) => Job.fromJson(e));
   }
 
   // GET /jobs/{jobId}
@@ -67,10 +57,7 @@ class JobApi {
     );
 
     final json = jsonDecode(res.body);
-    return Pagination.fromJson(
-      _springPage(json),
-      (e) => Job.fromJson(e),
-    );
+    return Pagination.fromJson(json, (e) => Job.fromJson(e));
   }
 
   /* =========================
@@ -100,10 +87,7 @@ class JobApi {
     );
 
     final json = jsonDecode(res.body);
-    return Pagination.fromJson(
-      _springPage(json),
-      (e) => Job.fromJson(e),
-    );
+    return Pagination.fromJson(json, (e) => Job.fromJson(e));
   }
 
   // POST /jobs
@@ -119,6 +103,7 @@ class JobApi {
 
     return Job.fromJson(jsonDecode(res.body));
   }
+
   // PUT /jobs/{jobId}
   static Future<Job> updateJob({
     required int jobId,
@@ -139,10 +124,7 @@ class JobApi {
     required int jobId,
     required int employerId,
   }) async {
-    await ApiClient.delete(
-      '$_base/$jobId?employerId=$employerId',
-      auth: true,
-    );
+    await ApiClient.delete('$_base/$jobId?employerId=$employerId', auth: true);
   }
 
   /* =========================
@@ -154,18 +136,12 @@ class JobApi {
     required int jobId,
     required JobViewRequest request,
   }) async {
-    await ApiClient.post(
-      '$_base/$jobId/view',
-      body: request.toJson(),
-    );
+    await ApiClient.post('$_base/$jobId/view', body: request.toJson());
   }
 
   // GET /jobs/{jobId}/analytics
   static Future<JobAnalytics> getJobAnalytics(int jobId) async {
-    final res = await ApiClient.get(
-      '$_base/$jobId/analytics',
-      auth: true,
-    );
+    final res = await ApiClient.get('$_base/$jobId/analytics', auth: true);
 
     return JobAnalytics.fromJson(jsonDecode(res.body));
   }
@@ -176,10 +152,7 @@ class JobApi {
 
   // POST /jobs/close-expired
   static Future<void> closeExpiredJobs() async {
-    await ApiClient.post(
-      '$_base/close-expired',
-      auth: true,
-    );
+    await ApiClient.post('$_base/close-expired', auth: true);
   }
 
   // GET /jobs/search (ADMIN / fallback)
@@ -197,24 +170,7 @@ class JobApi {
     final res = await ApiClient.get('$_base/search$query');
 
     final json = jsonDecode(res.body);
-    return Pagination.fromJson(
-      _springPage(json),
-      (e) => Job.fromJson(e),
-    );
-  }
-
-  /* =========================
-     HELPERS
-     ========================= */
-
-  static Map<String, dynamic> _springPage(Map<String, dynamic> page) {
-    return {
-      'items': page['content'],
-      'page': page['number'],
-      'size': page['size'],
-      'totalItems': page['totalElements'],
-      'totalPages': page['totalPages'],
-    };
+    return Pagination.fromJson(json, (e) => Job.fromJson(e));
   }
 
   static String _query(Map<String, String?> params) {
@@ -226,4 +182,3 @@ class JobApi {
     return filtered.isEmpty ? '' : '?$filtered';
   }
 }
-

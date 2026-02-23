@@ -1,153 +1,3 @@
-// import 'package:flutter/material.dart';
-// import 'package:job_portal_app/core/api/analytics_api.dart';
-// import 'package:job_portal_app/features/auth/provider/auth_provider.dart';
-// import 'package:job_portal_app/features/job_seeker/provider/job_provider.dart';
-// import 'package:job_portal_app/models/analytics_models.dart';
-// import 'package:job_portal_app/models/job_model.dart';
-// import 'package:provider/provider.dart';
-
-// class JobDetailsScreen extends StatefulWidget {
-//   final int jobId;
-
-//   const JobDetailsScreen({super.key, required this.jobId});
-
-//   @override
-//   State<JobDetailsScreen> createState() => _JobDetailsScreenState();
-// }
-
-// class _JobDetailsScreenState extends State<JobDetailsScreen> {
-//   JobViewsResponse? views;
-//   bool loadingAnalytics = false;
-
-//   @override
-//   void initState() {
-//     super.initState();
-
-//     // ✅ build শেষ হওয়ার পরে call হবে
-//     WidgetsBinding.instance.addPostFrameCallback((_) {
-//       _load();
-//     });
-//   }
-
-//   Future<void> _load() async {
-//     final jobProvider = context.read<JobProvider>();
-//     final auth = context.read<AuthProvider>();
-
-//     // load job
-//     await jobProvider.loadJobById(widget.jobId);
-
-//     // record view
-//     await jobProvider.recordView(
-//       widget.jobId,
-//       JobViewRequest(viewerId: auth.user?.id, userAgent: 'flutter'),
-//     );
-
-//     // load analytics
-//     loadingAnalytics = true;
-//     setState(() {});
-
-//     views = await AnalyticsApi.getJobViews(jobId: widget.jobId);
-
-//     loadingAnalytics = false;
-//     if (mounted) setState(() {});
-//   }
-
-//   @override
-//   Widget build(BuildContext context) {
-//     return Scaffold(
-//       appBar: AppBar(title: const Text('Job Details')),
-//       body: Consumer<JobProvider>(
-//         builder: (_, provider, __) {
-//           final job = provider.selectedJob;
-
-//           if (job == null) {
-//             return const Center(child: CircularProgressIndicator());
-//           }
-
-//           return SingleChildScrollView(
-//             padding: const EdgeInsets.all(16),
-//             child: Column(
-//               crossAxisAlignment: CrossAxisAlignment.start,
-//               children: [
-//                 Text(
-//                   job.title,
-//                   style: Theme.of(context).textTheme.headlineSmall,
-//                 ),
-//                 const SizedBox(height: 6),
-//                 Text(job.company.name),
-//                 const Divider(height: 32),
-
-//                 _info('Location', job.location),
-//                 _info('Job Type', job.jobType.name),
-//                 _info('Experience', job.experienceLevel.name),
-//                 _info(
-//                   'Salary',
-//                   '${job.minSalary ?? '-'} - ${job.maxSalary ?? '-'}',
-//                 ),
-
-//                 const Divider(height: 32),
-//                 Text(job.description),
-
-//                 const SizedBox(height: 24),
-
-//                 if (loadingAnalytics)
-//                   const Center(child: CircularProgressIndicator())
-//                 else if (views != null)
-//                   _AnalyticsCard(views!),
-//               ],
-//             ),
-//           );
-//         },
-//       ),
-//     );
-//   }
-
-//   Widget _info(String label, String value) {
-//     return Padding(
-//       padding: const EdgeInsets.only(bottom: 6),
-//       child: Text('$label: $value'),
-//     );
-//   }
-// }
-
-// class _AnalyticsCard extends StatelessWidget {
-//   final JobViewsResponse views;
-
-//   const _AnalyticsCard(this.views);
-
-//   @override
-//   Widget build(BuildContext context) {
-//     return Card(
-//       elevation: 2,
-//       child: Padding(
-//         padding: const EdgeInsets.all(16),
-//         child: Column(
-//           crossAxisAlignment: CrossAxisAlignment.start,
-//           children: [
-//             Text('Analytics', style: Theme.of(context).textTheme.titleMedium),
-//             const SizedBox(height: 12),
-//             _row('Total Views', views.totalViews.toString()),
-//             _row('Unique Views', views.uniqueViews.toString()),
-//           ],
-//         ),
-//       ),
-//     );
-//   }
-
-//   Widget _row(String label, String value) {
-//     return Padding(
-//       padding: const EdgeInsets.only(bottom: 6),
-//       child: Row(
-//         mainAxisAlignment: MainAxisAlignment.spaceBetween,
-//         children: [
-//           Text(label),
-//           Text(value, style: const TextStyle(fontWeight: FontWeight.bold)),
-//         ],
-//       ),
-//     );
-//   }
-// }
-
 // features/job_seeker/presentation/job/job_details_screen.dart
 import 'dart:io';
 import 'package:flutter/material.dart';
@@ -159,6 +9,7 @@ import 'package:job_portal_app/core/api/job_api.dart';
 import 'package:job_portal_app/core/api/resume_api.dart';
 import 'package:job_portal_app/core/api/saved_job.dart';
 import 'package:job_portal_app/core/constants/app_colors.dart';
+import 'package:job_portal_app/core/constants/constants.dart';
 import 'package:job_portal_app/features/auth/provider/auth_provider.dart';
 import 'package:job_portal_app/models/application_model.dart';
 import 'package:job_portal_app/models/company_model.dart';
@@ -169,7 +20,6 @@ import 'package:job_portal_app/routes/route_names.dart';
 import 'package:job_portal_app/shared/widgets/common/loading_overlay.dart';
 import 'package:provider/provider.dart';
 import 'package:share_plus/share_plus.dart';
-import 'package:url_launcher/url_launcher.dart';
 import 'package:file_picker/file_picker.dart';
 
 class JobDetailsScreen extends StatefulWidget {
@@ -211,8 +61,18 @@ class _JobDetailsScreenState extends State<JobDetailsScreen> {
   @override
   void initState() {
     super.initState();
+
     _loadJobDetails(widget.jobId);
-    _recordJobView(widget.jobId);
+    _recordJobView(widget.jobId); // ✅ keep this
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final auth = Provider.of<AuthProvider>(context, listen: false);
+      _currentUser = auth.user;
+
+      if (_currentUser?.id != null) {
+        _loadResumes();
+      }
+    });
   }
 
   @override
@@ -268,6 +128,7 @@ class _JobDetailsScreenState extends State<JobDetailsScreen> {
       if (_currentUser?.id != null) {
         _checkIfApplied(job.id);
         _checkIfSaved(job.id);
+        _loadResumes();
       }
 
       if (job.company.id != null) {
@@ -475,6 +336,7 @@ class _JobDetailsScreenState extends State<JobDetailsScreen> {
 
         // Apply with newly created resume
         await _applyWithResume(resume.id);
+        await _loadResumes(); // refresh list to include new resume
       } catch (e) {
         debugPrint('Resume upload failed: $e');
         _showSnackBar('Resume upload failed', isError: true);
@@ -506,7 +368,7 @@ class _JobDetailsScreenState extends State<JobDetailsScreen> {
       setState(() {
         _showApplicationModal = false;
         _hasApplied = true;
-        _selectedResumeId = null;
+        _selectedResumeId = _resumes.isNotEmpty ? _resumes.first.id : null;
         _coverLetterController.clear();
         _newResumeFile = null;
         _newResumeTitleController.clear();
@@ -809,7 +671,9 @@ Check out this job opportunity!
                                               12,
                                             ),
                                             child: Image.network(
-                                              _job!.company.logoUrl!,
+                                              AppConstants.getImageUrl(
+                                                _job!.company.logoUrl!,
+                                              ),
                                               fit: BoxFit.cover,
                                               errorBuilder: (_, __, ___) =>
                                                   _buildDefaultLogo(),
@@ -1190,7 +1054,7 @@ Check out this job opportunity!
                   ? ClipRRect(
                       borderRadius: BorderRadius.circular(12),
                       child: Image.network(
-                        _company!.logoUrl!,
+                        AppConstants.getImageUrl(_company!.logoUrl!),
                         fit: BoxFit.cover,
                         errorBuilder: (_, __, ___) => const Icon(
                           Icons.business,
@@ -1308,7 +1172,7 @@ Check out this job opportunity!
               ? ClipRRect(
                   borderRadius: BorderRadius.circular(8),
                   child: Image.network(
-                    job.company.logoUrl!,
+                    AppConstants.getImageUrl(job.company.logoUrl!),
                     fit: BoxFit.cover,
                     errorBuilder: (_, __, ___) => const Icon(Icons.business),
                   ),

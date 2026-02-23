@@ -120,7 +120,6 @@ class _JobListScreenState extends State<JobListScreen> {
           'My Jobs',
           style: TextStyle(fontSize: 20, fontWeight: FontWeight.w600),
         ),
-        automaticallyImplyLeading: false,
         elevation: 0,
         actions: [
           IconButton(

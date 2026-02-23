@@ -1,4 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:job_portal_app/features/admin/presentation/admin_dashboard.dart';
+import 'package:job_portal_app/features/admin/presentation/admin_screens.dart';
+import 'package:job_portal_app/features/admin/presentation/analytics_screen.dart';
+import 'package:job_portal_app/features/admin/presentation/categories_screen.dart';
+import 'package:job_portal_app/features/admin/presentation/manage_employer_jobs_screen.dart';
+import 'package:job_portal_app/features/admin/presentation/manage_employers_screen.dart';
+import 'package:job_portal_app/features/admin/presentation/manage_users_screen.dart';
+import 'package:job_portal_app/features/admin/presentation/push_notifications_screen.dart';
 import 'package:job_portal_app/features/admin/shell/admin_shell.dart';
 import 'package:job_portal_app/features/auth/presentation/forgot_password_screen.dart';
 import 'package:job_portal_app/features/auth/presentation/login_screen.dart';
@@ -15,7 +23,11 @@ import 'package:job_portal_app/features/employer/presentation/jobs/post_job_scre
 import 'package:job_portal_app/features/employer/presentation/shell/employer_shell.dart';
 import 'package:job_portal_app/features/job_seeker/presentation/home/job_feed_screen.dart';
 import 'package:job_portal_app/features/job_seeker/presentation/job/saved_jobs_screen.dart';
-import 'package:job_portal_app/features/job_seeker/presentation/profile/profile_screen.dart';
+import 'package:job_portal_app/features/job_seeker/presentation/profile/certification_screen.dart';
+import 'package:job_portal_app/features/job_seeker/presentation/profile/edit_profile_screen.dart';
+import 'package:job_portal_app/features/job_seeker/presentation/profile/education_screen.dart';
+import 'package:job_portal_app/features/job_seeker/presentation/profile/experience_screen.dart';
+import 'package:job_portal_app/features/job_seeker/presentation/profile/resume_upload_screen.dart';
 import 'package:job_portal_app/features/job_seeker/presentation/shell/job_seeker_shell.dart';
 import 'package:job_portal_app/features/job_seeker/presentation/tracking/applied_jobs_screen.dart';
 import 'package:job_portal_app/routes/route_names.dart';
@@ -79,8 +91,18 @@ class AppRouter {
         return MaterialPageRoute(builder: (_) => const JobFeedScreen());
       case RouteNames.savedJobs:
         return MaterialPageRoute(builder: (_) => const SavedJobsScreen());
-      case RouteNames.profile:
-        return MaterialPageRoute(builder: (_) => const JobSeekerProfileScreen());
+      case RouteNames.editProfile:
+        return MaterialPageRoute(
+          builder: (_) => const EditJobSeekerProfileScreen(),
+        );
+      case RouteNames.certifications:
+        return MaterialPageRoute(builder: (_) => const CertificationsScreen());
+      case RouteNames.education:
+        return MaterialPageRoute(builder: (_) => const EducationScreen());
+      case RouteNames.experience:
+        return MaterialPageRoute(builder: (_) => const ExperienceScreen());
+      case RouteNames.resumeUpload:
+        return MaterialPageRoute(builder: (_) => const ResumeUploadScreen());
       case RouteNames.appliedJobs:
         return MaterialPageRoute(builder: (_) => const AppliedJobsScreen());
       case RouteNames.jobDetails:
@@ -126,6 +148,37 @@ class AppRouter {
       // Admin Routes
       case RouteNames.adminShell:
         return MaterialPageRoute(builder: (_) => const AdminShell());
+
+      case RouteNames.adminDashboard:
+        return MaterialPageRoute(builder: (_) => const AdminDashboardScreen());
+
+      case RouteNames.manageUsers:
+        return MaterialPageRoute(builder: (_) => const ManageUsersScreen());
+
+      case RouteNames.manageEmployers:
+        return MaterialPageRoute(builder: (_) => const ManageEmployersScreen());
+
+      case RouteNames.manageEmployerJobs:
+        return MaterialPageRoute(
+          builder: (_) => const ManageEmployerJobsScreen(),
+        );
+
+      case RouteNames.approveJobs:
+        return MaterialPageRoute(builder: (_) => const ApproveJobsScreen());
+
+      case RouteNames.categories:
+        return MaterialPageRoute(builder: (_) => const CategoriesScreen());
+
+      case RouteNames.adminSkills:
+        return MaterialPageRoute(builder: (_) => const AdminSkillsScreen());
+
+      case RouteNames.analytics:
+        return MaterialPageRoute(builder: (_) => const AnalyticsScreen());
+
+      case RouteNames.pushNotifications:
+        return MaterialPageRoute(
+          builder: (_) => const PushNotificationsScreen(),
+        );
       // Add other admin routes here...
 
       default:

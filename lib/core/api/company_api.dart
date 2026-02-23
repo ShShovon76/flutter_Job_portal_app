@@ -25,7 +25,7 @@ class CompanyApi {
 
     final json = jsonDecode(res.body);
     return Pagination.fromJson(
-      _springPage(json),
+      json,
       (e) => Company.fromJson(e as Map<String, dynamic>),
     );
   }
@@ -54,7 +54,7 @@ class CompanyApi {
     final json = jsonDecode(res.body);
 
     return Pagination.fromJson(
-      _springPage(json),
+      json,
       (e) => Company.fromJson(e as Map<String, dynamic>),
     );
   }
@@ -82,7 +82,7 @@ class CompanyApi {
 
     final json = jsonDecode(res.body);
     return Pagination.fromJson(
-      _springPage(json),
+      json,
       (e) => Company.fromJson(e as Map<String, dynamic>),
     );
   }
@@ -234,7 +234,7 @@ class CompanyApi {
     final json = jsonDecode(res.body);
 
     return Pagination.fromJson(
-      _springPage(json),
+      json,
       (e) => CompanyReview.fromJson(e as Map<String, dynamic>),
     );
   }
@@ -265,17 +265,7 @@ class CompanyApi {
     );
   }
 
-  // ----------------------------
-  // Helpers
-  // ----------------------------
-  Map<String, dynamic> _springPage(Map<String, dynamic> json) => {
-    'items': json['content'],
-    'page': json['number'],
-    'size': json['size'],
-    'totalItems': json['totalElements'],
-    'totalPages': json['totalPages'],
-  };
-
+  
   String _query(Map<String, String?> params) {
     final q = params.entries
         .where((e) => e.value != null)

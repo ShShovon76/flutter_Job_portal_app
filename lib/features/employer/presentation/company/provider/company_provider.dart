@@ -10,18 +10,36 @@ class CompanyProvider extends ChangeNotifier {
   bool loading = false;
   String? error;
 
-  Company? myCompany;
-  List<CompanyReview> reviews = [];
+  // =====================================================
+  // STATE
+  // =====================================================
 
-  // ----------------------------
-  // Core safe call
-  // ----------------------------
+  /// Public list (GET /companies, /search)
+  List<Company> companies = [];
+  int page = 0;
+  int size = 10;
+  int totalPages = 0;
+  bool hasMore = true;
+
+  /// Selected company (GET /{id})
+  Company? selectedCompany;
+
+  /// Owner company (GET /owner/{ownerId})
+  Company? myCompany;
+
+  /// Reviews
+  List<CompanyReview> reviews = [];
+  int reviewPage = 0;
+  int reviewTotalPages = 0;
+
+  // =====================================================
+  // SAFE RUNNER
+  // =====================================================
+
   Future<T?> _run<T>(Future<T> Function() action) async {
     loading = true;
     error = null;
-
-    // 🔒 notify only if widget already built
-    if (hasListeners) notifyListeners();
+    notifyListeners();
 
     try {
       return await action();
@@ -30,23 +48,103 @@ class CompanyProvider extends ChangeNotifier {
       rethrow;
     } finally {
       loading = false;
-      if (hasListeners) notifyListeners();
+      notifyListeners();
     }
   }
 
-  // ----------------------------
-  // Company
-  // ----------------------------
-  Future<void> loadMyCompany(int ownerId) async {
-    final page = await _run(() => _api.getCompaniesByOwner(ownerId: ownerId));
-    myCompany = page?.items.isNotEmpty == true ? page!.items.first : null;
+  // =====================================================
+  // 1️⃣ GET COMPANIES
+  // =====================================================
+
+  Future<void> loadCompanies({bool refresh = false}) async {
+    if (refresh) {
+      page = 0;
+      companies.clear();
+      hasMore = true;
+    }
+
+    if (!hasMore) return;
+
+    final result = await _run(
+      () => _api.getCompanies(page: page, size: size),
+    );
+
+    if (result != null) {
+      companies.addAll(result.items);
+      totalPages = result.totalPages;
+      hasMore = page + 1 < totalPages;
+      page++;
+    }
   }
 
-  Future<void> createCompany(Company company, {File? logo}) async {
-    myCompany = await _run(
-      () => _api.createCompany(company: company, logo: logo),
+  // =====================================================
+  // 2️⃣ SEARCH
+  // =====================================================
+
+  Future<void> searchCompanies({
+    String? keyword,
+    String? industry,
+    bool? verified,
+    bool refresh = false,
+  }) async {
+    if (refresh) {
+      page = 0;
+      companies.clear();
+      hasMore = true;
+    }
+
+    if (!hasMore) return;
+
+    final result = await _run(
+      () => _api.searchCompanies(
+        keyword: keyword,
+        industry: industry,
+        verified: verified,
+        page: page,
+        size: size,
+      ),
     );
+
+    if (result != null) {
+      companies.addAll(result.items);
+      totalPages = result.totalPages;
+      hasMore = page + 1 < totalPages;
+      page++;
+    }
   }
+
+  // =====================================================
+  // 3️⃣ GET COMPANY BY ID
+  // =====================================================
+
+  Future<void> loadCompanyById(int id) async {
+    selectedCompany = await _run(() => _api.getCompanyById(id));
+  }
+
+  // =====================================================
+  // 4️⃣ OWNER
+  // =====================================================
+
+  Future<void> loadMyCompany(int ownerId) async {
+    final pageData =
+        await _run(() => _api.getCompaniesByOwner(ownerId: ownerId));
+
+    myCompany =
+        pageData?.items.isNotEmpty == true ? pageData!.items.first : null;
+  }
+
+  // =====================================================
+  // 5️⃣ CREATE
+  // =====================================================
+
+  Future<void> createCompany(Company company, {File? logo}) async {
+    myCompany =
+        await _run(() => _api.createCompany(company: company, logo: logo));
+  }
+
+  // =====================================================
+  // 6️⃣ UPDATE
+  // =====================================================
 
   Future<void> updateCompany(
     CompanyUpdateRequest request, {
@@ -55,24 +153,28 @@ class CompanyProvider extends ChangeNotifier {
   }) async {
     if (myCompany == null) return;
 
-    myCompany = await _run(
-      () => _api.updateCompany(
-        id: myCompany!.id,
-        request: request,
-        logo: logo,
-        cover: cover,
-      ),
-    );
+    myCompany = await _run(() => _api.updateCompany(
+          id: myCompany!.id,
+          request: request,
+          logo: logo,
+          cover: cover,
+        ));
   }
+
+  // =====================================================
+  // 7️⃣ LOGO / COVER
+  // =====================================================
 
   Future<void> uploadLogo(File file) async {
     if (myCompany == null) return;
-    myCompany = await _run(() => _api.uploadLogo(myCompany!.id, file));
+    myCompany =
+        await _run(() => _api.uploadLogo(myCompany!.id, file));
   }
 
   Future<void> uploadCover(File file) async {
     if (myCompany == null) return;
-    myCompany = await _run(() => _api.uploadCover(myCompany!.id, file));
+    myCompany =
+        await _run(() => _api.uploadCover(myCompany!.id, file));
   }
 
   Future<void> deleteLogo() async {
@@ -87,12 +189,25 @@ class CompanyProvider extends ChangeNotifier {
     myCompany = myCompany!.copyWith(coverImageUrl: null);
   }
 
-  // ----------------------------
-  // Reviews
-  // ----------------------------
-  Future<void> loadReviews(int companyId) async {
-    final page = await _run(() => _api.getReviews(companyId: companyId));
-    reviews = page?.items ?? [];
+  // =====================================================
+  // 8️⃣ REVIEWS
+  // =====================================================
+
+  Future<void> loadReviews(int companyId, {bool refresh = false}) async {
+    if (refresh) {
+      reviewPage = 0;
+      reviews.clear();
+    }
+
+    final result = await _run(
+      () => _api.getReviews(companyId: companyId, page: reviewPage),
+    );
+
+    if (result != null) {
+      reviews.addAll(result.items);
+      reviewTotalPages = result.totalPages;
+      reviewPage++;
+    }
   }
 
   Future<void> addReview(
@@ -100,29 +215,27 @@ class CompanyProvider extends ChangeNotifier {
     int reviewerId,
     CompanyReview review,
   ) async {
-    await _run(
-      () => _api.addReview(
-        companyId: companyId,
-        reviewerId: reviewerId,
-        review: review,
-      ),
-    );
-    await loadReviews(companyId);
+    await _run(() => _api.addReview(
+          companyId: companyId,
+          reviewerId: reviewerId,
+          review: review,
+        ));
+
+    await loadReviews(companyId, refresh: true);
   }
 
-  // ----------------------------
-  // Admin
-  // ----------------------------
+  // =====================================================
+  // 9️⃣ ADMIN
+  // =====================================================
+
   Future<void> verifyCompany(int companyId, int adminId) async {
-    await _run(
-      () => _api.verifyCompany(companyId: companyId, adminId: adminId),
-    );
+    await _run(() =>
+        _api.verifyCompany(companyId: companyId, adminId: adminId));
   }
 
   Future<void> deleteCompany(int companyId, int ownerId) async {
-    await _run(
-      () => _api.deleteCompany(companyId: companyId, ownerId: ownerId),
-    );
+    await _run(() =>
+        _api.deleteCompany(companyId: companyId, ownerId: ownerId));
     myCompany = null;
   }
 }

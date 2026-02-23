@@ -277,13 +277,25 @@ class _LoginScreenState extends State<LoginScreen> {
   void _redirectBasedOnRole(UserRole role) {
     switch (role) {
       case UserRole.JOB_SEEKER:
-        Navigator.pushReplacementNamed(context, RouteNames.jobSeekerShell);
+        Navigator.pushNamedAndRemoveUntil(
+          context,
+          RouteNames.jobSeekerShell,
+          (Route<dynamic> route) => false,
+        );
         break;
       case UserRole.EMPLOYER:
-        Navigator.pushReplacementNamed(context, RouteNames.employerShell);
+        Navigator.pushNamedAndRemoveUntil(
+          context,
+          RouteNames.employerShell,
+          (Route<dynamic> route) => false,
+        );
         break;
       case UserRole.ADMIN:
-        Navigator.pushReplacementNamed(context, RouteNames.adminShell);
+        Navigator.pushNamedAndRemoveUntil(
+          context,
+          RouteNames.adminShell,
+          (Route<dynamic> route) => false,
+        );
         break;
     }
   }

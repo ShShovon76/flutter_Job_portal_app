@@ -1,524 +1,661 @@
-// import 'package:flutter/material.dart';
-// import 'package:job_app/core/constants/app_colors.dart';
-// import 'package:job_app/core/constants/app_sizes.dart';
-// import 'package:job_app/shared/services/demo_data_service.dart';
-// import 'package:job_app/shared/widgets/buttons/primary_button.dart';
+// features/job_seeker/presentation/experience/experience_screen.dart
+import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
+import 'package:job_portal_app/core/constants/app_colors.dart';
+import 'package:job_portal_app/core/constants/app_sizes.dart';
+import 'package:job_portal_app/features/job_seeker/provider/profile_provider.dart';
+import 'package:job_portal_app/models/job_seeker_profile.dart';
+import 'package:job_portal_app/shared/widgets/buttons/primary_button.dart';
+import 'package:job_portal_app/shared/widgets/common/loading_overlay.dart';
+import 'package:provider/provider.dart';
 
-// class ExperienceScreen extends StatefulWidget {
-//   const ExperienceScreen({super.key});
+class ExperienceScreen extends StatefulWidget {
+  const ExperienceScreen({super.key});
 
-//   @override
-//   State<ExperienceScreen> createState() => _ExperienceScreenState();
-// }
+  @override
+  State<ExperienceScreen> createState() => _ExperienceScreenState();
+}
 
-// class _ExperienceScreenState extends State<ExperienceScreen> {
-//   List<Experience> experiences = DemoDataService.demoExperience;
-//   bool showAddForm = false;
+class _ExperienceScreenState extends State<ExperienceScreen> {
+  List<Experience> _experiences = [];
+  bool _isLoading = true;
+  bool _isSubmitting = false;
+  String? _error;
 
-//   final TextEditingController _companyController = TextEditingController();
-//   final TextEditingController _positionController = TextEditingController();
-//   final TextEditingController _descriptionController = TextEditingController();
-//   DateTime? _startDate;
-//   DateTime? _endDate;
-//   bool _currentlyWorking = false;
+  @override
+  void initState() {
+    super.initState();
+    _loadExperiences();
+  }
 
-//   @override
-//   Widget build(BuildContext context) {
-//     return Scaffold(
-//       appBar: AppBar(
-//         title: const Text('Work Experience'),
-//         actions: [
-//           if (!showAddForm)
-//             IconButton(
-//               onPressed: () {
-//                 setState(() => showAddForm = true);
-//               },
-//               icon: const Icon(Icons.add),
-//             ),
-//         ],
-//       ),
-//       body: Column(
-//         children: [
-//           if (showAddForm)
-//             // Add Experience Form
-//             Expanded(child: _buildExperienceForm())
-//           else
-//             // Experience List
-//             Expanded(
-//               child: experiences.isEmpty
-//                   ? _buildEmptyState()
-//                   : ListView.builder(
-//                       padding: const EdgeInsets.all(AppSizes.md),
-//                       itemCount: experiences.length,
-//                       itemBuilder: (context, index) {
-//                         final experience = experiences[index];
-//                         return _buildExperienceCard(experience);
-//                       },
-//                     ),
-//             ),
-//           // Floating Action Button for adding
-//           if (!showAddForm && experiences.isNotEmpty)
-//             Padding(
-//               padding: const EdgeInsets.all(AppSizes.md),
-//               child: PrimaryButton(
-//                 text: 'Add Experience',
-//                 onPressed: () {
-//                   setState(() => showAddForm = true);
-//                 },
-//                 prefixIcon: const Icon(Icons.add, size: 20),
-//               ),
-//             ),
-//         ],
-//       ),
-//     );
-//   }
+  Future<void> _loadExperiences() async {
+    final provider = Provider.of<JobSeekerProfileProvider>(
+      context,
+      listen: false,
+    );
+    final userId = provider.profile?.userId;
 
-//   Widget _buildExperienceCard(Experience experience) {
-//     final duration = _calculateDuration(
-//       experience.startDate,
-//       experience.endDate,
-//     );
+    if (userId == null) {
+      setState(() {
+        _error = 'User not found';
+        _isLoading = false;
+      });
+      return;
+    }
 
-//     return Card(
-//       margin: const EdgeInsets.only(bottom: AppSizes.md),
-//       child: Padding(
-//         padding: const EdgeInsets.all(AppSizes.md),
-//         child: Column(
-//           crossAxisAlignment: CrossAxisAlignment.start,
-//           children: [
-//             Row(
-//               mainAxisAlignment: MainAxisAlignment.spaceBetween,
-//               children: [
-//                 Expanded(
-//                   child: Text(
-//                     experience.position,
-//                     style: const TextStyle(
-//                       fontSize: 18,
-//                       fontWeight: FontWeight.w600,
-//                     ),
-//                   ),
-//                 ),
-//                 PopupMenuButton(
-//                   itemBuilder: (context) => [
-//                     const PopupMenuItem(value: 'edit', child: Text('Edit')),
-//                     const PopupMenuItem(
-//                       value: 'delete',
-//                       child: Text(
-//                         'Delete',
-//                         style: TextStyle(color: AppColors.error),
-//                       ),
-//                     ),
-//                   ],
-//                   onSelected: (value) {
-//                     if (value == 'edit') {
-//                       _editExperience(experience);
-//                     } else if (value == 'delete') {
-//                       _deleteExperience(experience.id);
-//                     }
-//                   },
-//                 ),
-//               ],
-//             ),
-//             const SizedBox(height: AppSizes.sm),
-//             Text(
-//               experience.company,
-//               style: const TextStyle(
-//                 fontSize: 16,
-//                 color: AppColors.textSecondary,
-//               ),
-//             ),
-//             const SizedBox(height: AppSizes.sm),
-//             Text(
-//               '${_formatDate(experience.startDate)} - ${experience.currentlyWorking ? 'Present' : _formatDate(experience.endDate!)} • $duration',
-//               style: const TextStyle(
-//                 fontSize: 14,
-//                 color: AppColors.textSecondary,
-//               ),
-//             ),
-//             const SizedBox(height: AppSizes.sm),
-//             Text(
-//               experience.description,
-//               style: const TextStyle(
-//                 fontSize: 14,
-//                 color: AppColors.textSecondary,
-//               ),
-//             ),
-//           ],
-//         ),
-//       ),
-//     );
-//   }
+    setState(() => _isLoading = true);
 
-//   Widget _buildExperienceForm() {
-//     return SingleChildScrollView(
-//       padding: const EdgeInsets.all(AppSizes.md),
-//       child: Column(
-//         crossAxisAlignment: CrossAxisAlignment.start,
-//         children: [
-//           const Text(
-//             'Add Work Experience',
-//             style: TextStyle(fontSize: 20, fontWeight: FontWeight.w600),
-//           ),
-//           const SizedBox(height: AppSizes.lg),
-//           _buildFormField('Company', 'Company name', _companyController),
-//           const SizedBox(height: AppSizes.lg),
-//           _buildFormField(
-//             'Position',
-//             'Job title or position',
-//             _positionController,
-//           ),
-//           const SizedBox(height: AppSizes.lg),
-//           // Start Date
-//           InkWell(
-//             onTap: () => _selectDate(true),
-//             child: Container(
-//               padding: const EdgeInsets.all(AppSizes.md),
-//               decoration: BoxDecoration(
-//                 border: Border.all(color: AppColors.border),
-//                 borderRadius: BorderRadius.circular(AppSizes.inputRadius),
-//               ),
-//               child: Row(
-//                 children: [
-//                   const Icon(Icons.calendar_today_outlined),
-//                   const SizedBox(width: AppSizes.md),
-//                   Expanded(
-//                     child: Text(
-//                       _startDate != null
-//                           ? 'Start Date: ${_formatDate(_startDate!)}'
-//                           : 'Select Start Date',
-//                       style: TextStyle(
-//                         color: _startDate != null
-//                             ? AppColors.textPrimary
-//                             : AppColors.textDisabled,
-//                       ),
-//                     ),
-//                   ),
-//                 ],
-//               ),
-//             ),
-//           ),
-//           const SizedBox(height: AppSizes.lg),
-//           // Currently Working Checkbox
-//           Row(
-//             children: [
-//               Checkbox(
-//                 value: _currentlyWorking,
-//                 onChanged: (value) {
-//                   setState(() {
-//                     _currentlyWorking = value ?? false;
-//                     if (_currentlyWorking) {
-//                       _endDate = null;
-//                     }
-//                   });
-//                 },
-//               ),
-//               const Text('I currently work here'),
-//             ],
-//           ),
-//           // End Date (if not currently working)
-//           if (!_currentlyWorking) ...[
-//             const SizedBox(height: AppSizes.lg),
-//             InkWell(
-//               onTap: () => _selectDate(false),
-//               child: Container(
-//                 padding: const EdgeInsets.all(AppSizes.md),
-//                 decoration: BoxDecoration(
-//                   border: Border.all(color: AppColors.border),
-//                   borderRadius: BorderRadius.circular(AppSizes.inputRadius),
-//                 ),
-//                 child: Row(
-//                   children: [
-//                     const Icon(Icons.calendar_today_outlined),
-//                     const SizedBox(width: AppSizes.md),
-//                     Expanded(
-//                       child: Text(
-//                         _endDate != null
-//                             ? 'End Date: ${_formatDate(_endDate!)}'
-//                             : 'Select End Date',
-//                         style: TextStyle(
-//                           color: _endDate != null
-//                               ? AppColors.textPrimary
-//                               : AppColors.textDisabled,
-//                         ),
-//                       ),
-//                     ),
-//                   ],
-//                 ),
-//               ),
-//             ),
-//           ],
-//           const SizedBox(height: AppSizes.lg),
-//           _buildFormField(
-//             'Description',
-//             'Describe your responsibilities and achievements',
-//             _descriptionController,
-//             maxLines: 4,
-//           ),
-//           const SizedBox(height: AppSizes.lg),
-//           // Key Achievements
-//           const Text(
-//             'Key Achievements (Optional)',
-//             style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
-//           ),
-//           const SizedBox(height: AppSizes.xs),
-//           const TextField(
-//             decoration: InputDecoration(
-//               hintText: 'Add an achievement and press enter',
-//               border: OutlineInputBorder(),
-//             ),
-//           ),
-//           const SizedBox(height: AppSizes.sm),
-//           Wrap(
-//             spacing: AppSizes.sm,
-//             children: [
-//               Chip(
-//                 label: const Text('Increased app performance by 40%'),
-//                 onDeleted: () {},
-//               ),
-//               Chip(
-//                 label: const Text('Led a team of 5 developers'),
-//                 onDeleted: () {},
-//               ),
-//               Chip(
-//                 label: const Text('Reduced bug reports by 60%'),
-//                 onDeleted: () {},
-//               ),
-//             ],
-//           ),
-//           const SizedBox(height: AppSizes.xl),
-//           Row(
-//             children: [
-//               Expanded(
-//                 child: OutlinedButton(
-//                   onPressed: () {
-//                     setState(() => showAddForm = false);
-//                     _clearForm();
-//                   },
-//                   child: const Text('Cancel'),
-//                 ),
-//               ),
-//               const SizedBox(width: AppSizes.md),
-//               Expanded(
-//                 child: PrimaryButton(
-//                   text: 'Save Experience',
-//                   onPressed: _saveExperience,
-//                 ),
-//               ),
-//             ],
-//           ),
-//         ],
-//       ),
-//     );
-//   }
+    try {
+      await provider.loadExperiences();
+      setState(() {
+        _experiences = provider.profile?.experience ?? [];
+        _isLoading = false;
+      });
+    } catch (e) {
+      setState(() {
+        _error = e.toString();
+        _isLoading = false;
+      });
+    }
+  }
 
-//   Widget _buildEmptyState() {
-//     return Center(
-//       child: Column(
-//         mainAxisAlignment: MainAxisAlignment.center,
-//         children: [
-//           Icon(
-//             Icons.work_outline,
-//             size: 80,
-//             color: AppColors.textDisabled.withOpacity(0.5),
-//           ),
-//           const SizedBox(height: AppSizes.xl),
-//           const Text(
-//             'No Work Experience',
-//             style: TextStyle(fontSize: 20, fontWeight: FontWeight.w600),
-//           ),
-//           const SizedBox(height: AppSizes.sm),
-//           const Text(
-//             'Add your work experience to showcase your career journey',
-//             textAlign: TextAlign.center,
-//             style: TextStyle(color: AppColors.textSecondary),
-//           ),
-//           const SizedBox(height: AppSizes.xl),
-//           PrimaryButton(
-//             text: 'Add Experience',
-//             onPressed: () {
-//               setState(() => showAddForm = true);
-//             },
-//             width: 200,
-//           ),
-//         ],
-//       ),
-//     );
-//   }
+  void _addExperience() {
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (context) => const AddEditExperienceScreen()),
+    ).then((added) {
+      if (added == true) {
+        _loadExperiences();
+      }
+    });
+  }
 
-//   Widget _buildFormField(
-//     String label,
-//     String hint,
-//     TextEditingController controller, {
-//     int maxLines = 1,
-//   }) {
-//     return Column(
-//       crossAxisAlignment: CrossAxisAlignment.start,
-//       children: [
-//         Text(
-//           label,
-//           style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
-//         ),
-//         const SizedBox(height: AppSizes.xs),
-//         TextField(
-//           controller: controller,
-//           decoration: InputDecoration(
-//             hintText: hint,
-//             border: OutlineInputBorder(
-//               borderRadius: BorderRadius.circular(AppSizes.inputRadius),
-//             ),
-//           ),
-//           maxLines: maxLines,
-//         ),
-//       ],
-//     );
-//   }
+  void _editExperience(Experience experience) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => AddEditExperienceScreen(experience: experience),
+      ),
+    ).then((updated) {
+      if (updated == true) {
+        _loadExperiences();
+      }
+    });
+  }
 
-//   Future<void> _selectDate(bool isStartDate) async {
-//     final DateTime? picked = await showDatePicker(
-//       context: context,
-//       initialDate: DateTime.now(),
-//       firstDate: DateTime(1950, 1, 1),
-//       lastDate: DateTime.now(),
-//     );
-//     if (picked != null) {
-//       setState(() {
-//         if (isStartDate) {
-//           _startDate = picked;
-//         } else {
-//           _endDate = picked;
-//         }
-//       });
-//     }
-//   }
+  Future<void> _deleteExperience(int index) async {
+    final confirmed = await _showConfirmDialog(
+      'Delete Experience',
+      'Are you sure you want to delete this work experience?',
+    );
 
-//   void _saveExperience() {
-//     if (_companyController.text.isEmpty ||
-//         _positionController.text.isEmpty ||
-//         _descriptionController.text.isEmpty ||
-//         _startDate == null ||
-//         (!_currentlyWorking && _endDate == null)) {
-//       ScaffoldMessenger.of(context).showSnackBar(
-//         const SnackBar(
-//           content: Text('Please fill all required fields'),
-//           backgroundColor: AppColors.error,
-//         ),
-//       );
-//       return;
-//     }
+    if (!confirmed) return;
 
-//     final newExperience = Experience(
-//       id: DateTime.now().millisecondsSinceEpoch.toString(),
-//       company: _companyController.text,
-//       position: _positionController.text,
-//       startDate: _startDate!,
-//       endDate: _currentlyWorking ? null : _endDate,
-//       currentlyWorking: _currentlyWorking,
-//       description: _descriptionController.text,
-//     );
+    final provider = Provider.of<JobSeekerProfileProvider>(
+      context,
+      listen: false,
+    );
+    final userId = provider.profile?.userId;
 
-//     setState(() {
-//       experiences.add(newExperience);
-//       showAddForm = false;
-//       _clearForm();
-//     });
+    if (userId == null) return;
 
-//     ScaffoldMessenger.of(context).showSnackBar(
-//       const SnackBar(
-//         content: Text('Experience added successfully'),
-//         backgroundColor: AppColors.success,
-//       ),
-//     );
-//   }
+    setState(() => _isSubmitting = true);
 
-//   void _editExperience(Experience experience) {
-//     _companyController.text = experience.company;
-//     _positionController.text = experience.position;
-//     _startDate = experience.startDate;
-//     _endDate = experience.endDate;
-//     _descriptionController.text = experience.description;
-//     _currentlyWorking = experience.currentlyWorking;
+    try {
+      await provider.deleteExperience(_experiences[index].hashCode);
 
-//     setState(() => showAddForm = true);
-//   }
+      setState(() {
+        _experiences.removeAt(index);
+        _isSubmitting = false;
+      });
 
-//   void _deleteExperience(String id) {
-//     showDialog(
-//       context: context,
-//       builder: (context) => AlertDialog(
-//         title: const Text('Delete Experience'),
-//         content: const Text('Are you sure you want to delete this experience?'),
-//         actions: [
-//           TextButton(
-//             onPressed: () => Navigator.pop(context),
-//             child: const Text('Cancel'),
-//           ),
-//           TextButton(
-//             onPressed: () {
-//               setState(() {
-//                 experiences.removeWhere((exp) => exp.id == id);
-//               });
-//               Navigator.pop(context);
-//             },
-//             child: const Text(
-//               'Delete',
-//               style: TextStyle(color: AppColors.error),
-//             ),
-//           ),
-//         ],
-//       ),
-//     );
-//   }
+      _showSnackBar('Experience deleted successfully');
+    } catch (e) {
+      setState(() => _isSubmitting = false);
+      _showSnackBar('Failed to delete experience', isError: true);
+    }
+  }
 
-//   void _clearForm() {
-//     _companyController.clear();
-//     _positionController.clear();
-//     _descriptionController.clear();
-//     _startDate = null;
-//     _endDate = null;
-//     _currentlyWorking = false;
-//   }
+  Future<bool> _showConfirmDialog(String title, String message) async {
+    final result = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Text(title),
+        content: Text(message),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            style: TextButton.styleFrom(foregroundColor: Colors.red),
+            child: const Text('Delete'),
+          ),
+        ],
+      ),
+    );
+    return result ?? false;
+  }
 
-//   String _formatDate(DateTime date) {
-//     return '${_getMonthName(date.month)} ${date.year}';
-//   }
+  void _showSnackBar(String message, {bool isError = false}) {
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(message),
+        backgroundColor: isError ? Colors.red : Colors.green,
+        behavior: SnackBarBehavior.floating,
+      ),
+    );
+  }
 
-//   String _getMonthName(int month) {
-//     const months = [
-//       'Jan',
-//       'Feb',
-//       'Mar',
-//       'Apr',
-//       'May',
-//       'Jun',
-//       'Jul',
-//       'Aug',
-//       'Sep',
-//       'Oct',
-//       'Nov',
-//       'Dec',
-//     ];
-//     return months[month - 1];
-//   }
+  String _formatDateRange(DateTime? start, DateTime? end) {
+    final startStr = start != null ? DateFormat('MMM yyyy').format(start) : '';
+    final endStr = end != null ? DateFormat('MMM yyyy').format(end) : 'Present';
+    return '$startStr - $endStr';
+  }
 
-//   String _calculateDuration(DateTime start, DateTime? end) {
-//     final endDate = end ?? DateTime.now();
-//     final years = endDate.year - start.year;
-//     final months = endDate.month - start.month;
+  @override
+  Widget build(BuildContext context) {
+    return LoadingOverlay(
+      isLoading: _isLoading || _isSubmitting,
+      child: Scaffold(
+        appBar: AppBar(
+          title: const Text(
+            'Work Experience',
+            style: TextStyle(fontSize: 20, fontWeight: FontWeight.w600),
+          ),
+          elevation: 0,
+          actions: [
+            IconButton(icon: const Icon(Icons.add), onPressed: _addExperience),
+          ],
+        ),
+        body: _error != null
+            ? _buildErrorState()
+            : _experiences.isEmpty
+            ? _buildEmptyState()
+            : _buildExperienceList(),
+      ),
+    );
+  }
 
-//     var totalMonths = years * 12 + months;
-//     if (endDate.day < start.day) {
-//       totalMonths--;
-//     }
+  Widget _buildExperienceList() {
+    return RefreshIndicator(
+      onRefresh: _loadExperiences,
+      color: AppColors.primary,
+      child: ListView.builder(
+        padding: const EdgeInsets.all(AppSizes.md),
+        itemCount: _experiences.length,
+        itemBuilder: (context, index) {
+          final experience = _experiences[index];
+          return _buildExperienceCard(experience, index);
+        },
+      ),
+    );
+  }
 
-//     if (totalMonths >= 12) {
-//       final years = totalMonths ~/ 12;
-//       final remainingMonths = totalMonths % 12;
-//       if (remainingMonths > 0) {
-//         return '$years yr ${remainingMonths} mo';
-//       }
-//       return '$years yr';
-//     } else {
-//       return '$totalMonths mo';
-//     }
-//   }
-// }
+  Widget _buildExperienceCard(Experience experience, int index) {
+    return Card(
+      margin: const EdgeInsets.only(bottom: AppSizes.md),
+      elevation: 2,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      child: Padding(
+        padding: const EdgeInsets.all(AppSizes.md),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Header
+            Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(10),
+                  decoration: BoxDecoration(
+                    color: AppColors.primary.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: const Icon(
+                    Icons.work,
+                    color: AppColors.primary,
+                    size: 24,
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        experience.jobTitle,
+                        style: const TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        experience.companyName,
+                        style: const TextStyle(
+                          fontSize: 14,
+                          color: AppColors.textSecondary,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                PopupMenuButton(
+                  itemBuilder: (context) => [
+                    const PopupMenuItem(
+                      value: 'edit',
+                      child: Row(
+                        children: [
+                          Icon(Icons.edit, size: 18),
+                          SizedBox(width: 8),
+                          Text('Edit'),
+                        ],
+                      ),
+                    ),
+                    const PopupMenuItem(
+                      value: 'delete',
+                      child: Row(
+                        children: [
+                          Icon(Icons.delete, size: 18, color: Colors.red),
+                          SizedBox(width: 8),
+                          Text('Delete', style: TextStyle(color: Colors.red)),
+                        ],
+                      ),
+                    ),
+                  ],
+                  onSelected: (value) {
+                    if (value == 'edit') {
+                      _editExperience(experience);
+                    } else if (value == 'delete') {
+                      _deleteExperience(index);
+                    }
+                  },
+                ),
+              ],
+            ),
+
+            const SizedBox(height: 12),
+
+            // Date Range
+            Row(
+              children: [
+                Icon(
+                  Icons.calendar_today,
+                  size: 14,
+                  color: Colors.grey.shade600,
+                ),
+                const SizedBox(width: 4),
+                Text(
+                  _formatDateRange(experience.startDate, experience.endDate),
+                  style: TextStyle(fontSize: 13, color: Colors.grey.shade600),
+                ),
+              ],
+            ),
+
+            const SizedBox(height: 12),
+
+            // Responsibilities
+            Text(
+              'Responsibilities:',
+              style: TextStyle(
+                fontSize: 13,
+                fontWeight: FontWeight.w600,
+                color: Colors.grey.shade700,
+              ),
+            ),
+            const SizedBox(height: 4),
+            Text(
+              experience.responsibilities,
+              style: TextStyle(
+                fontSize: 13,
+                color: Colors.grey.shade600,
+                height: 1.4,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildEmptyState() {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(32),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(
+              Icons.work_outline,
+              size: 80,
+              color: AppColors.textDisabled.withOpacity(0.5),
+            ),
+            const SizedBox(height: 24),
+            const Text(
+              'No Experience Added',
+              style: TextStyle(fontSize: 20, fontWeight: FontWeight.w600),
+            ),
+            const SizedBox(height: 8),
+            const Text(
+              'Add your work experience to showcase your career journey',
+              textAlign: TextAlign.center,
+              style: TextStyle(fontSize: 14, color: AppColors.textSecondary),
+            ),
+            const SizedBox(height: 24),
+            PrimaryButton(
+              text: 'Add Experience',
+              onPressed: _addExperience,
+              width: 200,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildErrorState() {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(24),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const Icon(Icons.error_outline, size: 64, color: Colors.red),
+            const SizedBox(height: 16),
+            const Text(
+              'Something went wrong',
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              _error ?? 'Failed to load experience',
+              textAlign: TextAlign.center,
+              style: const TextStyle(color: AppColors.textSecondary),
+            ),
+            const SizedBox(height: 24),
+            PrimaryButton(
+              text: 'Try Again',
+              onPressed: _loadExperiences,
+              width: 150,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+// Add/Edit Experience Screen
+class AddEditExperienceScreen extends StatefulWidget {
+  final Experience? experience;
+
+  const AddEditExperienceScreen({super.key, this.experience});
+
+  @override
+  State<AddEditExperienceScreen> createState() =>
+      _AddEditExperienceScreenState();
+}
+
+class _AddEditExperienceScreenState extends State<AddEditExperienceScreen> {
+  final _formKey = GlobalKey<FormState>();
+  late TextEditingController _jobTitleController;
+  late TextEditingController _companyNameController;
+  late TextEditingController _responsibilitiesController;
+  DateTime? _startDate;
+  DateTime? _endDate;
+  bool _isCurrentlyWorking = false;
+  bool _isSubmitting = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _jobTitleController = TextEditingController(
+      text: widget.experience?.jobTitle ?? '',
+    );
+    _companyNameController = TextEditingController(
+      text: widget.experience?.companyName ?? '',
+    );
+    _responsibilitiesController = TextEditingController(
+      text: widget.experience?.responsibilities ?? '',
+    );
+    _startDate = widget.experience?.startDate;
+    _endDate = widget.experience?.endDate;
+    _isCurrentlyWorking = widget.experience?.endDate == null;
+  }
+
+  @override
+  void dispose() {
+    _jobTitleController.dispose();
+    _companyNameController.dispose();
+    _responsibilitiesController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _selectDate(BuildContext context, bool isStart) async {
+    final initialDate = isStart
+        ? (_startDate ?? DateTime.now().subtract(const Duration(days: 365 * 2)))
+        : (_endDate ?? DateTime.now());
+
+    final firstDate = isStart ? DateTime(1900) : (_startDate ?? DateTime(1900));
+    final lastDate = isStart ? DateTime.now() : DateTime.now();
+
+    final picked = await showDatePicker(
+      context: context,
+      initialDate: initialDate,
+      firstDate: firstDate,
+      lastDate: lastDate,
+      builder: (context, child) {
+        return Theme(
+          data: Theme.of(context).copyWith(
+            colorScheme: const ColorScheme.light(primary: AppColors.primary),
+          ),
+          child: child!,
+        );
+      },
+    );
+
+    if (picked != null) {
+      setState(() {
+        if (isStart) {
+          _startDate = picked;
+        } else {
+          _endDate = picked;
+        }
+      });
+    }
+  }
+
+  Future<void> _saveExperience() async {
+    if (!_formKey.currentState!.validate()) return;
+    if (_startDate == null) {
+      _showSnackBar('Please select start date', isError: true);
+      return;
+    }
+
+    setState(() => _isSubmitting = true);
+
+    try {
+      final provider = Provider.of<JobSeekerProfileProvider>(
+        context,
+        listen: false,
+      );
+      final userId = provider.profile?.userId;
+
+      if (userId == null) {
+        _showSnackBar('User not found', isError: true);
+        return;
+      }
+
+      final experience = Experience(
+        id: widget.experience?.id,
+        jobTitle: _jobTitleController.text.trim(),
+        companyName: _companyNameController.text.trim(),
+        startDate: _startDate!,
+        endDate: _isCurrentlyWorking ? null : _endDate,
+        responsibilities: _responsibilitiesController.text.trim(),
+      );
+
+      if (widget.experience == null) {
+        await provider.addExperience(experience);
+      } else {
+        await provider.updateExperience(widget.experience!.id!, experience);
+      }
+
+      if (mounted) {
+        Navigator.pop(context, true);
+      }
+    } catch (e) {
+      setState(() => _isSubmitting = false);
+      _showSnackBar('Failed to save experience', isError: true);
+    }
+  }
+
+  void _showSnackBar(String message, {bool isError = false}) {
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(message),
+        backgroundColor: isError ? Colors.red : Colors.green,
+        behavior: SnackBarBehavior.floating,
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return LoadingOverlay(
+      isLoading: _isSubmitting,
+      child: Scaffold(
+        appBar: AppBar(
+          title: Text(
+            widget.experience == null ? 'Add Experience' : 'Edit Experience',
+          ),
+          elevation: 0,
+          actions: [
+            TextButton(
+              onPressed: _saveExperience,
+              style: TextButton.styleFrom(foregroundColor: AppColors.primary),
+              child: const Text('Save'),
+            ),
+          ],
+        ),
+        body: SingleChildScrollView(
+          padding: const EdgeInsets.all(AppSizes.md),
+          child: Form(
+            key: _formKey,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Job Title
+                TextFormField(
+                  controller: _jobTitleController,
+                  decoration: const InputDecoration(
+                    labelText: 'Job Title *',
+                    hintText: 'e.g. Senior Software Engineer',
+                    prefixIcon: Icon(Icons.work),
+                  ),
+                  validator: (value) {
+                    if (value == null || value.trim().isEmpty) {
+                      return 'Job title is required';
+                    }
+                    return null;
+                  },
+                ),
+                const SizedBox(height: 16),
+
+                // Company Name
+                TextFormField(
+                  controller: _companyNameController,
+                  decoration: const InputDecoration(
+                    labelText: 'Company Name *',
+                    hintText: 'e.g. Google, Microsoft, etc.',
+                    prefixIcon: Icon(Icons.business),
+                  ),
+                  validator: (value) {
+                    if (value == null || value.trim().isEmpty) {
+                      return 'Company name is required';
+                    }
+                    return null;
+                  },
+                ),
+                const SizedBox(height: 16),
+
+                // Start Date
+                ListTile(
+                  title: const Text('Start Date *'),
+                  subtitle: Text(
+                    _startDate == null
+                        ? 'Select start date'
+                        : DateFormat('MMM yyyy').format(_startDate!),
+                  ),
+                  leading: const Icon(Icons.calendar_today),
+                  onTap: () => _selectDate(context, true),
+                  tileColor: Colors.grey.shade50,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                ),
+                const SizedBox(height: 8),
+
+                // Currently Working Checkbox
+                CheckboxListTile(
+                  title: const Text('I am currently working here'),
+                  value: _isCurrentlyWorking,
+                  onChanged: (value) {
+                    setState(() {
+                      _isCurrentlyWorking = value ?? false;
+                      if (_isCurrentlyWorking) {
+                        _endDate = null;
+                      }
+                    });
+                  },
+                  controlAffinity: ListTileControlAffinity.leading,
+                  activeColor: AppColors.primary,
+                ),
+
+                // End Date
+                if (!_isCurrentlyWorking)
+                  ListTile(
+                    title: const Text('End Date *'),
+                    subtitle: Text(
+                      _endDate == null
+                          ? 'Select end date'
+                          : DateFormat('MMM yyyy').format(_endDate!),
+                    ),
+                    leading: const Icon(Icons.calendar_today),
+                    onTap: () => _selectDate(context, false),
+                    tileColor: Colors.grey.shade50,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                  ),
+                const SizedBox(height: 16),
+
+                // Responsibilities
+                TextFormField(
+                  controller: _responsibilitiesController,
+                  decoration: const InputDecoration(
+                    labelText: 'Responsibilities *',
+                    hintText:
+                        'Describe your key responsibilities and achievements...',
+                    prefixIcon: Icon(Icons.description),
+                    alignLabelWithHint: true,
+                  ),
+                  maxLines: 5,
+                  validator: (value) {
+                    if (value == null || value.trim().isEmpty) {
+                      return 'Responsibilities are required';
+                    }
+                    return null;
+                  },
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}

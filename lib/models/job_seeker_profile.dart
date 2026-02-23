@@ -4,7 +4,7 @@ import 'package:job_portal_app/models/saved_job.dart';
 
 class JobSeekerProfile {
   final int id;
-  final int? userId; // ✅ FIX: nullable
+  final int userId;
 
   final String? headline;
   final String? summary;
@@ -25,7 +25,7 @@ class JobSeekerProfile {
 
   JobSeekerProfile({
     required this.id,
-    this.userId,
+    required this.userId,
     this.headline,
     this.summary,
     required this.skills,
@@ -42,48 +42,43 @@ class JobSeekerProfile {
   });
 
   factory JobSeekerProfile.fromJson(Map<String, dynamic> json) {
+    final userIdValue = json['userId'];
+
+    if (userIdValue == null) {
+      throw Exception("JobSeekerProfile JSON missing required field: userId");
+    }
+
     return JobSeekerProfile(
       id: json['id'] as int,
-      userId: json['userId'] as int?, // ✅ SAFE
+      userId: userIdValue as int,
       headline: json['headline'] as String?,
       summary: json['summary'] as String?,
-
       skills: List<String>.from(json['skills'] ?? []),
-
       education: (json['education'] as List? ?? [])
           .map((e) => Education.fromJson(e))
           .toList(),
-
       experience: (json['experience'] as List? ?? [])
           .map((e) => Experience.fromJson(e))
           .toList(),
-
       certifications: (json['certifications'] as List? ?? [])
           .map((e) => Certification.fromJson(e))
           .toList(),
-
       portfolioLinks: List<String>.from(json['portfolioLinks'] ?? []),
-
       resumes: json['resumes'] != null
           ? (json['resumes'] as List).map((e) => Resume.fromJson(e)).toList()
           : null,
-
       preferredJobTypes: List<String>.from(json['preferredJobTypes'] ?? []),
-
       preferredLocations: List<String>.from(json['preferredLocations'] ?? []),
-
       applications: json['applications'] != null
           ? (json['applications'] as List)
                 .map((e) => JobApplication.fromJson(e))
                 .toList()
           : null,
-
       savedJobs: json['savedJobs'] != null
           ? (json['savedJobs'] as List)
                 .map((e) => SavedJob.fromJson(e))
                 .toList()
           : null,
-
       savedCompanies: json['savedCompanies'] != null
           ? (json['savedCompanies'] as List)
                 .map((e) => SavedCompany.fromJson(e))
@@ -148,7 +143,7 @@ class JobSeekerProfile {
 }
 
 class Certification {
-  final int id;
+  final int? id;
   final String title;
   final String issuer;
   final DateTime issueDate;
@@ -156,7 +151,7 @@ class Certification {
   final String? credentialUrl;
 
   Certification({
-    required this.id,
+    this.id,
     required this.title,
     required this.issuer,
     required this.issueDate,
@@ -177,18 +172,43 @@ class Certification {
     );
   }
 
-  Map<String, dynamic> toJson() => {
-    'id': id,
-    'title': title,
-    'issuer': issuer,
-    'issueDate': issueDate.toIso8601String(),
-    'expiryDate': expiryDate?.toIso8601String(),
-    'credentialUrl': credentialUrl,
-  };
+  Map<String, dynamic> toJson() {
+    final Map<String, dynamic> map = {
+      'title': title,
+      'issuer': issuer,
+      'issueDate': _formatDate(issueDate),
+      'expiryDate': expiryDate != null ? _formatDate(expiryDate!) : null,
+      'credentialUrl': credentialUrl,
+    };
+    
+    if (id != null) {
+      map['id'] = id;
+    }
+    return map;
+  }
+}
+extension CertificationCopy on Certification {
+  Certification copyWith({
+    int? id,
+    String? title,
+    String? issuer,
+    DateTime? issueDate,
+    DateTime? expiryDate,
+    String? credentialUrl,
+  }) {
+    return Certification(
+      id: id ?? this.id,
+      title: title ?? this.title,
+      issuer: issuer ?? this.issuer,
+      issueDate: issueDate ?? this.issueDate,
+      expiryDate: expiryDate ?? this.expiryDate,
+      credentialUrl: credentialUrl ?? this.credentialUrl,
+    );
+  }
 }
 
 class Experience {
-  final int id;
+  final int? id;
   final String companyName;
   final String jobTitle;
   final DateTime startDate;
@@ -196,7 +216,7 @@ class Experience {
   final String responsibilities;
 
   Experience({
-    required this.id,
+    this.id,
     required this.companyName,
     required this.jobTitle,
     required this.startDate,
@@ -215,72 +235,21 @@ class Experience {
     );
   }
 
-  Map<String, dynamic> toJson() => {
-    'id': id,
+ Map<String, dynamic> toJson() {
+  final Map<String, dynamic> map = {
     'companyName': companyName,
     'jobTitle': jobTitle,
-    'startDate': startDate.toIso8601String(),
-    'endDate': endDate?.toIso8601String(),
+    'startDate': _formatDate(startDate),
+    'endDate': endDate != null ? _formatDate(endDate!) : null,
     'responsibilities': responsibilities,
   };
-}
 
-class Education {
-  final int id;
-  final String degree;
-  final String institution;
-  final DateTime startDate;
-  final DateTime? endDate;
-  final String? grade;
-
-  Education({
-    required this.id,
-    required this.degree,
-    required this.institution,
-    required this.startDate,
-    this.endDate,
-    this.grade,
-  });
-
-  factory Education.fromJson(Map<String, dynamic> json) {
-    return Education(
-      id: json['id'],
-      degree: json['degree'],
-      institution: json['institution'],
-      startDate: DateTime.parse(json['startDate']),
-      endDate: json['endDate'] != null ? DateTime.parse(json['endDate']) : null,
-      grade: json['grade'],
-    );
+  if (id != null) {
+    map['id'] = id;
   }
 
-  Map<String, dynamic> toJson() => {
-    'id': id,
-    'degree': degree,
-    'institution': institution,
-    'startDate': startDate.toIso8601String(),
-    'endDate': endDate?.toIso8601String(),
-    'grade': grade,
-  };
+  return map;
 }
-
-extension EducationCopy on Education {
-  Education copyWith({
-    int? id,
-    String? degree,
-    String? institution,
-    DateTime? startDate,
-    DateTime? endDate,
-    String? grade,
-  }) {
-    return Education(
-      id: id ?? this.id,
-      degree: degree ?? this.degree,
-      institution: institution ?? this.institution,
-      startDate: startDate ?? this.startDate,
-      endDate: endDate ?? this.endDate,
-      grade: grade ?? this.grade,
-    );
-  }
 }
 
 extension ExperienceCopy on Experience {
@@ -303,25 +272,77 @@ extension ExperienceCopy on Experience {
   }
 }
 
-extension CertificationCopy on Certification {
-  Certification copyWith({
+class Education {
+  final int? id;
+  final String degree;
+  final String institution;
+  final DateTime startDate;
+  final DateTime? endDate;
+  final String? grade;
+
+  Education({
+    this.id,
+    required this.degree,
+    required this.institution,
+    required this.startDate,
+    this.endDate,
+    this.grade,
+  });
+
+  factory Education.fromJson(Map<String, dynamic> json) {
+    return Education(
+      id: json['id'],
+      degree: json['degree'],
+      institution: json['institution'],
+      startDate: DateTime.parse(json['startDate']),
+      endDate: json['endDate'] != null ? DateTime.parse(json['endDate']) : null,
+      grade: json['grade'],
+    );
+  }
+
+ Map<String, dynamic> toJson() {
+  final Map<String, dynamic> map = {
+    'degree': degree,
+    'institution': institution,
+    'startDate': _formatDate(startDate),
+    'endDate': endDate != null ? _formatDate(endDate!) : null,
+    'grade': grade,
+  };
+
+  if (id != null) {
+    map['id'] = id;
+  }
+
+  return map;
+}
+}
+
+String _formatDate(DateTime date) {
+  return "${date.year.toString().padLeft(4, '0')}-"
+      "${date.month.toString().padLeft(2, '0')}-"
+      "${date.day.toString().padLeft(2, '0')}";
+}
+
+extension EducationCopy on Education {
+  Education copyWith({
     int? id,
-    String? title,
-    String? issuer,
-    DateTime? issueDate,
-    DateTime? expiryDate,
-    String? credentialUrl,
+    String? degree,
+    String? institution,
+    DateTime? startDate,
+    DateTime? endDate,
+    String? grade,
   }) {
-    return Certification(
+    return Education(
       id: id ?? this.id,
-      title: title ?? this.title,
-      issuer: issuer ?? this.issuer,
-      issueDate: issueDate ?? this.issueDate,
-      expiryDate: expiryDate ?? this.expiryDate,
-      credentialUrl: credentialUrl ?? this.credentialUrl,
+      degree: degree ?? this.degree,
+      institution: institution ?? this.institution,
+      startDate: startDate ?? this.startDate,
+      endDate: endDate ?? this.endDate,
+      grade: grade ?? this.grade,
     );
   }
 }
+
 
 class ApplicantProfile {
   final int? userId;

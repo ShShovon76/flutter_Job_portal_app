@@ -29,12 +29,17 @@ class _SplashScreenState extends State<SplashScreen> {
 
     await auth.tryAutoLogin();
 
-    WidgetsBinding.instance.addPostFrameCallback((_) {
+    WidgetsBinding.instance.addPostFrameCallback((_){
       final route = auth.isAuthenticated
           ? auth.getRoleBasedRoute()
           : RouteNames.login;
 
-      Navigator.pushReplacementNamed(context, route);
+      // Make the new route the root so no back button appears
+      Navigator.pushNamedAndRemoveUntil(
+        context,
+        route,
+        (Route<dynamic> r) => false,
+      );
     });
   }
 
