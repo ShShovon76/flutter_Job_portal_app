@@ -1,8 +1,9 @@
+// manage_users_screen.dart
 
-// manage_users_screen.dart
-// manage_users_screen.dart
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:job_portal_app/core/constants/constants.dart';
 import 'package:job_portal_app/features/auth/provider/user_provider.dart';
 import 'package:job_portal_app/models/user_model.dart';
 import 'package:provider/provider.dart';
@@ -20,6 +21,7 @@ class _ManageUsersScreenState extends State<ManageUsersScreen> {
   String _selectedRole = 'All';
   String _selectedStatus = 'All';
   bool _isLoadingMore = false;
+  Timer? _debounceTimer;
 
   final List<String> _roles = ['All', 'JOB_SEEKER', 'EMPLOYER', 'ADMIN'];
   final List<String> _statuses = ['All', 'Enabled', 'Disabled'];
@@ -27,15 +29,29 @@ class _ManageUsersScreenState extends State<ManageUsersScreen> {
   @override
   void initState() {
     super.initState();
-    _loadUsers();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _loadUsers();
+    });
+
     _scrollController.addListener(_onScroll);
+    _setupSearchListener();
   }
 
   @override
   void dispose() {
     _scrollController.dispose();
     _searchController.dispose();
+    _debounceTimer?.cancel();
     super.dispose();
+  }
+
+  void _setupSearchListener() {
+    _searchController.addListener(() {
+      if (_debounceTimer?.isActive ?? false) _debounceTimer!.cancel();
+      _debounceTimer = Timer(const Duration(milliseconds: 500), () {
+        _searchUsers(_searchController.text);
+      });
+    });
   }
 
   void _onScroll() {
@@ -70,21 +86,19 @@ class _ManageUsersScreenState extends State<ManageUsersScreen> {
   }
 
   Future<void> _searchUsers(String query) async {
-    if (query.isEmpty) {
-      _refreshUsers();
-      return;
-    }
-
     final userProvider = Provider.of<UserProvider>(context, listen: false);
+
     await userProvider.searchUsers(
-      keyword: query,
+      keyword: query.isNotEmpty ? query : null,
       role: _selectedRole != 'All' ? _selectedRole : null,
-      enabled: _selectedStatus != 'All' 
-          ? _selectedStatus == 'Enabled' 
-          : null,
+      enabled: _selectedStatus != 'All' ? _selectedStatus == 'Enabled' : null,
       page: 0,
       size: 10,
     );
+  }
+
+  void _applyFilters() {
+    _searchUsers(_searchController.text);
   }
 
   void _showUserDetails(User user) {
@@ -118,12 +132,10 @@ class _ManageUsersScreenState extends State<ManageUsersScreen> {
                 context,
                 listen: false,
               );
-              await userProvider.enableUser(
-                user.id,
-                user.enabled == false,
-              );
+              await userProvider.enableUser(user.id, user.enabled == false);
               _refreshUsers();
-              
+
+              if (!context.mounted) return;
               ScaffoldMessenger.of(context).showSnackBar(
                 SnackBar(
                   content: Text(
@@ -135,8 +147,8 @@ class _ManageUsersScreenState extends State<ManageUsersScreen> {
               );
             },
             style: ElevatedButton.styleFrom(
-              backgroundColor: user.enabled == true 
-                  ? const Color(0xFFEF4444) 
+              backgroundColor: user.enabled == true
+                  ? const Color(0xFFEF4444)
                   : const Color(0xFF10B981),
             ),
             child: Text(user.enabled == true ? 'Disable' : 'Enable'),
@@ -168,7 +180,8 @@ class _ManageUsersScreenState extends State<ManageUsersScreen> {
               );
               await userProvider.deleteUser(user.id);
               _refreshUsers();
-              
+
+              if (!context.mounted) return;
               ScaffoldMessenger.of(context).showSnackBar(
                 const SnackBar(
                   content: Text('User deleted successfully'),
@@ -191,22 +204,22 @@ class _ManageUsersScreenState extends State<ManageUsersScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.grey[50],
-      body: Column(
-        children: [
-          // Header with Stats
-          _buildHeader(),
-          
-          // Search Bar
-          _buildSearchBar(),
-          
-          // Filter Chips
-          _buildFilterChips(),
-          
-          // Users List
-          Expanded(
-            child: _buildUsersList(),
-          ),
-        ],
+      body: SafeArea(
+        child: Column(
+          children: [
+            // Header with Stats
+            _buildHeader(),
+
+            // Search Bar
+            _buildSearchBar(),
+
+            // Filter Chips
+            _buildFilterChips(),
+
+            // Users List
+            Expanded(child: _buildUsersList()),
+          ],
+        ),
       ),
     );
   }
@@ -216,22 +229,27 @@ class _ManageUsersScreenState extends State<ManageUsersScreen> {
       builder: (context, provider, child) {
         final totalUsers = provider.usersPage?.totalItems ?? 0;
         final users = provider.usersPage?.items ?? [];
-        
-        final jobSeekers = users.where((u) => u.role == UserRole.JOB_SEEKER).length;
-        final employers = users.where((u) => u.role == UserRole.EMPLOYER).length;
+
+        final jobSeekers = users
+            .where((u) => u.role == UserRole.JOB_SEEKER)
+            .length;
+        final employers = users
+            .where((u) => u.role == UserRole.EMPLOYER)
+            .length;
         final admins = users.where((u) => u.role == UserRole.ADMIN).length;
 
         return Container(
-          padding: const EdgeInsets.all(20),
+          width: double.infinity,
+          padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
             color: Colors.white,
             borderRadius: const BorderRadius.only(
-              bottomLeft: Radius.circular(24),
-              bottomRight: Radius.circular(24),
+              bottomLeft: Radius.circular(20),
+              bottomRight: Radius.circular(20),
             ),
             boxShadow: [
               BoxShadow(
-                color: Colors.grey.withOpacity(0.1),
+                color: Colors.grey.withValues(alpha: 0.1),
                 blurRadius: 8,
                 offset: const Offset(0, 2),
               ),
@@ -243,32 +261,32 @@ class _ManageUsersScreenState extends State<ManageUsersScreen> {
               const Text(
                 'Manage Users',
                 style: TextStyle(
-                  fontSize: 24,
+                  fontSize: 22,
                   fontWeight: FontWeight.bold,
                   color: Color(0xFF1E293B),
                 ),
               ),
               const SizedBox(height: 16),
-              Row(
+              // Wrap the row to prevent overflow on small screens
+              Wrap(
+                spacing: 8,
+                runSpacing: 8,
                 children: [
                   _buildStatChip(
                     label: 'Total',
                     value: '$totalUsers',
                     color: const Color(0xFF3B82F6),
                   ),
-                  const SizedBox(width: 8),
                   _buildStatChip(
                     label: 'Job Seekers',
                     value: '$jobSeekers',
                     color: const Color(0xFF10B981),
                   ),
-                  const SizedBox(width: 8),
                   _buildStatChip(
                     label: 'Employers',
                     value: '$employers',
                     color: const Color(0xFFF59E0B),
                   ),
-                  const SizedBox(width: 8),
                   _buildStatChip(
                     label: 'Admins',
                     value: '$admins',
@@ -288,33 +306,30 @@ class _ManageUsersScreenState extends State<ManageUsersScreen> {
     required String value,
     required Color color,
   }) {
-    return Expanded(
-      child: Container(
-        padding: const EdgeInsets.symmetric(vertical: 8),
-        decoration: BoxDecoration(
-          color: color.withOpacity(0.1),
-          borderRadius: BorderRadius.circular(12),
-        ),
-        child: Column(
-          children: [
-            Text(
-              value,
-              style: TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.bold,
-                color: color,
-              ),
+    return Container(
+      constraints: const BoxConstraints(minWidth: 70),
+      padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 12),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.1),
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(
+            value,
+            style: TextStyle(
+              fontSize: 16,
+              fontWeight: FontWeight.bold,
+              color: color,
             ),
-            const SizedBox(height: 2),
-            Text(
-              label,
-              style: const TextStyle(
-                fontSize: 10,
-                color: Color(0xFF64748B),
-              ),
-            ),
-          ],
-        ),
+          ),
+          const SizedBox(height: 2),
+          Text(
+            label,
+            style: const TextStyle(fontSize: 10, color: Color(0xFF64748B)),
+          ),
+        ],
       ),
     );
   }
@@ -327,6 +342,7 @@ class _ManageUsersScreenState extends State<ManageUsersScreen> {
         children: [
           Expanded(
             child: Container(
+              height: 48,
               padding: const EdgeInsets.symmetric(horizontal: 12),
               decoration: BoxDecoration(
                 color: Colors.grey[100],
@@ -357,21 +373,20 @@ class _ManageUsersScreenState extends State<ManageUsersScreen> {
                         )
                       : null,
                 ),
-                onSubmitted: _searchUsers,
               ),
             ),
           ),
           const SizedBox(width: 8),
           Container(
+            width: 48,
+            height: 48,
             decoration: BoxDecoration(
               color: const Color(0xFF3B82F6),
               borderRadius: BorderRadius.circular(12),
             ),
             child: IconButton(
               icon: const Icon(Icons.filter_list, color: Colors.white),
-              onPressed: () {
-                // Show advanced filter options
-              },
+              onPressed: _applyFilters,
             ),
           ),
         ],
@@ -381,7 +396,7 @@ class _ManageUsersScreenState extends State<ManageUsersScreen> {
 
   Widget _buildFilterChips() {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       color: Colors.white,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -399,15 +414,19 @@ class _ManageUsersScreenState extends State<ManageUsersScreen> {
                     selected: isSelected,
                     onSelected: (selected) {
                       setState(() => _selectedRole = role);
-                      _searchUsers(_searchController.text);
+                      _applyFilters();
                     },
                     backgroundColor: Colors.grey[100],
                     selectedColor: const Color(0xFF3B82F6),
                     checkmarkColor: Colors.white,
                     labelStyle: TextStyle(
-                      color: isSelected ? Colors.white : const Color(0xFF1E293B),
+                      color: isSelected
+                          ? Colors.white
+                          : const Color(0xFF1E293B),
                       fontSize: 12,
-                      fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
+                      fontWeight: isSelected
+                          ? FontWeight.w600
+                          : FontWeight.normal,
                     ),
                   ),
                 );
@@ -428,19 +447,23 @@ class _ManageUsersScreenState extends State<ManageUsersScreen> {
                     selected: isSelected,
                     onSelected: (selected) {
                       setState(() => _selectedStatus = status);
-                      _searchUsers(_searchController.text);
+                      _applyFilters();
                     },
                     backgroundColor: Colors.grey[100],
                     selectedColor: status == 'Enabled'
                         ? const Color(0xFF10B981)
                         : status == 'Disabled'
-                            ? const Color(0xFFEF4444)
-                            : const Color(0xFF3B82F6),
+                        ? const Color(0xFFEF4444)
+                        : const Color(0xFF3B82F6),
                     checkmarkColor: Colors.white,
                     labelStyle: TextStyle(
-                      color: isSelected ? Colors.white : const Color(0xFF1E293B),
+                      color: isSelected
+                          ? Colors.white
+                          : const Color(0xFF1E293B),
                       fontSize: 12,
-                      fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
+                      fontWeight: isSelected
+                          ? FontWeight.w600
+                          : FontWeight.normal,
                     ),
                   ),
                 );
@@ -465,26 +488,29 @@ class _ManageUsersScreenState extends State<ManageUsersScreen> {
 
         if (provider.error != null) {
           return Center(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                const Icon(
-                  Icons.error_outline,
-                  size: 48,
-                  color: Color(0xFFEF4444),
-                ),
-                const SizedBox(height: 16),
-                Text(
-                  provider.error!,
-                  textAlign: TextAlign.center,
-                  style: const TextStyle(color: Color(0xFFEF4444)),
-                ),
-                const SizedBox(height: 16),
-                ElevatedButton(
-                  onPressed: _refreshUsers,
-                  child: const Text('Try Again'),
-                ),
-              ],
+            child: Padding(
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  const Icon(
+                    Icons.error_outline,
+                    size: 48,
+                    color: Color(0xFFEF4444),
+                  ),
+                  const SizedBox(height: 16),
+                  Text(
+                    provider.error!,
+                    textAlign: TextAlign.center,
+                    style: const TextStyle(color: Color(0xFFEF4444)),
+                  ),
+                  const SizedBox(height: 16),
+                  ElevatedButton(
+                    onPressed: _refreshUsers,
+                    child: const Text('Try Again'),
+                  ),
+                ],
+              ),
             ),
           );
         }
@@ -492,13 +518,13 @@ class _ManageUsersScreenState extends State<ManageUsersScreen> {
         final users = provider.usersPage?.items ?? [];
 
         if (users.isEmpty) {
-          return const Center(
+          return Center(
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Icon(Icons.people_outline, size: 64, color: Color(0xFF94A3B8)),
-                SizedBox(height: 16),
-                Text(
+                Icon(Icons.people_outline, size: 64, color: Colors.grey[400]),
+                const SizedBox(height: 16),
+                const Text(
                   'No users found',
                   style: TextStyle(fontSize: 16, color: Color(0xFF64748B)),
                 ),
@@ -529,7 +555,7 @@ class _ManageUsersScreenState extends State<ManageUsersScreen> {
   Widget _buildUserCard(User user) {
     final dateFormat = DateFormat('MMM d, yyyy');
     final roleColor = _getRoleColor(user.role);
-    
+
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       decoration: BoxDecoration(
@@ -537,7 +563,7 @@ class _ManageUsersScreenState extends State<ManageUsersScreen> {
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: Colors.grey.withOpacity(0.1),
+            color: Colors.grey.withValues(alpha: 0.1),
             blurRadius: 8,
             offset: const Offset(0, 2),
           ),
@@ -547,30 +573,34 @@ class _ManageUsersScreenState extends State<ManageUsersScreen> {
         onTap: () => _showUserDetails(user),
         borderRadius: BorderRadius.circular(16),
         child: Padding(
-          padding: const EdgeInsets.all(16),
+          padding: const EdgeInsets.all(12),
           child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               // Profile Picture
               CircleAvatar(
-                radius: 30,
-                backgroundColor: roleColor.withOpacity(0.1),
+                radius: 28,
+                backgroundColor: roleColor.withValues(alpha: 0.1),
                 backgroundImage: user.profilePictureUrl != null
-                    ? NetworkImage(user.profilePictureUrl!)
+                    ? NetworkImage(
+                        AppConstants.getImageUrl(user.profilePictureUrl!),
+                      )
                     : null,
                 child: user.profilePictureUrl == null
                     ? Text(
                         user.fullName[0].toUpperCase(),
                         style: TextStyle(
                           color: roleColor,
-                          fontSize: 20,
+                          fontSize: 18,
                           fontWeight: FontWeight.bold,
                         ),
                       )
                     : null,
               ),
               const SizedBox(width: 12),
-              // User Info
+              // User Info - Expanded to take available space
               Expanded(
+                flex: 2,
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -581,19 +611,23 @@ class _ManageUsersScreenState extends State<ManageUsersScreen> {
                         fontWeight: FontWeight.bold,
                         color: Color(0xFF1E293B),
                       ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
                     ),
                     const SizedBox(height: 4),
                     Text(
                       user.email,
                       style: const TextStyle(
-                        fontSize: 13,
+                        fontSize: 12,
                         color: Color(0xFF64748B),
                       ),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                     ),
                     const SizedBox(height: 4),
-                    Row(
+                    Wrap(
+                      spacing: 8,
+                      runSpacing: 4,
                       children: [
                         // Role Badge
                         Container(
@@ -602,7 +636,7 @@ class _ManageUsersScreenState extends State<ManageUsersScreen> {
                             vertical: 2,
                           ),
                           decoration: BoxDecoration(
-                            color: roleColor.withOpacity(0.1),
+                            color: roleColor.withValues(alpha: 0.1),
                             borderRadius: BorderRadius.circular(12),
                           ),
                           child: Text(
@@ -614,7 +648,6 @@ class _ManageUsersScreenState extends State<ManageUsersScreen> {
                             ),
                           ),
                         ),
-                        const SizedBox(width: 8),
                         // Status Badge
                         Container(
                           padding: const EdgeInsets.symmetric(
@@ -623,8 +656,10 @@ class _ManageUsersScreenState extends State<ManageUsersScreen> {
                           ),
                           decoration: BoxDecoration(
                             color: (user.enabled ?? true)
-                                ? const Color(0xFF10B981).withOpacity(0.1)
-                                : const Color(0xFFEF4444).withOpacity(0.1),
+                                ? const Color(0xFF10B981).withValues(alpha: 0.1)
+                                : const Color(
+                                    0xFFEF4444,
+                                  ).withValues(alpha: 0.1),
                             borderRadius: BorderRadius.circular(12),
                           ),
                           child: Text(
@@ -643,87 +678,103 @@ class _ManageUsersScreenState extends State<ManageUsersScreen> {
                   ],
                 ),
               ),
-              // Joined Date
-              if (user.createdAt != null)
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.end,
-                  children: [
-                    Text(
-                      'Joined',
-                      style: TextStyle(
-                        fontSize: 10,
-                        color: Colors.grey[400],
-                      ),
-                    ),
-                    Text(
-                      dateFormat.format(user.createdAt!),
-                      style: const TextStyle(
-                        fontSize: 11,
-                        fontWeight: FontWeight.w500,
-                        color: Color(0xFF64748B),
-                      ),
-                    ),
-                  ],
-                ),
-              // Actions
-              PopupMenuButton(
-                icon: const Icon(Icons.more_vert, color: Color(0xFF64748B)),
-                itemBuilder: (context) => [
-                  const PopupMenuItem(
-                    value: 'view',
-                    child: Row(
+              // Joined Date and Actions
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.end,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  if (user.createdAt != null)
+                    Column(
                       children: [
-                        Icon(Icons.visibility, size: 18),
-                        SizedBox(width: 8),
-                        Text('View Details'),
-                      ],
-                    ),
-                  ),
-                  PopupMenuItem(
-                    value: 'toggle',
-                    child: Row(
-                      children: [
-                        Icon(
-                          user.enabled == true
-                              ? Icons.block
-                              : Icons.check_circle,
-                          size: 18,
-                          color: user.enabled == true
-                              ? const Color(0xFFEF4444)
-                              : const Color(0xFF10B981),
-                        ),
-                        const SizedBox(width: 8),
                         Text(
-                          user.enabled == true ? 'Disable' : 'Enable',
+                          'Joined',
                           style: TextStyle(
-                            color: user.enabled == true
-                                ? const Color(0xFFEF4444)
-                                : const Color(0xFF10B981),
+                            fontSize: 9,
+                            color: Colors.grey[400],
+                          ),
+                        ),
+                        Text(
+                          dateFormat.format(user.createdAt!),
+                          style: const TextStyle(
+                            fontSize: 10,
+                            fontWeight: FontWeight.w500,
+                            color: Color(0xFF64748B),
                           ),
                         ),
                       ],
                     ),
-                  ),
-                  const PopupMenuItem(
-                    value: 'delete',
-                    child: Row(
-                      children: [
-                        Icon(Icons.delete, size: 18, color: Color(0xFFEF4444)),
-                        SizedBox(width: 8),
-                        Text('Delete', style: TextStyle(color: Color(0xFFEF4444))),
-                      ],
+                  // Actions
+                  PopupMenuButton(
+                    icon: const Icon(
+                      Icons.more_vert,
+                      color: Color(0xFF64748B),
+                      size: 20,
                     ),
+                    itemBuilder: (context) => [
+                      const PopupMenuItem(
+                        value: 'view',
+                        child: Row(
+                          children: [
+                            Icon(Icons.visibility, size: 18),
+                            SizedBox(width: 8),
+                            Text('View Details'),
+                          ],
+                        ),
+                      ),
+                      PopupMenuItem(
+                        value: 'toggle',
+                        child: Row(
+                          children: [
+                            Icon(
+                              user.enabled == true
+                                  ? Icons.block
+                                  : Icons.check_circle,
+                              size: 18,
+                              color: user.enabled == true
+                                  ? const Color(0xFFEF4444)
+                                  : const Color(0xFF10B981),
+                            ),
+                            const SizedBox(width: 8),
+                            Text(
+                              user.enabled == true ? 'Disable' : 'Enable',
+                              style: TextStyle(
+                                color: user.enabled == true
+                                    ? const Color(0xFFEF4444)
+                                    : const Color(0xFF10B981),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      const PopupMenuItem(
+                        value: 'delete',
+                        child: Row(
+                          children: [
+                            Icon(
+                              Icons.delete,
+                              size: 18,
+                              color: Color(0xFFEF4444),
+                            ),
+                            SizedBox(width: 8),
+                            Text(
+                              'Delete',
+                              style: TextStyle(color: Color(0xFFEF4444)),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                    onSelected: (value) {
+                      if (value == 'view') {
+                        _showUserDetails(user);
+                      } else if (value == 'toggle') {
+                        _confirmToggleStatus(user);
+                      } else if (value == 'delete') {
+                        _confirmDeleteUser(user);
+                      }
+                    },
                   ),
                 ],
-                onSelected: (value) {
-                  if (value == 'view') {
-                    _showUserDetails(user);
-                  } else if (value == 'toggle') {
-                    _confirmToggleStatus(user);
-                  } else if (value == 'delete') {
-                    _confirmDeleteUser(user);
-                  }
-                },
               ),
             ],
           ),
@@ -774,119 +825,125 @@ class _UserDetailsSheet extends StatelessWidget {
         color: Colors.white,
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Header
-          Row(
-            children: [
-              CircleAvatar(
-                radius: 40,
-                backgroundColor: roleColor.withOpacity(0.1),
-                backgroundImage: user.profilePictureUrl != null
-                    ? NetworkImage(user.profilePictureUrl!)
-                    : null,
-                child: user.profilePictureUrl == null
-                    ? Text(
-                        user.fullName[0].toUpperCase(),
-                        style: TextStyle(
-                          color: roleColor,
-                          fontSize: 28,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      )
-                    : null,
-              ),
-              const SizedBox(width: 16),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      user.fullName,
-                      style: const TextStyle(
-                        fontSize: 20,
-                        fontWeight: FontWeight.bold,
-                        color: Color(0xFF1E293B),
-                      ),
-                    ),
-                    const SizedBox(height: 4),
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 8,
-                        vertical: 4,
-                      ),
-                      decoration: BoxDecoration(
-                        color: roleColor.withOpacity(0.1),
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: Text(
-                        user.role?.value ?? 'USER',
-                        style: TextStyle(
-                          fontSize: 12,
-                          color: roleColor,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                    ),
-                  ],
+      child: SingleChildScrollView(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Header
+            Row(
+              children: [
+                CircleAvatar(
+                  radius: 40,
+                  backgroundColor: roleColor.withValues(alpha: 0.1),
+                  backgroundImage: user.profilePictureUrl != null
+                      ? NetworkImage(
+                          AppConstants.getImageUrl(user.profilePictureUrl!),
+                        )
+                      : null,
+                  child: user.profilePictureUrl == null
+                      ? Text(
+                          user.fullName[0].toUpperCase(),
+                          style: TextStyle(
+                            color: roleColor,
+                            fontSize: 28,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        )
+                      : null,
                 ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 24),
-          
-          // User Details
-          _buildDetailItem(
-            icon: Icons.email,
-            label: 'Email',
-            value: user.email,
-          ),
-          if (user.phone != null) ...[
-            const SizedBox(height: 12),
-            _buildDetailItem(
-              icon: Icons.phone,
-              label: 'Phone',
-              value: user.phone!,
-            ),
-          ],
-          if (user.createdAt != null) ...[
-            const SizedBox(height: 12),
-            _buildDetailItem(
-              icon: Icons.calendar_today,
-              label: 'Joined',
-              value: dateFormat.format(user.createdAt!),
-            ),
-          ],
-          const SizedBox(height: 12),
-          _buildDetailItem(
-            icon: Icons.info,
-            label: 'Status',
-            value: (user.enabled ?? true) ? 'Enabled' : 'Disabled',
-            valueColor: (user.enabled ?? true)
-                ? const Color(0xFF10B981)
-                : const Color(0xFFEF4444),
-          ),
-          
-          const SizedBox(height: 24),
-          
-          // Actions
-          Row(
-            children: [
-              Expanded(
-                child: OutlinedButton.icon(
-                  onPressed: () => Navigator.pop(context),
-                  icon: const Icon(Icons.close),
-                  label: const Text('Close'),
-                  style: OutlinedButton.styleFrom(
-                    padding: const EdgeInsets.symmetric(vertical: 12),
+                const SizedBox(width: 16),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        user.fullName,
+                        style: const TextStyle(
+                          fontSize: 20,
+                          fontWeight: FontWeight.bold,
+                          color: Color(0xFF1E293B),
+                        ),
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      const SizedBox(height: 4),
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 8,
+                          vertical: 4,
+                        ),
+                        decoration: BoxDecoration(
+                          color: roleColor.withValues(alpha: 0.1),
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: Text(
+                          user.role?.value ?? 'USER',
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: roleColor,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
                 ),
+              ],
+            ),
+            const SizedBox(height: 24),
+
+            // User Details
+            _buildDetailItem(
+              icon: Icons.email,
+              label: 'Email',
+              value: user.email,
+            ),
+            if (user.phone != null) ...[
+              const SizedBox(height: 12),
+              _buildDetailItem(
+                icon: Icons.phone,
+                label: 'Phone',
+                value: user.phone!,
               ),
             ],
-          ),
-        ],
+            if (user.createdAt != null) ...[
+              const SizedBox(height: 12),
+              _buildDetailItem(
+                icon: Icons.calendar_today,
+                label: 'Joined',
+                value: dateFormat.format(user.createdAt!),
+              ),
+            ],
+            const SizedBox(height: 12),
+            _buildDetailItem(
+              icon: Icons.info,
+              label: 'Status',
+              value: (user.enabled ?? true) ? 'Enabled' : 'Disabled',
+              valueColor: (user.enabled ?? true)
+                  ? const Color(0xFF10B981)
+                  : const Color(0xFFEF4444),
+            ),
+
+            const SizedBox(height: 24),
+
+            // Actions
+            Row(
+              children: [
+                Expanded(
+                  child: OutlinedButton.icon(
+                    onPressed: () => Navigator.pop(context),
+                    icon: const Icon(Icons.close),
+                    label: const Text('Close'),
+                    style: OutlinedButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(vertical: 12),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -903,7 +960,7 @@ class _UserDetailsSheet extends StatelessWidget {
         Container(
           padding: const EdgeInsets.all(8),
           decoration: BoxDecoration(
-            color: const Color(0xFF3B82F6).withOpacity(0.1),
+            color: const Color(0xFF3B82F6).withValues(alpha: 0.1),
             borderRadius: BorderRadius.circular(8),
           ),
           child: Icon(icon, color: const Color(0xFF3B82F6), size: 18),
@@ -915,14 +972,13 @@ class _UserDetailsSheet extends StatelessWidget {
             children: [
               Text(
                 label,
-                style: const TextStyle(
-                  fontSize: 12,
-                  color: Color(0xFF64748B),
-                ),
+                style: const TextStyle(fontSize: 12, color: Color(0xFF64748B)),
               ),
               const SizedBox(height: 2),
               Text(
                 value,
+                softWrap: true,
+                overflow: TextOverflow.visible,
                 style: TextStyle(
                   fontSize: 14,
                   fontWeight: FontWeight.w500,

@@ -32,8 +32,6 @@ class _JobListScreenState extends State<JobListScreen> {
   // Stats state
   EmployerDashboardResponse? _dashboardStats;
 
-  
-
   @override
   void initState() {
     super.initState();
@@ -308,7 +306,7 @@ class _JobListScreenState extends State<JobListScreen> {
             Icon(
               Icons.work_outline,
               size: 80,
-              color: AppColors.textDisabled.withOpacity(0.5),
+              color: AppColors.textDisabled.withValues(alpha: 0.5),
             ),
             const SizedBox(height: AppSizes.xl),
             Text(
@@ -493,7 +491,7 @@ class _JobCard extends StatelessWidget {
                   decoration: BoxDecoration(
                     color: Color(
                       int.parse(_getStatusColor(job.status)),
-                    ).withOpacity(0.1),
+                    ).withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(AppSizes.radiusXs),
                   ),
                   child: Text(
@@ -556,7 +554,7 @@ class _JobCard extends StatelessWidget {
                       vertical: 2,
                     ),
                     decoration: BoxDecoration(
-                      color: AppColors.success.withOpacity(0.1),
+                      color: AppColors.success.withValues(alpha: 0.1),
                       borderRadius: BorderRadius.circular(AppSizes.radiusXs),
                     ),
                     child: const Text(
@@ -652,13 +650,13 @@ class _JobCard extends StatelessWidget {
       width: 48,
       height: 48,
       decoration: BoxDecoration(
-        color: AppColors.primary.withOpacity(0.1),
+        color: AppColors.primary.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(AppSizes.radiusSm),
       ),
       child: Icon(
         Icons.business,
         size: 24,
-        color: AppColors.primary.withOpacity(0.5),
+        color: AppColors.primary.withValues(alpha: 0.5),
       ),
     );
   }

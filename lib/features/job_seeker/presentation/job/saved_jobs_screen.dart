@@ -487,7 +487,7 @@ class _SavedJobsScreenState extends State<SavedJobsScreen> {
                   vertical: 4,
                 ),
                 decoration: BoxDecoration(
-                  color: AppColors.primary.withOpacity(0.1),
+                  color: AppColors.primary.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(20),
                 ),
                 child: Row(
@@ -517,7 +517,7 @@ class _SavedJobsScreenState extends State<SavedJobsScreen> {
                   vertical: 4,
                 ),
                 decoration: BoxDecoration(
-                  color: Colors.green.withOpacity(0.1),
+                  color: Colors.green.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(20),
                 ),
                 child: Row(
@@ -609,7 +609,7 @@ class _SavedJobsScreenState extends State<SavedJobsScreen> {
             Positioned.fill(
               child: Container(
                 decoration: BoxDecoration(
-                  color: Colors.white.withOpacity(0.7),
+                  color: Colors.white.withValues(alpha: 0.7),
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: const Center(child: CircularProgressIndicator()),
@@ -698,7 +698,7 @@ class _SavedJobsScreenState extends State<SavedJobsScreen> {
                       Container(
                         padding: const EdgeInsets.all(6),
                         decoration: BoxDecoration(
-                          color: AppColors.primary.withOpacity(0.1),
+                          color: AppColors.primary.withValues(alpha: 0.1),
                           borderRadius: BorderRadius.circular(8),
                         ),
                         child: Icon(
@@ -846,13 +846,13 @@ class _SavedJobsScreenState extends State<SavedJobsScreen> {
       width: 56,
       height: 56,
       decoration: BoxDecoration(
-        color: AppColors.primary.withOpacity(0.1),
+        color: AppColors.primary.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(11),
       ),
       child: Icon(
         Icons.business,
         size: 28,
-        color: AppColors.primary.withOpacity(0.5),
+        color: AppColors.primary.withValues(alpha: 0.5),
       ),
     );
   }
@@ -867,7 +867,7 @@ class _SavedJobsScreenState extends State<SavedJobsScreen> {
             Icon(
               Icons.bookmark_border,
               size: 80,
-              color: AppColors.textDisabled.withOpacity(0.5),
+              color: AppColors.textDisabled.withValues(alpha: 0.5),
             ),
             const SizedBox(height: 24),
             const Text(
@@ -904,7 +904,7 @@ class _SavedJobsScreenState extends State<SavedJobsScreen> {
             Icon(
               Icons.search_off,
               size: 80,
-              color: AppColors.textDisabled.withOpacity(0.5),
+              color: AppColors.textDisabled.withValues(alpha: 0.5),
             ),
             const SizedBox(height: 24),
             const Text(

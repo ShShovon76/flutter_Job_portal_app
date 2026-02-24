@@ -1,6 +1,6 @@
 class AppConstants {
-  static const baseUrl = 'http://192.168.20.142:8080/api';
-  static const baseImageUrl = 'http://192.168.20.142:8080/uploads/';
+  static const baseUrl = 'http://10.114.229.41:8080/api';
+  static const baseImageUrl = 'http://10.114.229.41:8080/uploads/';
 
   /// Constructs a complete image URL - handles cases where path already contains /uploads/
   static String getImageUrl(String? imagePath) {
@@ -13,7 +13,7 @@ class AppConstants {
 
     // If path starts with /uploads/, prepend only the base domain (no /uploads/)
     if (imagePath.startsWith('/uploads/')) {
-      return 'http://192.168.20.142:8080$imagePath';
+      return 'http://10.114.229.41:8080$imagePath';
     }
 
     // Otherwise, use the full baseImageUrl

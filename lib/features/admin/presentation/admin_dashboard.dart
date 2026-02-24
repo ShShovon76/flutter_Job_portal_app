@@ -40,6 +40,8 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
   }
 
   Future<void> _loadDashboardData() async {
+    if (!mounted) return;
+
     setState(() {
       _isLoading = true;
       _errorMessage = null;
@@ -51,28 +53,19 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
         listen: false,
       );
 
-      // Fetch site metrics from Analytics API
       await analyticsProvider.fetchSiteMetrics();
 
-      // Also load other necessary data
-      // ignore: use_build_context_synchronously
       final userProvider = Provider.of<UserProvider>(context, listen: false);
-      // ignore: use_build_context_synchronously
       final jobProvider = Provider.of<JobProvider>(context, listen: false);
-      // ignore: use_build_context_synchronously
       final companyProvider = Provider.of<CompanyProvider>(
-        // ignore: use_build_context_synchronously
         context,
         listen: false,
       );
-      // ignore: use_build_context_synchronously
       final categoryProvider = Provider.of<CategoryProvider>(
-        // ignore: use_build_context_synchronously
         context,
         listen: false,
       );
 
-      // Load paginated data for quick access
       await Future.wait([
         userProvider.loadUsers(page: 0, size: 5),
         jobProvider.loadJobs(refresh: true),
@@ -80,10 +73,14 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
         categoryProvider.loadTopCategories(),
       ]);
 
+      if (!mounted) return; // 🔥 IMPORTANT
+
       setState(() {
         _isLoading = false;
       });
     } catch (e) {
+      if (!mounted) return; // 🔥 IMPORTANT
+
       setState(() {
         _isLoading = false;
         _errorMessage = 'Failed to load dashboard: ${e.toString()}';
@@ -930,9 +927,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
             radius: 20,
             backgroundColor: const Color(0xFF3B82F6).withValues(alpha: 0.1),
             backgroundImage: user.profilePictureUrl != null
-                ? NetworkImage(
-                    AppConstants.getImageUrl(user.profilePictureUrl),
-                  )
+                ? NetworkImage(AppConstants.getImageUrl(user.profilePictureUrl))
                 : null,
             child: user.profilePictureUrl == null
                 ? Text(

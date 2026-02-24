@@ -1,10 +1,9 @@
-
 import 'package:flutter/material.dart';
-
 
 // manage_employer_jobs_screen.dart
 
 import 'package:intl/intl.dart';
+import 'package:job_portal_app/core/constants/constants.dart';
 import 'package:job_portal_app/features/job_seeker/provider/job_provider.dart';
 import 'package:job_portal_app/models/job_model.dart';
 
@@ -14,7 +13,8 @@ class ManageEmployerJobsScreen extends StatefulWidget {
   const ManageEmployerJobsScreen({super.key});
 
   @override
-  State<ManageEmployerJobsScreen> createState() => _ManageEmployerJobsScreenState();
+  State<ManageEmployerJobsScreen> createState() =>
+      _ManageEmployerJobsScreenState();
 }
 
 class _ManageEmployerJobsScreenState extends State<ManageEmployerJobsScreen> {
@@ -27,7 +27,11 @@ class _ManageEmployerJobsScreenState extends State<ManageEmployerJobsScreen> {
   @override
   void initState() {
     super.initState();
-    _loadJobs();
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _loadJobs();
+    });
+
     _scrollController.addListener(_onScroll);
   }
 
@@ -52,7 +56,7 @@ class _ManageEmployerJobsScreenState extends State<ManageEmployerJobsScreen> {
 
   Future<void> _loadMoreJobs() async {
     if (_isLoadingMore) return;
-    
+
     final jobProvider = Provider.of<JobProvider>(context, listen: false);
     if (jobProvider.hasMore) {
       setState(() => _isLoadingMore = true);
@@ -81,14 +85,12 @@ class _ManageEmployerJobsScreenState extends State<ManageEmployerJobsScreen> {
         children: [
           // Search Bar
           _buildSearchBar(),
-          
+
           // Filter Chips
           _buildFilterChips(),
-          
+
           // Jobs List
-          Expanded(
-            child: _buildJobsList(),
-          ),
+          Expanded(child: _buildJobsList()),
         ],
       ),
       floatingActionButton: FloatingActionButton(
@@ -120,10 +122,18 @@ class _ManageEmployerJobsScreenState extends State<ManageEmployerJobsScreen> {
                   hintText: 'Search jobs...',
                   hintStyle: const TextStyle(color: Color(0xFF94A3B8)),
                   border: InputBorder.none,
-                  prefixIcon: const Icon(Icons.search, color: Color(0xFF64748B), size: 20),
+                  prefixIcon: const Icon(
+                    Icons.search,
+                    color: Color(0xFF64748B),
+                    size: 20,
+                  ),
                   suffixIcon: _searchController.text.isNotEmpty
                       ? IconButton(
-                          icon: const Icon(Icons.clear, color: Color(0xFF64748B), size: 18),
+                          icon: const Icon(
+                            Icons.clear,
+                            color: Color(0xFF64748B),
+                            size: 18,
+                          ),
                           onPressed: () {
                             _searchController.clear();
                             _refreshJobs();
@@ -178,7 +188,10 @@ class _ManageEmployerJobsScreenState extends State<ManageEmployerJobsScreen> {
                   fontSize: 13,
                   fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
                 ),
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 8,
+                ),
               ),
             );
           }).toList(),
@@ -203,7 +216,11 @@ class _ManageEmployerJobsScreenState extends State<ManageEmployerJobsScreen> {
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                const Icon(Icons.error_outline, size: 48, color: Color(0xFFEF4444)),
+                const Icon(
+                  Icons.error_outline,
+                  size: 48,
+                  color: Color(0xFFEF4444),
+                ),
                 const SizedBox(height: 16),
                 Text(
                   jobProvider.error!,
@@ -254,7 +271,7 @@ class _ManageEmployerJobsScreenState extends State<ManageEmployerJobsScreen> {
   Widget _buildJobCard(Job job) {
     final dateFormat = DateFormat('MMM d, yyyy');
     final statusColor = _getStatusColor(job.status);
-    
+
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       decoration: BoxDecoration(
@@ -262,7 +279,7 @@ class _ManageEmployerJobsScreenState extends State<ManageEmployerJobsScreen> {
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: Colors.grey.withOpacity(0.1),
+            color: Colors.grey.withValues(alpha: 0.1),
             blurRadius: 8,
             offset: const Offset(0, 2),
           ),
@@ -286,14 +303,14 @@ class _ManageEmployerJobsScreenState extends State<ManageEmployerJobsScreen> {
                     width: 48,
                     height: 48,
                     decoration: BoxDecoration(
-                      color: const Color(0xFF3B82F6).withOpacity(0.1),
+                      color: const Color(0xFF3B82F6).withValues(alpha: 0.1),
                       borderRadius: BorderRadius.circular(12),
                     ),
                     child: job.company.logoUrl != null
                         ? ClipRRect(
                             borderRadius: BorderRadius.circular(12),
                             child: Image.network(
-                              job.company.logoUrl!,
+                             AppConstants.getImageUrl(job.company.logoUrl!) ,
                               fit: BoxFit.cover,
                               errorBuilder: (_, __, ___) => const Icon(
                                 Icons.business,
@@ -359,9 +376,12 @@ class _ManageEmployerJobsScreenState extends State<ManageEmployerJobsScreen> {
                   ),
                   // Status Badge
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 8,
+                      vertical: 4,
+                    ),
                     decoration: BoxDecoration(
-                      color: statusColor.withOpacity(0.1),
+                      color: statusColor.withValues(alpha: 0.1),
                       borderRadius: BorderRadius.circular(20),
                     ),
                     child: Text(
@@ -392,7 +412,11 @@ class _ManageEmployerJobsScreenState extends State<ManageEmployerJobsScreen> {
                   if (job.minSalary != null)
                     _buildInfoChip(
                       icon: Icons.attach_money,
-                      label: _formatSalary(job.minSalary, job.maxSalary, job.salaryType),
+                      label: _formatSalary(
+                        job.minSalary,
+                        job.maxSalary,
+                        job.salaryType,
+                      ),
                     ),
                 ],
               ),
@@ -412,10 +436,7 @@ class _ManageEmployerJobsScreenState extends State<ManageEmployerJobsScreen> {
                       const SizedBox(width: 4),
                       Text(
                         'Posted ${dateFormat.format(job.postedAt)}',
-                        style: TextStyle(
-                          fontSize: 11,
-                          color: Colors.grey[500],
-                        ),
+                        style: TextStyle(fontSize: 11, color: Colors.grey[500]),
                       ),
                     ],
                   ),
@@ -472,10 +493,7 @@ class _ManageEmployerJobsScreenState extends State<ManageEmployerJobsScreen> {
     );
   }
 
-  Widget _buildInfoChip({
-    required IconData icon,
-    required String label,
-  }) {
+  Widget _buildInfoChip({required IconData icon, required String label}) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
       decoration: BoxDecoration(
@@ -489,10 +507,7 @@ class _ManageEmployerJobsScreenState extends State<ManageEmployerJobsScreen> {
           const SizedBox(width: 4),
           Text(
             label,
-            style: const TextStyle(
-              fontSize: 11,
-              color: Color(0xFF64748B),
-            ),
+            style: const TextStyle(fontSize: 11, color: Color(0xFF64748B)),
           ),
         ],
       ),

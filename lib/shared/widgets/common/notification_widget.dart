@@ -44,9 +44,9 @@ class NotificationWidget extends StatelessWidget {
       margin: const EdgeInsets.all(8),
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       decoration: BoxDecoration(
-        color: _getColor().withOpacity(0.1),
+        color: _getColor().withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: _getColor().withOpacity(0.3)),
+        border: Border.all(color: _getColor().withValues(alpha: 0.3)),
       ),
       child: Row(
         children: [

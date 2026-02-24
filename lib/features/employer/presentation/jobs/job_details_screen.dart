@@ -638,7 +638,7 @@ Check out this job opportunity!
                             end: Alignment.bottomCenter,
                             colors: [
                               AppColors.primary,
-                              AppColors.primary.withOpacity(0.8),
+                              AppColors.primary.withValues(alpha: 0.8),
                             ],
                           ),
                         ),
@@ -659,7 +659,9 @@ Check out this job opportunity!
                                       borderRadius: BorderRadius.circular(12),
                                       boxShadow: [
                                         BoxShadow(
-                                          color: Colors.black.withOpacity(0.1),
+                                          color: Colors.black.withValues(
+                                            alpha: 0.1,
+                                          ),
                                           blurRadius: 10,
                                           offset: const Offset(0, 4),
                                         ),
@@ -701,7 +703,9 @@ Check out this job opportunity!
                                           vertical: 4,
                                         ),
                                         decoration: BoxDecoration(
-                                          color: Colors.white.withOpacity(0.2),
+                                          color: Colors.white.withValues(
+                                            alpha: 0.2,
+                                          ),
                                           borderRadius: BorderRadius.circular(
                                             12,
                                           ),
@@ -792,7 +796,9 @@ Check out this job opportunity!
                                     vertical: 2,
                                   ),
                                   decoration: BoxDecoration(
-                                    color: AppColors.success.withOpacity(0.1),
+                                    color: AppColors.success.withValues(
+                                      alpha: 0.1,
+                                    ),
                                     borderRadius: BorderRadius.circular(4),
                                   ),
                                   child: const Text(
@@ -841,7 +847,7 @@ Check out this job opportunity!
                             Container(
                               padding: const EdgeInsets.all(16),
                               decoration: BoxDecoration(
-                                color: AppColors.primary.withOpacity(0.1),
+                                color: AppColors.primary.withValues(alpha: 0.1),
                                 borderRadius: BorderRadius.circular(12),
                               ),
                               child: Row(
@@ -1020,13 +1026,13 @@ Check out this job opportunity!
       width: 60,
       height: 60,
       decoration: BoxDecoration(
-        color: AppColors.primary.withOpacity(0.1),
+        color: AppColors.primary.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(12),
       ),
       child: Icon(
         Icons.business,
         size: 30,
-        color: AppColors.primary.withOpacity(0.5),
+        color: AppColors.primary.withValues(alpha: 0.5),
       ),
     );
   }

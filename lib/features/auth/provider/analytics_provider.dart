@@ -81,28 +81,22 @@ class AnalyticsProvider extends ChangeNotifier {
   // GET /analytics/applications/trends
   // ============================================================
 
-  Future<void> fetchApplicationTrends({
-    int? jobId,
-    int? employerId,
-    DateTime? from,
-    DateTime? to,
-  }) async {
-    try {
-      _startLoading();
-
-      _applicationTrends =
-          await AnalyticsApi.getApplicationTrends(
-        jobId: jobId,
-        employerId: employerId,
-        from: from,
-        to: to,
-      );
-
-      _stopLoading();
-    } catch (e) {
-      _handleError(e);
-    }
-  }
+ Future<void> fetchApplicationTrends({
+  int? jobId,
+  int? employerId,
+  DateTime? from,
+  DateTime? to,
+}) async {
+  await _execute(() async {
+    _applicationTrends =
+        await AnalyticsApi.getApplicationTrends(
+      jobId: jobId,
+      employerId: employerId,
+      from: from,
+      to: to,
+    );
+  });
+}
 
   // ============================================================
   // 3️⃣ EMPLOYER DASHBOARD
@@ -129,18 +123,26 @@ class AnalyticsProvider extends ChangeNotifier {
   // GET /analytics/site-metrics
   // ============================================================
 
-  Future<void> fetchSiteMetrics() async {
-    try {
-      _startLoading();
+Future<void> _execute(Future<void> Function() action) async {
+  _isLoading = true;
+  _error = null;
+  notifyListeners();
 
-      _siteMetrics =
-          await AnalyticsApi.getSiteMetrics();
-
-      _stopLoading();
-    } catch (e) {
-      _handleError(e);
-    }
+  try {
+    await action();
+  } catch (e) {
+    _error = e.toString();
   }
+
+  _isLoading = false;
+  notifyListeners();
+}
+
+Future<void> fetchSiteMetrics() async {
+  await _execute(() async {
+    _siteMetrics = await AnalyticsApi.getSiteMetrics();
+  });
+}
 
   // ============================================================
   // 5️⃣ JOB SEEKER DASHBOARD

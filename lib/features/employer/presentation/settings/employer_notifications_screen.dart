@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:job_portal_app/core/constants/app_colors.dart';
 import 'package:job_portal_app/core/constants/app_sizes.dart';
 
-
 class EmployerNotificationsScreen extends StatefulWidget {
   const EmployerNotificationsScreen({super.key});
 
@@ -90,7 +89,7 @@ class _EmployerNotificationsScreenState
                 if (unreadCount > 0)
                   Container(
                     padding: const EdgeInsets.all(AppSizes.md),
-                    color: AppColors.primary.withOpacity(0.1),
+                    color: AppColors.primary.withValues(alpha: 0.1),
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
@@ -145,13 +144,15 @@ class _EmployerNotificationsScreenState
                             'Push Notifications',
                             'Receive push notifications on your device',
                             pushNotifications,
-                            (value) => setState(() => pushNotifications = value),
+                            (value) =>
+                                setState(() => pushNotifications = value),
                           ),
                           _buildSettingSwitch(
                             'Email Notifications',
                             'Receive notifications via email',
                             emailNotifications,
-                            (value) => setState(() => emailNotifications = value),
+                            (value) =>
+                                setState(() => emailNotifications = value),
                           ),
                         ],
                       ),
@@ -177,19 +178,22 @@ class _EmployerNotificationsScreenState
                             'New Applications',
                             'When candidates apply to your jobs',
                             applicationUpdates,
-                            (value) => setState(() => applicationUpdates = value),
+                            (value) =>
+                                setState(() => applicationUpdates = value),
                           ),
                           _buildSettingSwitch(
                             'Interview Reminders',
                             'Reminders for scheduled interviews',
                             interviewReminders,
-                            (value) => setState(() => interviewReminders = value),
+                            (value) =>
+                                setState(() => interviewReminders = value),
                           ),
                           _buildSettingSwitch(
                             'Candidate Messages',
                             'When candidates send you messages',
                             candidateMessages,
-                            (value) => setState(() => candidateMessages = value),
+                            (value) =>
+                                setState(() => candidateMessages = value),
                           ),
                           _buildSettingSwitch(
                             'Job Alerts',
@@ -237,9 +241,7 @@ class _EmployerNotificationsScreenState
                           const SizedBox(height: AppSizes.lg),
                           const Text(
                             'Application Digest',
-                            style: TextStyle(
-                              fontWeight: FontWeight.w500,
-                            ),
+                            style: TextStyle(fontWeight: FontWeight.w500),
                           ),
                           const SizedBox(height: AppSizes.sm),
                           const Text(
@@ -258,9 +260,7 @@ class _EmployerNotificationsScreenState
                           const SizedBox(height: AppSizes.md),
                           const Text(
                             'Quiet Hours',
-                            style: TextStyle(
-                              fontWeight: FontWeight.w500,
-                            ),
+                            style: TextStyle(fontWeight: FontWeight.w500),
                           ),
                           const SizedBox(height: AppSizes.sm),
                           const Text(
@@ -301,7 +301,9 @@ class _EmployerNotificationsScreenState
   Widget _buildNotificationItem(Map<String, dynamic> notification) {
     return Card(
       margin: const EdgeInsets.only(bottom: AppSizes.md),
-      color: !notification['read'] ? AppColors.primary.withOpacity(0.05) : null,
+      color: !notification['read']
+          ? AppColors.primary.withValues(alpha: 0.05)
+          : null,
       child: ListTile(
         leading: Container(
           width: 40,
@@ -319,7 +321,9 @@ class _EmployerNotificationsScreenState
         title: Text(
           notification['title'],
           style: TextStyle(
-            fontWeight: !notification['read'] ? FontWeight.w600 : FontWeight.normal,
+            fontWeight: !notification['read']
+                ? FontWeight.w600
+                : FontWeight.normal,
           ),
         ),
         subtitle: Column(
@@ -416,7 +420,9 @@ class _EmployerNotificationsScreenState
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('Clear All Notifications'),
-        content: const Text('Are you sure you want to clear all notifications?'),
+        content: const Text(
+          'Are you sure you want to clear all notifications?',
+        ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),

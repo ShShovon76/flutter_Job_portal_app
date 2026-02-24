@@ -91,11 +91,8 @@ class _NoInternetScreenState extends State<NoInternetScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return WillPopScope(
-      onWillPop: () async {
-        // Prevent going back when there's no internet
-        return false;
-      },
+    return PopScope(
+      canPop: false,
       child: Scaffold(
         backgroundColor: Colors.white,
         body: SafeArea(

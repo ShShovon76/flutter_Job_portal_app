@@ -2,6 +2,7 @@
 // manage_employers_screen.dart
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:job_portal_app/core/constants/constants.dart';
 import 'package:job_portal_app/features/employer/presentation/company/provider/company_provider.dart';
 import 'package:job_portal_app/models/company_model.dart';
 import 'package:provider/provider.dart';
@@ -24,7 +25,11 @@ class _ManageEmployersScreenState extends State<ManageEmployersScreen> {
   @override
   void initState() {
     super.initState();
-    _loadCompanies();
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _loadCompanies();
+    });
+
     _scrollController.addListener(_onScroll);
   }
 
@@ -43,14 +48,20 @@ class _ManageEmployersScreenState extends State<ManageEmployersScreen> {
   }
 
   Future<void> _loadCompanies() async {
-    final companyProvider = Provider.of<CompanyProvider>(context, listen: false);
+    final companyProvider = Provider.of<CompanyProvider>(
+      context,
+      listen: false,
+    );
     await companyProvider.loadCompanies(refresh: true);
   }
 
   Future<void> _loadMoreCompanies() async {
     if (_isLoadingMore) return;
-    
-    final companyProvider = Provider.of<CompanyProvider>(context, listen: false);
+
+    final companyProvider = Provider.of<CompanyProvider>(
+      context,
+      listen: false,
+    );
     if (companyProvider.hasMore) {
       setState(() => _isLoadingMore = true);
       await companyProvider.loadCompanies();
@@ -59,7 +70,10 @@ class _ManageEmployersScreenState extends State<ManageEmployersScreen> {
   }
 
   Future<void> _refreshCompanies() async {
-    final companyProvider = Provider.of<CompanyProvider>(context, listen: false);
+    final companyProvider = Provider.of<CompanyProvider>(
+      context,
+      listen: false,
+    );
     await companyProvider.loadCompanies(refresh: true);
   }
 
@@ -69,8 +83,11 @@ class _ManageEmployersScreenState extends State<ManageEmployersScreen> {
       return;
     }
 
-    final companyProvider = Provider.of<CompanyProvider>(context, listen: false);
-    
+    final companyProvider = Provider.of<CompanyProvider>(
+      context,
+      listen: false,
+    );
+
     bool? verified;
     if (_selectedFilter == 'Verified') verified = true;
     if (_selectedFilter == 'Pending') verified = false;
@@ -111,18 +128,18 @@ class _ManageEmployersScreenState extends State<ManageEmployersScreen> {
               Navigator.pop(context);
               // You'll need to add adminId from auth provider
               const adminId = 1; // Replace with actual admin ID
-              
+
               final companyProvider = Provider.of<CompanyProvider>(
                 context,
                 listen: false,
               );
-              
+
               if (!company.verified) {
                 await companyProvider.verifyCompany(company.id, adminId);
               }
-              
+
               _refreshCompanies();
-              
+
               ScaffoldMessenger.of(context).showSnackBar(
                 SnackBar(
                   content: Text(
@@ -134,8 +151,8 @@ class _ManageEmployersScreenState extends State<ManageEmployersScreen> {
               );
             },
             style: ElevatedButton.styleFrom(
-              backgroundColor: company.verified 
-                  ? const Color(0xFFEF4444) 
+              backgroundColor: company.verified
+                  ? const Color(0xFFEF4444)
                   : const Color(0xFF10B981),
             ),
             child: Text(company.verified ? 'Unverify' : 'Verify'),
@@ -165,14 +182,14 @@ class _ManageEmployersScreenState extends State<ManageEmployersScreen> {
                 context,
                 listen: false,
               );
-              
+
               await companyProvider.deleteCompany(
                 company.id,
                 company.owner?.id ?? 0,
               );
-              
+
               _refreshCompanies();
-              
+
               ScaffoldMessenger.of(context).showSnackBar(
                 const SnackBar(
                   content: Text('Company deleted successfully'),
@@ -199,17 +216,15 @@ class _ManageEmployersScreenState extends State<ManageEmployersScreen> {
         children: [
           // Header with Stats
           _buildHeader(),
-          
+
           // Search Bar
           _buildSearchBar(),
-          
+
           // Filter Chips
           _buildFilterChips(),
-          
+
           // Companies List
-          Expanded(
-            child: _buildCompaniesList(),
-          ),
+          Expanded(child: _buildCompaniesList()),
         ],
       ),
     );
@@ -218,12 +233,14 @@ class _ManageEmployersScreenState extends State<ManageEmployersScreen> {
   Widget _buildHeader() {
     return Consumer<CompanyProvider>(
       builder: (context, provider, child) {
-        final totalCompanies = provider.totalPages > 0 
-            ? provider.companies.length 
+        final totalCompanies = provider.totalPages > 0
+            ? provider.companies.length
             : 0;
         final verified = provider.companies.where((c) => c.verified).length;
         final pending = provider.companies.where((c) => !c.verified).length;
-        final featured = provider.companies.where((c) => c.featured == true).length;
+        final featured = provider.companies
+            .where((c) => c.featured == true)
+            .length;
 
         return Container(
           padding: const EdgeInsets.all(20),
@@ -235,7 +252,7 @@ class _ManageEmployersScreenState extends State<ManageEmployersScreen> {
             ),
             boxShadow: [
               BoxShadow(
-                color: Colors.grey.withOpacity(0.1),
+                color: Colors.grey.withValues(alpha: 0.1),
                 blurRadius: 8,
                 offset: const Offset(0, 2),
               ),
@@ -298,7 +315,7 @@ class _ManageEmployersScreenState extends State<ManageEmployersScreen> {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.1),
+        color: color.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(20),
       ),
       child: Row(
@@ -314,10 +331,7 @@ class _ManageEmployersScreenState extends State<ManageEmployersScreen> {
           const SizedBox(width: 4),
           Text(
             label,
-            style: const TextStyle(
-              fontSize: 12,
-              color: Color(0xFF64748B),
-            ),
+            style: const TextStyle(fontSize: 12, color: Color(0xFF64748B)),
           ),
         ],
       ),
@@ -393,10 +407,10 @@ class _ManageEmployersScreenState extends State<ManageEmployersScreen> {
                 selectedColor: filter == 'Verified'
                     ? const Color(0xFF10B981)
                     : filter == 'Pending'
-                        ? const Color(0xFFF59E0B)
-                        : filter == 'Featured'
-                            ? const Color(0xFF8B5CF6)
-                            : const Color(0xFF3B82F6),
+                    ? const Color(0xFFF59E0B)
+                    : filter == 'Featured'
+                    ? const Color(0xFF8B5CF6)
+                    : const Color(0xFF3B82F6),
                 checkmarkColor: Colors.white,
                 labelStyle: TextStyle(
                   color: isSelected ? Colors.white : const Color(0xFF1E293B),
@@ -455,7 +469,11 @@ class _ManageEmployersScreenState extends State<ManageEmployersScreen> {
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Icon(Icons.business_outlined, size: 64, color: Color(0xFF94A3B8)),
+                Icon(
+                  Icons.business_outlined,
+                  size: 64,
+                  color: Color(0xFF94A3B8),
+                ),
                 SizedBox(height: 16),
                 Text(
                   'No companies found',
@@ -493,7 +511,7 @@ class _ManageEmployersScreenState extends State<ManageEmployersScreen> {
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: Colors.grey.withOpacity(0.1),
+            color: Colors.grey.withValues(alpha: 0.1),
             blurRadius: 8,
             offset: const Offset(0, 2),
           ),
@@ -511,14 +529,14 @@ class _ManageEmployersScreenState extends State<ManageEmployersScreen> {
                 width: 56,
                 height: 56,
                 decoration: BoxDecoration(
-                  color: const Color(0xFF3B82F6).withOpacity(0.1),
+                  color: const Color(0xFF3B82F6).withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: company.logoUrl != null
                     ? ClipRRect(
                         borderRadius: BorderRadius.circular(12),
                         child: Image.network(
-                          company.logoUrl!,
+                         AppConstants.getImageUrl(company.logoUrl!),
                           fit: BoxFit.cover,
                           errorBuilder: (_, __, ___) => const Icon(
                             Icons.business,
@@ -556,7 +574,9 @@ class _ManageEmployersScreenState extends State<ManageEmployersScreen> {
                             margin: const EdgeInsets.only(left: 4),
                             padding: const EdgeInsets.all(4),
                             decoration: BoxDecoration(
-                              color: const Color(0xFF8B5CF6).withOpacity(0.1),
+                              color: const Color(
+                                0xFF8B5CF6,
+                              ).withValues(alpha: 0.1),
                               shape: BoxShape.circle,
                             ),
                             child: const Icon(
@@ -596,8 +616,10 @@ class _ManageEmployersScreenState extends State<ManageEmployersScreen> {
                           ),
                           decoration: BoxDecoration(
                             color: company.verified
-                                ? const Color(0xFF10B981).withOpacity(0.1)
-                                : const Color(0xFFF59E0B).withOpacity(0.1),
+                                ? const Color(0xFF10B981).withValues(alpha: 0.1)
+                                : const Color(
+                                    0xFFF59E0B,
+                                  ).withValues(alpha: 0.1),
                             borderRadius: BorderRadius.circular(12),
                           ),
                           child: Row(
@@ -634,7 +656,9 @@ class _ManageEmployersScreenState extends State<ManageEmployersScreen> {
                               vertical: 2,
                             ),
                             decoration: BoxDecoration(
-                              color: const Color(0xFF3B82F6).withOpacity(0.1),
+                              color: const Color(
+                                0xFF3B82F6,
+                              ).withValues(alpha: 0.1),
                               borderRadius: BorderRadius.circular(12),
                             ),
                             child: Text(
@@ -694,7 +718,10 @@ class _ManageEmployersScreenState extends State<ManageEmployersScreen> {
                       children: [
                         Icon(Icons.delete, size: 18, color: Color(0xFFEF4444)),
                         SizedBox(width: 8),
-                        Text('Delete', style: TextStyle(color: Color(0xFFEF4444))),
+                        Text(
+                          'Delete',
+                          style: TextStyle(color: Color(0xFFEF4444)),
+                        ),
                       ],
                     ),
                   ),
@@ -756,14 +783,14 @@ class _CompanyDetailsSheet extends StatelessWidget {
                   width: 64,
                   height: 64,
                   decoration: BoxDecoration(
-                    color: const Color(0xFF3B82F6).withOpacity(0.1),
+                    color: const Color(0xFF3B82F6).withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(16),
                   ),
                   child: company.logoUrl != null
                       ? ClipRRect(
                           borderRadius: BorderRadius.circular(16),
                           child: Image.network(
-                            company.logoUrl!,
+                           AppConstants.getImageUrl(company.logoUrl!),
                             fit: BoxFit.cover,
                           ),
                         )
@@ -794,7 +821,9 @@ class _CompanyDetailsSheet extends StatelessWidget {
                             Container(
                               padding: const EdgeInsets.all(4),
                               decoration: BoxDecoration(
-                                color: const Color(0xFF8B5CF6).withOpacity(0.1),
+                                color: const Color(
+                                  0xFF8B5CF6,
+                                ).withValues(alpha: 0.1),
                                 shape: BoxShape.circle,
                               ),
                               child: const Icon(
@@ -826,10 +855,7 @@ class _CompanyDetailsSheet extends StatelessWidget {
               const SizedBox(height: 8),
               Text(
                 company.about!,
-                style: const TextStyle(
-                  fontSize: 14,
-                  color: Color(0xFF1E293B),
-                ),
+                style: const TextStyle(fontSize: 14, color: Color(0xFF1E293B)),
               ),
               const SizedBox(height: 16),
             ],
@@ -946,7 +972,7 @@ class _CompanyDetailsSheet extends StatelessWidget {
                       vertical: 6,
                     ),
                     decoration: BoxDecoration(
-                      color: const Color(0xFF3B82F6).withOpacity(0.1),
+                      color: const Color(0xFF3B82F6).withValues(alpha: 0.1),
                       borderRadius: BorderRadius.circular(20),
                     ),
                     child: Row(
@@ -1016,7 +1042,7 @@ class _CompanyDetailsSheet extends StatelessWidget {
         Container(
           padding: const EdgeInsets.all(6),
           decoration: BoxDecoration(
-            color: const Color(0xFF3B82F6).withOpacity(0.1),
+            color: const Color(0xFF3B82F6).withValues(alpha: 0.1),
             borderRadius: BorderRadius.circular(6),
           ),
           child: Icon(icon, color: const Color(0xFF3B82F6), size: 14),
@@ -1028,10 +1054,7 @@ class _CompanyDetailsSheet extends StatelessWidget {
             children: [
               Text(
                 label,
-                style: const TextStyle(
-                  fontSize: 11,
-                  color: Color(0xFF64748B),
-                ),
+                style: const TextStyle(fontSize: 11, color: Color(0xFF64748B)),
               ),
               const SizedBox(height: 2),
               Text(
@@ -1049,19 +1072,13 @@ class _CompanyDetailsSheet extends StatelessWidget {
     );
   }
 
-  Widget _buildInfoItem({
-    required String label,
-    required String value,
-  }) {
+  Widget _buildInfoItem({required String label, required String value}) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
           label,
-          style: const TextStyle(
-            fontSize: 11,
-            color: Color(0xFF64748B),
-          ),
+          style: const TextStyle(fontSize: 11, color: Color(0xFF64748B)),
         ),
         const SizedBox(height: 2),
         Text(
@@ -1089,4 +1106,3 @@ class _CompanyDetailsSheet extends StatelessWidget {
     }
   }
 }
-

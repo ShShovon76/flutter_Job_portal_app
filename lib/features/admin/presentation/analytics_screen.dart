@@ -17,7 +17,6 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
   final ScrollController _scrollController = ScrollController();
   String _selectedTimeRange = 'week';
   String _selectedChart = 'users';
-  bool _isLoading = true;
 
   final List<String> _timeRanges = ['day', 'week', 'month', 'year'];
   final List<Map<String, dynamic>> _chartTypes = [
@@ -34,7 +33,10 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
   @override
   void initState() {
     super.initState();
-    _loadAnalyticsData();
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _loadAnalyticsData();
+    });
   }
 
   @override
@@ -44,20 +46,15 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
   }
 
   Future<void> _loadAnalyticsData() async {
-    setState(() => _isLoading = true);
-
     try {
       final analyticsProvider = Provider.of<AnalyticsProvider>(
         context,
         listen: false,
       );
 
-      // Fetch site metrics
-      await analyticsProvider.fetchSiteMetrics();
-
-      // Also fetch application trends
       final now = DateTime.now();
       DateTime from;
+
       switch (_selectedTimeRange) {
         case 'day':
           from = now.subtract(const Duration(days: 1));
@@ -75,11 +72,12 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
           from = now.subtract(const Duration(days: 7));
       }
 
-      await analyticsProvider.fetchApplicationTrends(from: from, to: now);
-
-      setState(() => _isLoading = false);
+      // 🚀 Run both APIs in parallel
+      await Future.wait([
+        analyticsProvider.fetchSiteMetrics(),
+        analyticsProvider.fetchApplicationTrends(from: from, to: now),
+      ]);
     } catch (e) {
-      setState(() => _isLoading = false);
       _showErrorSnackBar('Failed to load analytics: ${e.toString()}');
     }
   }
@@ -96,13 +94,19 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Colors.grey[50],
-      body: RefreshIndicator(
-        onRefresh: _loadAnalyticsData,
-        color: const Color(0xFF3B82F6),
-        child: _isLoading ? _buildLoadingView() : _buildAnalyticsContent(),
-      ),
+    return Consumer<AnalyticsProvider>(
+      builder: (context, provider, _) {
+        return Scaffold(
+          backgroundColor: Colors.grey[50],
+          body: RefreshIndicator(
+            onRefresh: _loadAnalyticsData,
+            color: const Color(0xFF3B82F6),
+            child: provider.isLoading
+                ? _buildLoadingView()
+                : _buildAnalyticsContent(),
+          ),
+        );
+      },
     );
   }
 
@@ -195,7 +199,7 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
-            color: Colors.blue.withOpacity(0.3),
+            color: Colors.blue.withValues(alpha: 0.3),
             blurRadius: 15,
             offset: const Offset(0, 5),
           ),
@@ -236,7 +240,7 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
         borderRadius: BorderRadius.circular(30),
         boxShadow: [
           BoxShadow(
-            color: Colors.grey.withOpacity(0.1),
+            color: Colors.grey.withValues(alpha: 0.1),
             blurRadius: 5,
             offset: const Offset(0, 2),
           ),
@@ -346,7 +350,7 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: Colors.grey.withOpacity(0.1),
+            color: Colors.grey.withValues(alpha: 0.1),
             blurRadius: 8,
             offset: const Offset(0, 2),
           ),
@@ -355,6 +359,7 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        mainAxisSize: MainAxisSize.min,
         children: [
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -362,10 +367,10 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
               Container(
                 padding: const EdgeInsets.all(8),
                 decoration: BoxDecoration(
-                  color: color.withOpacity(0.1),
+                  color: color.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(8),
                 ),
-                child: Icon(icon, color: color, size: 18),
+                child: Icon(icon, color: color, size: 16),
               ),
               if (change > 0)
                 Container(
@@ -374,7 +379,7 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
                     vertical: 2,
                   ),
                   decoration: BoxDecoration(
-                    color: const Color(0xFF10B981).withOpacity(0.1),
+                    color: const Color(0xFF10B981).withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(20),
                   ),
                   child: Row(
@@ -399,6 +404,9 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
                 ),
             ],
           ),
+
+          const SizedBox(height: 6),
+
           Text(
             _formatNumber(value),
             style: const TextStyle(
@@ -407,10 +415,12 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
               color: Color(0xFF1E293B),
             ),
           ),
+
           Text(
             title,
             style: const TextStyle(fontSize: 11, color: Color(0xFF64748B)),
           ),
+
           Text(
             '$change $changeLabel',
             style: TextStyle(
@@ -432,7 +442,7 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
         borderRadius: BorderRadius.circular(30),
         boxShadow: [
           BoxShadow(
-            color: Colors.grey.withOpacity(0.1),
+            color: Colors.grey.withValues(alpha: 0.1),
             blurRadius: 5,
             offset: const Offset(0, 2),
           ),
@@ -454,6 +464,7 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
                 ),
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.center,
+                  mainAxisSize: MainAxisSize.min,
                   children: [
                     Icon(
                       type['icon'],
@@ -499,7 +510,7 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
             borderRadius: BorderRadius.circular(20),
             boxShadow: [
               BoxShadow(
-                color: Colors.grey.withOpacity(0.1),
+                color: Colors.grey.withValues(alpha: 0.1),
                 blurRadius: 8,
                 offset: const Offset(0, 2),
               ),
@@ -810,7 +821,7 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
             borderRadius: BorderRadius.circular(20),
             boxShadow: [
               BoxShadow(
-                color: Colors.grey.withOpacity(0.1),
+                color: Colors.grey.withValues(alpha: 0.1),
                 blurRadius: 8,
                 offset: const Offset(0, 2),
               ),
@@ -888,7 +899,7 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
               Container(
                 padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
-                  color: const Color(0xFF3B82F6).withOpacity(0.1),
+                  color: const Color(0xFF3B82F6).withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: Row(
@@ -932,7 +943,7 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
             borderRadius: BorderRadius.circular(20),
             boxShadow: [
               BoxShadow(
-                color: Colors.grey.withOpacity(0.1),
+                color: Colors.grey.withValues(alpha: 0.1),
                 blurRadius: 8,
                 offset: const Offset(0, 2),
               ),
@@ -1029,7 +1040,7 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
             borderRadius: BorderRadius.circular(20),
             boxShadow: [
               BoxShadow(
-                color: Colors.grey.withOpacity(0.1),
+                color: Colors.grey.withValues(alpha: 0.1),
                 blurRadius: 8,
                 offset: const Offset(0, 2),
               ),
@@ -1076,7 +1087,7 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
                           vertical: 4,
                         ),
                         decoration: BoxDecoration(
-                          color: const Color(0xFF3B82F6).withOpacity(0.1),
+                          color: const Color(0xFF3B82F6).withValues(alpha: 0.1),
                           borderRadius: BorderRadius.circular(20),
                         ),
                         child: Text(
@@ -1109,7 +1120,7 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
-            color: Colors.grey.withOpacity(0.1),
+            color: Colors.grey.withValues(alpha: 0.1),
             blurRadius: 8,
             offset: const Offset(0, 2),
           ),

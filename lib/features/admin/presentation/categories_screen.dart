@@ -20,12 +20,16 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
   bool _isLoadingMore = false;
   Category? _editingCategory;
 
-  @override
-  void initState() {
-    super.initState();
+@override
+void initState() {
+  super.initState();
+
+  WidgetsBinding.instance.addPostFrameCallback((_) {
     _loadCategories();
-    _scrollController.addListener(_onScroll);
-  }
+  });
+
+  _scrollController.addListener(_onScroll);
+}
 
   @override
   void dispose() {

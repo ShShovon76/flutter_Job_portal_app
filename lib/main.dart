@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:job_portal_app/core/theme/app_theme.dart';
 import 'package:job_portal_app/core/theme/dark_theme.dart';
+import 'package:job_portal_app/features/Notifications/notifications_provider.dart';
 import 'package:job_portal_app/features/auth/provider/analytics_provider.dart';
 import 'package:job_portal_app/features/auth/provider/auth_provider.dart';
 import 'package:job_portal_app/features/auth/provider/category_provider.dart';
@@ -25,6 +26,7 @@ void main() {
         ChangeNotifierProvider(create: (_) => AnalyticsProvider()),
         ChangeNotifierProvider(create: (_) => UserProvider()),
         ChangeNotifierProvider(create: (_) => CategoryProvider()),
+        ChangeNotifierProvider(create: (_) => NotificationProvider()),
       ],
       child: const MyApp(),
     ),

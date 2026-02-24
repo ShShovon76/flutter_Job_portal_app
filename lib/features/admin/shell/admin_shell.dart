@@ -23,6 +23,7 @@ class AdminShell extends StatefulWidget {
 
 class _AdminShellState extends State<AdminShell> {
   int _selectedIndex = 0;
+  final GlobalKey<NavigatorState> _navigatorKey = GlobalKey<NavigatorState>();
 
   final List<AdminNavItem> _navItems = [
     AdminNavItem(
@@ -54,7 +55,7 @@ class _AdminShellState extends State<AdminShell> {
       icon: Icons.check_circle_outline,
       selectedIcon: Icons.check_circle,
       route: RouteNames.approveJobs,
-      badge: '5', // Example: pending approvals
+      badge: '5',
     ),
     AdminNavItem(
       title: 'Categories',
@@ -83,10 +84,26 @@ class _AdminShellState extends State<AdminShell> {
   ];
 
   void _onItemTapped(int index) {
+    if (_selectedIndex == index) return;
+
     setState(() {
       _selectedIndex = index;
     });
-    Navigator.pushReplacementNamed(context, _navItems[index].route);
+
+    // Navigate within the shell's navigator, not replace the shell
+    _navigatorKey.currentState?.pushNamedAndRemoveUntil(
+      _navItems[index].route,
+      (route) => false, // Remove all previous routes in the nested navigator
+    );
+  }
+
+  /// Handle Android back button to go back in the nested navigator
+  Future<bool> _onWillPop() async {
+    if (_navigatorKey.currentState?.canPop() ?? false) {
+      _navigatorKey.currentState?.pop();
+      return false;
+    }
+    return true;
   }
 
   @override
@@ -94,373 +111,388 @@ class _AdminShellState extends State<AdminShell> {
     final auth = Provider.of<AuthProvider>(context);
     final user = auth.user;
 
-    return Scaffold(
-      backgroundColor: Colors.grey[50],
-      appBar: AppBar(
-        backgroundColor: Colors.white,
-        elevation: 0,
-        title: Text(
-          _navItems[_selectedIndex].title,
-          style: const TextStyle(
-            color: Color(0xFF1E293B),
-            fontSize: 20,
-            fontWeight: FontWeight.bold,
-          ),
-        ),
-        centerTitle: false,
-        leading: Builder(
-          builder: (context) => IconButton(
-            icon: const Icon(Icons.menu, color: Color(0xFF1E293B)),
-            onPressed: () => Scaffold.of(context).openDrawer(),
-          ),
-        ),
-        actions: [
-          // Notifications
-          Stack(
-            children: [
-              IconButton(
-                icon: const Icon(
-                  Icons.notifications_outlined,
-                  color: Color(0xFF1E293B),
-                ),
-                onPressed: () {
-                  Navigator.pushNamed(context, RouteNames.pushNotifications);
-                },
-              ),
-              Positioned(
-                right: 8,
-                top: 8,
-                child: Container(
-                  padding: const EdgeInsets.all(4),
-                  decoration: const BoxDecoration(
-                    color: Color(0xFFEF4444),
-                    shape: BoxShape.circle,
-                  ),
-                  constraints: const BoxConstraints(
-                    minWidth: 16,
-                    minHeight: 16,
-                  ),
-                  child: const Text(
-                    '3',
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 10,
-                      fontWeight: FontWeight.bold,
-                    ),
-                    textAlign: TextAlign.center,
-                  ),
-                ),
-              ),
-            ],
-          ),
-          // Profile
-          IconButton(
-            icon: CircleAvatar(
-              radius: 16,
-              backgroundColor: const Color(0xFF3B82F6),
-              backgroundImage: user?.profilePictureUrl != null
-                  ? NetworkImage(
-                      AppConstants.getImageUrl(user!.profilePictureUrl),
-                    )
-                  : null,
-              child: user?.profilePictureUrl == null
-                  ? Text(
-                      user?.fullName[0].toUpperCase() ?? 'A',
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontSize: 14,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    )
-                  : null,
+    return WillPopScope(
+      onWillPop: _onWillPop,
+      child: Scaffold(
+        backgroundColor: Colors.grey[50],
+        appBar: AppBar(
+          backgroundColor: Colors.white,
+          elevation: 0,
+          title: Text(
+            _navItems[_selectedIndex].title,
+            style: const TextStyle(
+              color: Color(0xFF1E293B),
+              fontSize: 20,
+              fontWeight: FontWeight.bold,
             ),
-            onPressed: () {
-              // Navigate to admin profile
-            },
           ),
-        ],
-      ),
-      drawer: Drawer(
-        child: Container(
-          color: Colors.white,
-          child: Column(
-            children: [
-              // Header
-              Container(
-                width: double.infinity,
-                padding: const EdgeInsets.fromLTRB(16, 48, 16, 24),
-                decoration: const BoxDecoration(
-                  gradient: LinearGradient(
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                    colors: [Color(0xFF3B82F6), Color(0xFF1E40AF)],
+          centerTitle: false,
+          leading: Builder(
+            builder: (context) => IconButton(
+              icon: const Icon(Icons.menu, color: Color(0xFF1E293B)),
+              onPressed: () => Scaffold.of(context).openDrawer(),
+            ),
+          ),
+          actions: [
+            // Notifications
+            Stack(
+              children: [
+                IconButton(
+                  icon: const Icon(
+                    Icons.notifications_outlined,
+                    color: Color(0xFF1E293B),
                   ),
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    CircleAvatar(
-                      radius: 40,
-                      backgroundColor: Colors.white,
-                      backgroundImage: user?.profilePictureUrl != null
-                          ? NetworkImage(
-                              AppConstants.getImageUrl(user!.profilePictureUrl),
-                            )
-                          : null,
-                      child: user?.profilePictureUrl == null
-                          ? Text(
-                              user?.fullName[0].toUpperCase() ?? 'A',
-                              style: const TextStyle(
-                                color: Color(0xFF3B82F6),
-                                fontSize: 32,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            )
-                          : null,
-                    ),
-                    const SizedBox(height: 16),
-                    Text(
-                      user?.fullName ?? 'Admin User',
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      user?.email ?? 'admin@example.com',
-                      style: const TextStyle(
-                        color: Colors.white70,
-                        fontSize: 14,
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 8,
-                        vertical: 4,
-                      ),
-                      decoration: BoxDecoration(
-                        color: Colors.white.withOpacity(0.2),
-                        borderRadius: BorderRadius.circular(4),
-                      ),
-                      child: const Text(
-                        'Administrator',
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontSize: 12,
-                          fontWeight: FontWeight.w500,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-
-              // Navigation Items
-              Expanded(
-                child: ListView.builder(
-                  padding: const EdgeInsets.symmetric(vertical: 8),
-                  itemCount: _navItems.length,
-                  itemBuilder: (context, index) {
-                    final item = _navItems[index];
-                    final isSelected = _selectedIndex == index;
-
-                    return Column(
-                      children: [
-                        if (index == 4) // After Approve Jobs
-                          const Padding(
-                            padding: EdgeInsets.symmetric(vertical: 8),
-                            child: Divider(color: Color(0xFFE2E8F0)),
-                          ),
-                        ListTile(
-                          leading: Icon(
-                            isSelected ? item.selectedIcon : item.icon,
-                            color: isSelected
-                                ? const Color(0xFF3B82F6)
-                                : const Color(0xFF64748B),
-                          ),
-                          title: Text(
-                            item.title,
-                            style: TextStyle(
-                              color: isSelected
-                                  ? const Color(0xFF3B82F6)
-                                  : const Color(0xFF1E293B),
-                              fontWeight: isSelected
-                                  ? FontWeight.w600
-                                  : FontWeight.normal,
-                            ),
-                          ),
-                          trailing: item.badge != null
-                              ? Container(
-                                  padding: const EdgeInsets.all(6),
-                                  decoration: const BoxDecoration(
-                                    color: Color(0xFFEF4444),
-                                    shape: BoxShape.circle,
-                                  ),
-                                  constraints: const BoxConstraints(
-                                    minWidth: 20,
-                                    minHeight: 20,
-                                  ),
-                                  child: Text(
-                                    item.badge!,
-                                    style: const TextStyle(
-                                      color: Colors.white,
-                                      fontSize: 10,
-                                      fontWeight: FontWeight.bold,
-                                    ),
-                                    textAlign: TextAlign.center,
-                                  ),
-                                )
-                              : null,
-                          selected: isSelected,
-                          selectedTileColor: const Color(0xFFEFF6FF),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                          onTap: () {
-                            Navigator.pop(context);
-                            _onItemTapped(index);
-                          },
-                        ),
-                      ],
+                  onPressed: () {
+                    _navigatorKey.currentState?.pushNamed(
+                      RouteNames.pushNotifications,
                     );
                   },
                 ),
-              ),
-
-              // Footer
-              Container(
-                padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  border: Border(top: BorderSide(color: Colors.grey[200]!)),
+                Positioned(
+                  right: 8,
+                  top: 8,
+                  child: Container(
+                    padding: const EdgeInsets.all(4),
+                    decoration: const BoxDecoration(
+                      color: Color(0xFFEF4444),
+                      shape: BoxShape.circle,
+                    ),
+                    constraints: const BoxConstraints(
+                      minWidth: 16,
+                      minHeight: 16,
+                    ),
+                    child: const Text(
+                      '3',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 10,
+                        fontWeight: FontWeight.bold,
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                  ),
                 ),
-                child: Column(
-                  children: [
-                    ListTile(
-                      leading: const Icon(
-                        Icons.settings_outlined,
-                        color: Color(0xFF64748B),
-                      ),
-                      title: const Text(
-                        'Settings',
-                        style: TextStyle(color: Color(0xFF1E293B)),
-                      ),
-                      onTap: () {
-                        Navigator.pop(context);
-                        // Navigate to admin settings
-                      },
+              ],
+            ),
+            // Profile
+            IconButton(
+              icon: CircleAvatar(
+                radius: 16,
+                backgroundColor: const Color(0xFF3B82F6),
+                backgroundImage: user?.profilePictureUrl != null
+                    ? NetworkImage(
+                        AppConstants.getImageUrl(user!.profilePictureUrl),
+                      )
+                    : null,
+                child: user?.profilePictureUrl == null
+                    ? Text(
+                        user?.fullName[0].toUpperCase() ?? 'A',
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 14,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      )
+                    : null,
+              ),
+              onPressed: () {
+                // Navigate to admin profile
+              },
+            ),
+          ],
+        ),
+        drawer: Drawer(
+          child: Container(
+            color: Colors.white,
+            child: Column(
+              children: [
+                // Header
+                Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.fromLTRB(16, 48, 16, 24),
+                  decoration: const BoxDecoration(
+                    gradient: LinearGradient(
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                      colors: [Color(0xFF3B82F6), Color(0xFF1E40AF)],
                     ),
-                    ListTile(
-                      leading: const Icon(
-                        Icons.help_outline,
-                        color: Color(0xFF64748B),
-                      ),
-                      title: const Text(
-                        'Help & Support',
-                        style: TextStyle(color: Color(0xFF1E293B)),
-                      ),
-                      onTap: () {
-                        Navigator.pop(context);
-                        // Navigate to help
-                      },
-                    ),
-                    const SizedBox(height: 8),
-                    SizedBox(
-                      width: double.infinity,
-                      child: ElevatedButton.icon(
-                        onPressed: () async {
-                          final shouldLogout = await showDialog<bool>(
-                            context: context,
-                            builder: (context) => AlertDialog(
-                              title: const Text('Logout'),
-                              content: const Text(
-                                'Are you sure you want to logout?',
-                              ),
-                              actions: [
-                                TextButton(
-                                  onPressed: () =>
-                                      Navigator.pop(context, false),
-                                  child: const Text('Cancel'),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      CircleAvatar(
+                        radius: 40,
+                        backgroundColor: Colors.white,
+                        backgroundImage: user?.profilePictureUrl != null
+                            ? NetworkImage(
+                                AppConstants.getImageUrl(
+                                  user!.profilePictureUrl,
                                 ),
-                                ElevatedButton(
-                                  onPressed: () => Navigator.pop(context, true),
-                                  style: ElevatedButton.styleFrom(
-                                    backgroundColor: const Color(0xFFEF4444),
-                                  ),
-                                  child: const Text('Logout'),
+                              )
+                            : null,
+                        child: user?.profilePictureUrl == null
+                            ? Text(
+                                user?.fullName[0].toUpperCase() ?? 'A',
+                                style: const TextStyle(
+                                  color: Color(0xFF3B82F6),
+                                  fontSize: 32,
+                                  fontWeight: FontWeight.bold,
                                 ),
-                              ],
-                            ),
-                          );
-
-                          if (shouldLogout == true) {
-                            await auth.logout();
-                            if (mounted) {
-                              Navigator.pushNamedAndRemoveUntil(
-                                context,
-                                RouteNames.login,
-                                (route) => false,
-                              );
-                            }
-                          }
-                        },
-                        icon: const Icon(Icons.logout, color: Colors.white),
-                        label: const Text('Logout'),
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: const Color(0xFFEF4444),
-                          foregroundColor: Colors.white,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(8),
+                              )
+                            : null,
+                      ),
+                      const SizedBox(height: 16),
+                      Text(
+                        user?.fullName ?? 'Admin User',
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        user?.email ?? 'admin@example.com',
+                        style: const TextStyle(
+                          color: Colors.white70,
+                          fontSize: 14,
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 8,
+                          vertical: 4,
+                        ),
+                        decoration: BoxDecoration(
+                          color: Colors.white.withValues(alpha: 0.2),
+                          borderRadius: BorderRadius.circular(4),
+                        ),
+                        child: const Text(
+                          'Administrator',
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 12,
+                            fontWeight: FontWeight.w500,
                           ),
                         ),
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
-              ),
-            ],
+
+                // Navigation Items
+                Expanded(
+                  child: ListView.builder(
+                    padding: const EdgeInsets.symmetric(vertical: 8),
+                    itemCount: _navItems.length,
+                    itemBuilder: (context, index) {
+                      final item = _navItems[index];
+                      final isSelected = _selectedIndex == index;
+
+                      return Column(
+                        children: [
+                          if (index == 4)
+                            const Padding(
+                              padding: EdgeInsets.symmetric(vertical: 8),
+                              child: Divider(color: Color(0xFFE2E8F0)),
+                            ),
+                          ListTile(
+                            leading: Icon(
+                              isSelected ? item.selectedIcon : item.icon,
+                              color: isSelected
+                                  ? const Color(0xFF3B82F6)
+                                  : const Color(0xFF64748B),
+                            ),
+                            title: Text(
+                              item.title,
+                              style: TextStyle(
+                                color: isSelected
+                                    ? const Color(0xFF3B82F6)
+                                    : const Color(0xFF1E293B),
+                                fontWeight: isSelected
+                                    ? FontWeight.w600
+                                    : FontWeight.normal,
+                              ),
+                            ),
+                            trailing: item.badge != null
+                                ? Container(
+                                    padding: const EdgeInsets.all(6),
+                                    decoration: const BoxDecoration(
+                                      color: Color(0xFFEF4444),
+                                      shape: BoxShape.circle,
+                                    ),
+                                    constraints: const BoxConstraints(
+                                      minWidth: 20,
+                                      minHeight: 20,
+                                    ),
+                                    child: Text(
+                                      item.badge!,
+                                      style: const TextStyle(
+                                        color: Colors.white,
+                                        fontSize: 10,
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                      textAlign: TextAlign.center,
+                                    ),
+                                  )
+                                : null,
+                            selected: isSelected,
+                            selectedTileColor: const Color(0xFFEFF6FF),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            onTap: () {
+                              Navigator.pop(context); // Close drawer
+                              _onItemTapped(index);
+                            },
+                          ),
+                        ],
+                      );
+                    },
+                  ),
+                ),
+
+                // Footer
+                Container(
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    border: Border(top: BorderSide(color: Colors.grey[200]!)),
+                  ),
+                  child: Column(
+                    children: [
+                      ListTile(
+                        leading: const Icon(
+                          Icons.settings_outlined,
+                          color: Color(0xFF64748B),
+                        ),
+                        title: const Text(
+                          'Settings',
+                          style: TextStyle(color: Color(0xFF1E293B)),
+                        ),
+                        onTap: () {
+                          Navigator.pop(context);
+                          // Navigate to admin settings within the shell
+                          _navigatorKey.currentState?.pushNamed(
+                            '/admin/settings',
+                          );
+                        },
+                      ),
+                      ListTile(
+                        leading: const Icon(
+                          Icons.help_outline,
+                          color: Color(0xFF64748B),
+                        ),
+                        title: const Text(
+                          'Help & Support',
+                          style: TextStyle(color: Color(0xFF1E293B)),
+                        ),
+                        onTap: () {
+                          Navigator.pop(context);
+                          // Navigate to help within the shell
+                          _navigatorKey.currentState?.pushNamed('/admin/help');
+                        },
+                      ),
+                      const SizedBox(height: 8),
+                      SizedBox(
+                        width: double.infinity,
+                        child: ElevatedButton.icon(
+                          onPressed: () async {
+                            final shouldLogout = await showDialog<bool>(
+                              context: context,
+                              builder: (context) => AlertDialog(
+                                title: const Text('Logout'),
+                                content: const Text(
+                                  'Are you sure you want to logout?',
+                                ),
+                                actions: [
+                                  TextButton(
+                                    onPressed: () =>
+                                        Navigator.pop(context, false),
+                                    child: const Text('Cancel'),
+                                  ),
+                                  ElevatedButton(
+                                    onPressed: () =>
+                                        Navigator.pop(context, true),
+                                    style: ElevatedButton.styleFrom(
+                                      backgroundColor: const Color(0xFFEF4444),
+                                    ),
+                                    child: const Text('Logout'),
+                                  ),
+                                ],
+                              ),
+                            );
+
+                            if (shouldLogout == true) {
+                              await auth.logout();
+                              if (mounted) {
+                                // Navigate to login, replacing the entire stack
+                                Navigator.pushNamedAndRemoveUntil(
+                                  // ignore: use_build_context_synchronously
+                                  context,
+                                  RouteNames.login,
+                                  (route) => false,
+                                );
+                              }
+                            }
+                          },
+                          icon: const Icon(Icons.logout, color: Colors.white),
+                          label: const Text('Logout'),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: const Color(0xFFEF4444),
+                            foregroundColor: Colors.white,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
-      ),
-      body: Navigator(
-        initialRoute: RouteNames.adminDashboard,
-        onGenerateRoute: (settings) {
-          WidgetBuilder builder;
-          switch (settings.name) {
-            case RouteNames.adminDashboard:
-              builder = (context) => const AdminDashboardScreen();
-              break;
-            case RouteNames.manageUsers:
-              builder = (context) => const ManageUsersScreen();
-              break;
-            case RouteNames.manageEmployers:
-              builder = (context) => const ManageEmployersScreen();
-              break;
-            case RouteNames.manageEmployerJobs:
-              builder = (context) => const ManageEmployerJobsScreen();
-              break;
-            case RouteNames.approveJobs:
-              builder = (context) => const ApproveJobsScreen();
-              break;
-            case RouteNames.categories:
-              builder = (context) => const CategoriesScreen();
-              break;
-            case RouteNames.adminSkills:
-              builder = (context) => const AdminSkillsScreen();
-              break;
-            case RouteNames.analytics:
-              builder = (context) => const AnalyticsScreen();
-              break;
-            case RouteNames.pushNotifications:
-              builder = (context) => const PushNotificationsScreen();
-              break;
-            default:
-              builder = (context) => const AdminDashboardScreen();
-          }
-          return MaterialPageRoute(builder: builder, settings: settings);
-        },
+        body: Navigator(
+          key: _navigatorKey,
+          initialRoute: RouteNames.adminDashboard,
+          onGenerateRoute: (settings) {
+            WidgetBuilder builder;
+            switch (settings.name) {
+              case RouteNames.adminDashboard:
+                builder = (context) => const AdminDashboardScreen();
+                break;
+              case RouteNames.manageUsers:
+                builder = (context) => const ManageUsersScreen();
+                break;
+              case RouteNames.manageEmployers:
+                builder = (context) => const ManageEmployersScreen();
+                break;
+              case RouteNames.manageEmployerJobs:
+                builder = (context) => const ManageEmployerJobsScreen();
+                break;
+              case RouteNames.approveJobs:
+                builder = (context) => const ApproveJobsScreen();
+                break;
+              case RouteNames.categories:
+                builder = (context) => const CategoriesScreen();
+                break;
+              case RouteNames.adminSkills:
+                builder = (context) => const AdminSkillsScreen();
+                break;
+              case RouteNames.analytics:
+                builder = (context) => const AnalyticsScreen();
+                break;
+              case RouteNames.pushNotifications:
+                builder = (context) => const PushNotificationsScreen();
+                break;
+              default:
+                builder = (context) => const AdminDashboardScreen();
+            }
+            return MaterialPageRoute(builder: builder, settings: settings);
+          },
+        ),
       ),
     );
   }

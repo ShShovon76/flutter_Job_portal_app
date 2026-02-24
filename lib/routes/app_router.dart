@@ -48,8 +48,6 @@ class AppRouter {
         return MaterialPageRoute(
           builder: (_) => const RegisterJobSeekerScreen(),
         );
-      // case RouteNames.roleSelection:
-      //   return MaterialPageRoute(builder: (_) => const RoleSelectionScreen());
       case RouteNames.forgotPassword:
         return MaterialPageRoute(builder: (_) => const ForgotPasswordScreen());
       case RouteNames.otpVerification:

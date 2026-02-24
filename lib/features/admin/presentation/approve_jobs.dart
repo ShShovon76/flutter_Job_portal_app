@@ -1,8 +1,7 @@
-
-
 // approve_jobs_screen.dart
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:job_portal_app/core/constants/constants.dart';
 import 'package:job_portal_app/features/job_seeker/provider/job_provider.dart';
 import 'package:job_portal_app/models/job_model.dart';
 import 'package:provider/provider.dart';
@@ -23,7 +22,16 @@ class _ApproveJobsScreenState extends State<ApproveJobsScreen> {
   @override
   void initState() {
     super.initState();
-    _loadPendingJobs();
+
+    // Delay job loading until after build
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _loadPendingJobs();
+    });
+  }
+
+  Future<void> _loadPendingJobs() async {
+    final jobProvider = Provider.of<JobProvider>(context, listen: false);
+    await jobProvider.loadJobs(refresh: true);
   }
 
   @override
@@ -31,12 +39,6 @@ class _ApproveJobsScreenState extends State<ApproveJobsScreen> {
     _scrollController.dispose();
     _searchController.dispose();
     super.dispose();
-  }
-
-  Future<void> _loadPendingJobs() async {
-    final jobProvider = Provider.of<JobProvider>(context, listen: false);
-    // You'll need to add a method to fetch pending jobs
-    await jobProvider.loadJobs(refresh: true);
   }
 
   @override
@@ -47,17 +49,15 @@ class _ApproveJobsScreenState extends State<ApproveJobsScreen> {
         children: [
           // Stats Header
           _buildStatsHeader(),
-          
+
           // Filter Tabs
           _buildFilterTabs(),
-          
+
           // Search Bar
           _buildSearchBar(),
-          
+
           // Jobs List
-          Expanded(
-            child: _buildJobsList(),
-          ),
+          Expanded(child: _buildJobsList()),
         ],
       ),
     );
@@ -74,7 +74,7 @@ class _ApproveJobsScreenState extends State<ApproveJobsScreen> {
         ),
         boxShadow: [
           BoxShadow(
-            color: Colors.grey.withOpacity(0.1),
+            color: Colors.grey.withValues(alpha: 0.1),
             blurRadius: 8,
             offset: const Offset(0, 2),
           ),
@@ -127,7 +127,7 @@ class _ApproveJobsScreenState extends State<ApproveJobsScreen> {
       child: Container(
         padding: const EdgeInsets.all(12),
         decoration: BoxDecoration(
-          color: color.withOpacity(0.1),
+          color: color.withValues(alpha: 0.1),
           borderRadius: BorderRadius.circular(12),
         ),
         child: Column(
@@ -143,10 +143,7 @@ class _ApproveJobsScreenState extends State<ApproveJobsScreen> {
             const SizedBox(height: 4),
             Text(
               label,
-              style: const TextStyle(
-                fontSize: 12,
-                color: Color(0xFF64748B),
-              ),
+              style: const TextStyle(fontSize: 12, color: Color(0xFF64748B)),
             ),
           ],
         ),
@@ -172,7 +169,9 @@ class _ApproveJobsScreenState extends State<ApproveJobsScreen> {
                 margin: const EdgeInsets.symmetric(horizontal: 4),
                 padding: const EdgeInsets.symmetric(vertical: 8),
                 decoration: BoxDecoration(
-                  color: isSelected ? const Color(0xFF3B82F6) : Colors.transparent,
+                  color: isSelected
+                      ? const Color(0xFF3B82F6)
+                      : Colors.transparent,
                   borderRadius: BorderRadius.circular(20),
                 ),
                 child: Text(
@@ -181,7 +180,9 @@ class _ApproveJobsScreenState extends State<ApproveJobsScreen> {
                   style: TextStyle(
                     color: isSelected ? Colors.white : const Color(0xFF64748B),
                     fontSize: 13,
-                    fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
+                    fontWeight: isSelected
+                        ? FontWeight.w600
+                        : FontWeight.normal,
                   ),
                 ),
               ),
@@ -208,10 +209,18 @@ class _ApproveJobsScreenState extends State<ApproveJobsScreen> {
             hintText: 'Search jobs to approve...',
             hintStyle: const TextStyle(color: Color(0xFF94A3B8)),
             border: InputBorder.none,
-            prefixIcon: const Icon(Icons.search, color: Color(0xFF64748B), size: 20),
+            prefixIcon: const Icon(
+              Icons.search,
+              color: Color(0xFF64748B),
+              size: 20,
+            ),
             suffixIcon: _searchController.text.isNotEmpty
                 ? IconButton(
-                    icon: const Icon(Icons.clear, color: Color(0xFF64748B), size: 18),
+                    icon: const Icon(
+                      Icons.clear,
+                      color: Color(0xFF64748B),
+                      size: 18,
+                    ),
                     onPressed: () {
                       _searchController.clear();
                     },
@@ -251,14 +260,19 @@ class _ApproveJobsScreenState extends State<ApproveJobsScreen> {
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 Icon(
-                  _selectedFilter == 'Pending' ? Icons.hourglass_empty : Icons.check_circle,
+                  _selectedFilter == 'Pending'
+                      ? Icons.hourglass_empty
+                      : Icons.check_circle,
                   size: 64,
                   color: const Color(0xFF94A3B8),
                 ),
                 const SizedBox(height: 16),
                 Text(
                   'No ${_selectedFilter.toLowerCase()} jobs',
-                  style: const TextStyle(fontSize: 16, color: Color(0xFF64748B)),
+                  style: const TextStyle(
+                    fontSize: 16,
+                    color: Color(0xFF64748B),
+                  ),
                 ),
               ],
             ),
@@ -284,7 +298,7 @@ class _ApproveJobsScreenState extends State<ApproveJobsScreen> {
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: Colors.grey.withOpacity(0.1),
+            color: Colors.grey.withValues(alpha: 0.1),
             blurRadius: 8,
             offset: const Offset(0, 2),
           ),
@@ -304,18 +318,21 @@ class _ApproveJobsScreenState extends State<ApproveJobsScreen> {
                       width: 48,
                       height: 48,
                       decoration: BoxDecoration(
-                        color: const Color(0xFF3B82F6).withOpacity(0.1),
+                        color: const Color(0xFF3B82F6).withValues(alpha: 0.1),
                         borderRadius: BorderRadius.circular(12),
                       ),
                       child: job.company.logoUrl != null
                           ? ClipRRect(
                               borderRadius: BorderRadius.circular(12),
                               child: Image.network(
-                                job.company.logoUrl!,
+                                AppConstants.getImageUrl(job.company.logoUrl!) ,
                                 fit: BoxFit.cover,
                               ),
                             )
-                          : const Icon(Icons.business, color: Color(0xFF3B82F6)),
+                          : const Icon(
+                              Icons.business,
+                              color: Color(0xFF3B82F6),
+                            ),
                     ),
                     const SizedBox(width: 12),
                     Expanded(
@@ -355,7 +372,9 @@ class _ApproveJobsScreenState extends State<ApproveJobsScreen> {
                     children: [
                       CircleAvatar(
                         radius: 20,
-                        backgroundColor: const Color(0xFF3B82F6).withOpacity(0.1),
+                        backgroundColor: const Color(
+                          0xFF3B82F6,
+                        ).withValues(alpha: 0.1),
                         child: Text(
                           job.employer.fullName[0].toUpperCase(),
                           style: const TextStyle(
@@ -422,9 +441,7 @@ class _ApproveJobsScreenState extends State<ApproveJobsScreen> {
           Container(
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
-              border: Border(
-                top: BorderSide(color: Colors.grey[200]!),
-              ),
+              border: Border(top: BorderSide(color: Colors.grey[200]!)),
             ),
             child: Row(
               children: [
@@ -467,10 +484,7 @@ class _ApproveJobsScreenState extends State<ApproveJobsScreen> {
     );
   }
 
-  Widget _buildDetailChip({
-    required IconData icon,
-    required String label,
-  }) {
+  Widget _buildDetailChip({required IconData icon, required String label}) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
       decoration: BoxDecoration(
@@ -484,10 +498,7 @@ class _ApproveJobsScreenState extends State<ApproveJobsScreen> {
           const SizedBox(width: 4),
           Text(
             label,
-            style: const TextStyle(
-              fontSize: 11,
-              color: Color(0xFF64748B),
-            ),
+            style: const TextStyle(fontSize: 11, color: Color(0xFF64748B)),
           ),
         ],
       ),
@@ -529,7 +540,7 @@ class _ApproveJobsScreenState extends State<ApproveJobsScreen> {
 
   void _showRejectDialog(Job job) {
     final reasonController = TextEditingController();
-    
+
     showDialog(
       context: context,
       builder: (context) => AlertDialog(

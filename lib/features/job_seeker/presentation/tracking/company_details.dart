@@ -225,7 +225,7 @@ class _CompanyDetailsScreenState extends State<CompanyDetailsScreen>
                       end: Alignment.bottomCenter,
                       colors: [
                         Colors.transparent,
-                        Colors.black.withOpacity(0.7),
+                        Colors.black.withValues(alpha: 0.7),
                       ],
                     ),
                   ),
@@ -251,12 +251,12 @@ class _CompanyDetailsScreenState extends State<CompanyDetailsScreen>
 
   Widget _buildDefaultCover() {
     return Container(
-      color: AppColors.primary.withOpacity(0.3),
+      color: AppColors.primary.withValues(alpha: 0.3),
       child: Center(
         child: Icon(
           Icons.image,
           size: 64,
-          color: Colors.white.withOpacity(0.5),
+          color: Colors.white.withValues(alpha: 0.5),
         ),
       ),
     );
@@ -303,7 +303,7 @@ class _CompanyDetailsScreenState extends State<CompanyDetailsScreen>
                           vertical: 5,
                         ),
                         decoration: BoxDecoration(
-                          color: AppColors.primary.withOpacity(0.1),
+                          color: AppColors.primary.withValues(alpha: 0.1),
                           borderRadius: BorderRadius.circular(20),
                         ),
                         child: Text(
@@ -325,7 +325,7 @@ class _CompanyDetailsScreenState extends State<CompanyDetailsScreen>
                             vertical: 4,
                           ),
                           decoration: BoxDecoration(
-                            color: Colors.green.withOpacity(0.1),
+                            color: Colors.green.withValues(alpha: 0.1),
                             borderRadius: BorderRadius.circular(20),
                           ),
                           child: const Row(
@@ -380,7 +380,7 @@ class _CompanyDetailsScreenState extends State<CompanyDetailsScreen>
                 border: Border.all(color: AppColors.border, width: 2),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withOpacity(0.1),
+                    color: Colors.black.withValues(alpha: 0.1),
                     blurRadius: 12,
                     offset: const Offset(0, 6),
                   ),
@@ -408,13 +408,13 @@ class _CompanyDetailsScreenState extends State<CompanyDetailsScreen>
       width: 80,
       height: 80,
       decoration: BoxDecoration(
-        color: AppColors.primary.withOpacity(0.1),
+        color: AppColors.primary.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(10),
       ),
       child: Icon(
         Icons.business,
         size: 40,
-        color: AppColors.primary.withOpacity(0.5),
+        color: AppColors.primary.withValues(alpha: 0.5),
       ),
     );
   }
@@ -490,9 +490,9 @@ class _CompanyDetailsScreenState extends State<CompanyDetailsScreen>
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.amber.withOpacity(0.1),
+        color: Colors.amber.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.amber.withOpacity(0.3)),
+        border: Border.all(color: Colors.amber.withValues(alpha: 0.3)),
       ),
       child: Row(
         children: [
@@ -656,7 +656,7 @@ class _CompanyDetailsScreenState extends State<CompanyDetailsScreen>
               Icon(
                 Icons.work_outline,
                 size: 48,
-                color: AppColors.textDisabled.withOpacity(0.5),
+                color: AppColors.textDisabled.withValues(alpha: 0.5),
               ),
               const SizedBox(height: 16),
               const Text(
@@ -694,7 +694,7 @@ class _CompanyDetailsScreenState extends State<CompanyDetailsScreen>
         width: 48,
         height: 48,
         decoration: BoxDecoration(
-          color: AppColors.primary.withOpacity(0.1),
+          color: AppColors.primary.withValues(alpha: 0.1),
           borderRadius: BorderRadius.circular(8),
         ),
         child: job.company.logoUrl != null
@@ -745,7 +745,7 @@ class _CompanyDetailsScreenState extends State<CompanyDetailsScreen>
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                 decoration: BoxDecoration(
-                  color: _getJobTypeColor(job.jobType).withOpacity(0.1),
+                  color: _getJobTypeColor(job.jobType).withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: Text(
@@ -950,7 +950,7 @@ class _CompanyDetailsScreenState extends State<CompanyDetailsScreen>
         style: TextStyle(fontSize: 12, color: color),
       ),
       onPressed: () => _launchUrl(link.url),
-      backgroundColor: color.withOpacity(0.1),
+      backgroundColor: color.withValues(alpha: 0.1),
     );
   }
 
@@ -995,7 +995,7 @@ class _CompanyDetailsScreenState extends State<CompanyDetailsScreen>
             Icon(
               Icons.business_outlined,
               size: 80,
-              color: AppColors.textDisabled.withOpacity(0.5),
+              color: AppColors.textDisabled.withValues(alpha: 0.5),
             ),
             const SizedBox(height: 24),
             const Text(

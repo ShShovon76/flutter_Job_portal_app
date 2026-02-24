@@ -212,8 +212,11 @@ class _ManageJobsScreenState extends State<ManageJobsScreen> {
   // ===================== JOB ACTIONS =====================
   void _editJob(int? jobId) {
     if (jobId != null) {
-      Navigator.pushNamed(context, RouteNames.editJob, arguments: jobId)
-          .then((_) => _loadJobs(refresh: true));
+      Navigator.pushNamed(
+        context,
+        RouteNames.editJob,
+        arguments: jobId,
+      ).then((_) => _loadJobs(refresh: true));
     }
   }
 
@@ -847,7 +850,7 @@ class _ManageJobsScreenState extends State<ManageJobsScreen> {
             Positioned.fill(
               child: Container(
                 decoration: BoxDecoration(
-                  color: Colors.white.withOpacity(0.7),
+                  color: Colors.white.withValues(alpha: 0.7),
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: const Center(child: CircularProgressIndicator()),
@@ -918,7 +921,9 @@ class _ManageJobsScreenState extends State<ManageJobsScreen> {
                         vertical: 4,
                       ),
                       decoration: BoxDecoration(
-                        color: _getStatusColor(job.status).withOpacity(0.1),
+                        color: _getStatusColor(
+                          job.status,
+                        ).withValues(alpha: 0.1),
                         borderRadius: BorderRadius.circular(12),
                       ),
                       child: Text(
@@ -1089,7 +1094,7 @@ class _ManageJobsScreenState extends State<ManageJobsScreen> {
                   Container(
                     padding: const EdgeInsets.all(8),
                     decoration: BoxDecoration(
-                      color: Colors.orange.withOpacity(0.1),
+                      color: Colors.orange.withValues(alpha: 0.1),
                       borderRadius: BorderRadius.circular(8),
                     ),
                     child: Row(
@@ -1194,13 +1199,13 @@ class _ManageJobsScreenState extends State<ManageJobsScreen> {
       width: 48,
       height: 48,
       decoration: BoxDecoration(
-        color: AppColors.primary.withOpacity(0.1),
+        color: AppColors.primary.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(8),
       ),
       child: Icon(
         Icons.business,
         size: 24,
-        color: AppColors.primary.withOpacity(0.5),
+        color: AppColors.primary.withValues(alpha: 0.5),
       ),
     );
   }
@@ -1283,7 +1288,7 @@ class _ManageJobsScreenState extends State<ManageJobsScreen> {
             Icon(
               Icons.work_outline,
               size: 80,
-              color: AppColors.textDisabled.withOpacity(0.5),
+              color: AppColors.textDisabled.withValues(alpha: 0.5),
             ),
             const SizedBox(height: 24),
             Text(
