@@ -399,7 +399,7 @@ class _JobSeekerProfileScreenState extends State<JobSeekerProfileScreen>
 
   Widget _buildProfileHeader(User user, JobSeekerProfile profile) {
     return Container(
-      color: AppColors.primary.withOpacity(0.1),
+      color: AppColors.primary.withValues(alpha: 0.1),
       child: Padding(
         padding: const EdgeInsets.all(AppSizes.lg),
         child: Column(
@@ -507,7 +507,7 @@ class _JobSeekerProfileScreenState extends State<JobSeekerProfileScreen>
         Container(
           padding: const EdgeInsets.all(8),
           decoration: BoxDecoration(
-            color: color.withOpacity(0.1),
+            color: color.withValues(alpha: 0.1),
             shape: BoxShape.circle,
           ),
           child: Icon(icon, color: color, size: 20),
@@ -547,7 +547,7 @@ class _JobSeekerProfileScreenState extends State<JobSeekerProfileScreen>
         leading: Container(
           padding: const EdgeInsets.all(8),
           decoration: BoxDecoration(
-            color: AppColors.primary.withOpacity(0.1),
+            color: AppColors.primary.withValues(alpha: 0.1),
             borderRadius: BorderRadius.circular(8),
           ),
           child: Icon(icon, color: AppColors.primary),
@@ -585,7 +585,7 @@ class _JobSeekerProfileScreenState extends State<JobSeekerProfileScreen>
         borderRadius: BorderRadius.circular(18),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
+            color: Colors.black.withValues(alpha: 0.05),
             blurRadius: 12,
             offset: const Offset(0, 4),
           ),
@@ -599,7 +599,7 @@ class _JobSeekerProfileScreenState extends State<JobSeekerProfileScreen>
               Container(
                 padding: const EdgeInsets.all(8),
                 decoration: BoxDecoration(
-                  color: AppColors.primary.withOpacity(0.1),
+                  color: AppColors.primary.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: Icon(icon, size: 18, color: AppColors.primary),
@@ -636,8 +636,8 @@ class _JobSeekerProfileScreenState extends State<JobSeekerProfileScreen>
             decoration: BoxDecoration(
               gradient: LinearGradient(
                 colors: [
-                  AppColors.primary.withOpacity(0.15),
-                  AppColors.primary.withOpacity(0.08),
+                  AppColors.primary.withValues(alpha: 0.15),
+                  AppColors.primary.withValues(alpha: 0.08),
                 ],
               ),
               borderRadius: BorderRadius.circular(30),

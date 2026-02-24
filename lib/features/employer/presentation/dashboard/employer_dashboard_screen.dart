@@ -58,7 +58,9 @@ class EmployerDashboardScreen extends StatelessWidget {
                             'Manage your hiring process efficiently',
                             style: TextStyle(
                               fontSize: 14,
-                              color: AppColors.textInverse.withOpacity(0.9),
+                              color: AppColors.textInverse.withValues(
+                                alpha: 0.9,
+                              ),
                             ),
                           ),
                         ],
@@ -69,7 +71,7 @@ class EmployerDashboardScreen extends StatelessWidget {
                       width: 60,
                       height: 60,
                       decoration: BoxDecoration(
-                        color: Colors.white.withOpacity(0.2),
+                        color: Colors.white.withValues(alpha: 0.2),
                         borderRadius: BorderRadius.circular(30),
                       ),
                       child: const Icon(
@@ -241,7 +243,7 @@ class EmployerDashboardScreen extends StatelessWidget {
                   width: 40,
                   height: 40,
                   decoration: BoxDecoration(
-                    color: color.withOpacity(0.1),
+                    color: color.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(AppSizes.radiusSm),
                   ),
                   child: Icon(icon, color: color),
@@ -321,7 +323,7 @@ class EmployerDashboardScreen extends StatelessWidget {
         margin: const EdgeInsets.only(bottom: AppSizes.md),
         child: ListTile(
           leading: CircleAvatar(
-            backgroundColor: AppColors.primary.withOpacity(0.1),
+            backgroundColor: AppColors.primary.withValues(alpha: 0.1),
             child: Text(
               app['name']!.substring(0, 1),
               style: const TextStyle(color: AppColors.primary),
@@ -342,7 +344,7 @@ class EmployerDashboardScreen extends StatelessWidget {
                   vertical: 2,
                 ),
                 decoration: BoxDecoration(
-                  color: _getStatusColor(app['status']!).withOpacity(0.1),
+                  color: _getStatusColor(app['status']!).withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(AppSizes.radiusXs),
                 ),
                 child: Text(

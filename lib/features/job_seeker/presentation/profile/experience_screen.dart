@@ -210,7 +210,7 @@ class _ExperienceScreenState extends State<ExperienceScreen> {
                 Container(
                   padding: const EdgeInsets.all(10),
                   decoration: BoxDecoration(
-                    color: AppColors.primary.withOpacity(0.1),
+                    color: AppColors.primary.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: const Icon(
@@ -330,7 +330,7 @@ class _ExperienceScreenState extends State<ExperienceScreen> {
             Icon(
               Icons.work_outline,
               size: 80,
-              color: AppColors.textDisabled.withOpacity(0.5),
+              color: AppColors.textDisabled.withValues(alpha: 0.5),
             ),
             const SizedBox(height: 24),
             const Text(

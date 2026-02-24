@@ -34,18 +34,18 @@ class _AppliedJobsScreenState extends State<AppliedJobsScreen> {
   // ===================== STATS =====================
   Map<String, int> _statusCounts = {};
 
-@override
-void initState() {
-  super.initState();
+  @override
+  void initState() {
+    super.initState();
 
-  // Defer data loading until after the first frame
-  WidgetsBinding.instance.addPostFrameCallback((_) {
-    _loadApplications();
-  });
+    // Defer data loading until after the first frame
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _loadApplications();
+    });
 
-  _setupSearchListener();
-  _setupScrollListener();
-}
+    _setupSearchListener();
+    _setupScrollListener();
+  }
 
   @override
   void dispose() {
@@ -65,9 +65,12 @@ void initState() {
       return;
     }
 
-    final provider = Provider.of<JobApplicationProvider>(context, listen: false);
+    final provider = Provider.of<JobApplicationProvider>(
+      context,
+      listen: false,
+    );
     await provider.fetchByJobSeeker(userId: userId, refresh: refresh);
-    
+
     if (refresh) {
       _calculateStats(provider.applications);
     }
@@ -97,7 +100,10 @@ void initState() {
     _scrollController.addListener(() {
       if (_scrollController.position.pixels >=
           _scrollController.position.maxScrollExtent - 200) {
-        final provider = Provider.of<JobApplicationProvider>(context, listen: false);
+        final provider = Provider.of<JobApplicationProvider>(
+          context,
+          listen: false,
+        );
         if (!provider.isLoading && provider.hasMore) {
           _loadApplications();
         }
@@ -134,9 +140,7 @@ void initState() {
       builder: (context, child) {
         return Theme(
           data: Theme.of(context).copyWith(
-            colorScheme: const ColorScheme.light(
-              primary: AppColors.primary,
-            ),
+            colorScheme: const ColorScheme.light(primary: AppColors.primary),
           ),
           child: child!,
         );
@@ -153,41 +157,48 @@ void initState() {
 
   // ===================== FILTERED APPLICATIONS =====================
   List<JobApplication> _filteredApplications(JobApplicationProvider provider) {
-  return provider.applications.where((app) {
-    // Search filter
-    if (_searchController.text.isNotEmpty) {
-      final searchTerm = _searchController.text.toLowerCase();
-      final jobTitleMatch = (app.jobTitle ?? '').toLowerCase().contains(searchTerm);
-      final companyMatch = (app.companyName ?? '').toLowerCase().contains(searchTerm);
-      if (!jobTitleMatch && !companyMatch) return false;
-    }
-
-    // Status filter
-    if (_selectedStatus != null && app.status != _selectedStatus) {
-      return false;
-    }
-
-    // Date range filter
-    if (_dateFrom != null || _dateTo != null) {
-      final appliedDate = DateTime.parse(app.appliedAt);
-      if (_dateFrom != null && appliedDate.isBefore(_dateFrom!)) return false;
-      if (_dateTo != null) {
-        final endOfDay = DateTime(_dateTo!.year, _dateTo!.month, _dateTo!.day, 23, 59, 59);
-        if (appliedDate.isAfter(endOfDay)) return false;
+    return provider.applications.where((app) {
+      // Search filter
+      if (_searchController.text.isNotEmpty) {
+        final searchTerm = _searchController.text.toLowerCase();
+        final jobTitleMatch = (app.jobTitle ?? '').toLowerCase().contains(
+          searchTerm,
+        );
+        final companyMatch = (app.companyName ?? '').toLowerCase().contains(
+          searchTerm,
+        );
+        if (!jobTitleMatch && !companyMatch) return false;
       }
-    }
 
-    return true;
-  }).toList();
-}
+      // Status filter
+      if (_selectedStatus != null && app.status != _selectedStatus) {
+        return false;
+      }
+
+      // Date range filter
+      if (_dateFrom != null || _dateTo != null) {
+        final appliedDate = DateTime.parse(app.appliedAt);
+        if (_dateFrom != null && appliedDate.isBefore(_dateFrom!)) return false;
+        if (_dateTo != null) {
+          final endOfDay = DateTime(
+            _dateTo!.year,
+            _dateTo!.month,
+            _dateTo!.day,
+            23,
+            59,
+            59,
+          );
+          if (appliedDate.isAfter(endOfDay)) return false;
+        }
+      }
+
+      return true;
+    }).toList();
+  }
 
   // ===================== APPLICATION ACTIONS =====================
   Future<void> _viewJobDetails(int jobId) async {
-    Navigator.pushNamed(
-      context,
-      RouteNames.jobDetails,
-      arguments: jobId,
-    );
+    Navigator.pushNamed(context, RouteNames.jobDetails, arguments: jobId);
   }
 
   Future<void> _withdrawApplication(JobApplication application) async {
@@ -199,9 +210,12 @@ void initState() {
     if (!confirmed) return;
 
     try {
-      final provider = Provider.of<JobApplicationProvider>(context, listen: false);
+      final provider = Provider.of<JobApplicationProvider>(
+        context,
+        listen: false,
+      );
       await provider.withdraw(application.id);
-      
+
       if (mounted) {
         _showSnackBar('Application withdrawn successfully');
       }
@@ -302,14 +316,18 @@ void initState() {
 
     if (difference.inDays == 0) {
       if (difference.inHours == 0) {
-        return difference.inMinutes <= 1 ? 'Just now' : '${difference.inMinutes}m ago';
+        return difference.inMinutes <= 1
+            ? 'Just now'
+            : '${difference.inMinutes}m ago';
       }
       return '${difference.inHours}h ago';
     }
     if (difference.inDays == 1) return 'Yesterday';
     if (difference.inDays < 7) return '${difference.inDays}d ago';
-    if (difference.inDays < 30) return '${(difference.inDays / 7).floor()}w ago';
-    if (difference.inDays < 365) return '${(difference.inDays / 30).floor()}mo ago';
+    if (difference.inDays < 30)
+      return '${(difference.inDays / 7).floor()}w ago';
+    if (difference.inDays < 365)
+      return '${(difference.inDays / 30).floor()}mo ago';
     return '${(difference.inDays / 365).floor()}y ago';
   }
 
@@ -322,8 +340,8 @@ void initState() {
   @override
   Widget build(BuildContext context) {
     return Consumer<JobApplicationProvider>(
-  builder: (context, provider, child) {
-    final filteredApps = _filteredApplications(provider);
+      builder: (context, provider, child) {
+        final filteredApps = _filteredApplications(provider);
 
         return LoadingOverlay(
           isLoading: provider.isLoading && provider.applications.isEmpty,
@@ -353,26 +371,27 @@ void initState() {
                 if (provider.applications.isNotEmpty) _buildStatusStats(),
 
                 // Results Count
-                _buildResultsCount(filteredApps.length, provider.applications.length),
+                _buildResultsCount(
+                  filteredApps.length,
+                  provider.applications.length,
+                ),
 
                 // Applications List
                 Expanded(
                   child: provider.error != null && provider.applications.isEmpty
                       ? _buildErrorState(provider.error!)
                       : provider.applications.isEmpty && !provider.isLoading
-                          ? _buildEmptyState()
-                          : filteredApps.isEmpty
-                              ? _buildNoResultsState()
-                              : _buildApplicationsList(filteredApps, provider),
+                      ? _buildEmptyState()
+                      : filteredApps.isEmpty
+                      ? _buildNoResultsState()
+                      : _buildApplicationsList(filteredApps, provider),
                 ),
 
                 // Loading More Indicator
                 if (provider.isFetchingMore)
                   const Padding(
                     padding: EdgeInsets.all(16),
-                    child: Center(
-                      child: CircularProgressIndicator(),
-                    ),
+                    child: Center(child: CircularProgressIndicator()),
                   ),
               ],
             ),
@@ -409,9 +428,7 @@ void initState() {
                   icon: const Icon(Icons.clear),
                 )
               : null,
-          border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(8),
-          ),
+          border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
           contentPadding: const EdgeInsets.symmetric(vertical: 0),
         ),
       ),
@@ -423,19 +440,14 @@ void initState() {
       padding: const EdgeInsets.all(AppSizes.md),
       decoration: BoxDecoration(
         color: Colors.grey.shade50,
-        border: Border(
-          bottom: BorderSide(color: Colors.grey.shade200),
-        ),
+        border: Border(bottom: BorderSide(color: Colors.grey.shade200)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           const Text(
             'Status',
-            style: TextStyle(
-              fontSize: 14,
-              fontWeight: FontWeight.w600,
-            ),
+            style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
           ),
           const SizedBox(height: 8),
           SingleChildScrollView(
@@ -449,7 +461,7 @@ void initState() {
                     setState(() => _selectedStatus = null);
                   },
                   backgroundColor: Colors.grey.shade100,
-                  selectedColor: AppColors.primary.withOpacity(0.2),
+                  selectedColor: AppColors.primary.withValues(alpha: 0.2),
                   checkmarkColor: AppColors.primary,
                 ),
                 const SizedBox(width: 8),
@@ -460,10 +472,14 @@ void initState() {
                       label: Text(_getStatusLabel(status)),
                       selected: _selectedStatus == status,
                       onSelected: (selected) {
-                        setState(() => _selectedStatus = selected ? status : null);
+                        setState(
+                          () => _selectedStatus = selected ? status : null,
+                        );
                       },
                       backgroundColor: Colors.grey.shade100,
-                      selectedColor: _getStatusColor(status).withOpacity(0.2),
+                      selectedColor: _getStatusColor(
+                        status,
+                      ).withValues(alpha: 0.2),
                       checkmarkColor: _getStatusColor(status),
                     ),
                   );
@@ -476,10 +492,7 @@ void initState() {
           // Date Range
           const Text(
             'Date Range',
-            style: TextStyle(
-              fontSize: 14,
-              fontWeight: FontWeight.w600,
-            ),
+            style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
           ),
           const SizedBox(height: 8),
           Row(
@@ -540,16 +553,16 @@ void initState() {
           final status = ApplicationStatus.values[index];
           final count = _statusCounts[status.value] ?? 0;
           if (count == 0) return const SizedBox();
-          
+
           final color = _getStatusColor(status);
-          
+
           return Container(
             margin: const EdgeInsets.only(right: 8),
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
             decoration: BoxDecoration(
-              color: color.withOpacity(0.1),
+              color: color.withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(20),
-              border: Border.all(color: color.withOpacity(0.3)),
+              border: Border.all(color: color.withValues(alpha: 0.3)),
             ),
             child: Row(
               mainAxisSize: MainAxisSize.min,
@@ -590,7 +603,10 @@ void initState() {
 
   Widget _buildResultsCount(int filteredCount, int totalCount) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: AppSizes.md, vertical: AppSizes.sm),
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppSizes.md,
+        vertical: AppSizes.sm,
+      ),
       child: Row(
         children: [
           Text(
@@ -623,7 +639,10 @@ void initState() {
     );
   }
 
-  Widget _buildApplicationsList(List<JobApplication> applications, JobApplicationProvider provider) {
+  Widget _buildApplicationsList(
+    List<JobApplication> applications,
+    JobApplicationProvider provider,
+  ) {
     return RefreshIndicator(
       onRefresh: () => _loadApplications(refresh: true),
       color: AppColors.primary,
@@ -645,9 +664,7 @@ void initState() {
     return Card(
       margin: const EdgeInsets.only(bottom: AppSizes.md),
       elevation: 2,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12),
-      ),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       child: InkWell(
         onTap: () => _viewJobDetails(application.jobId),
         borderRadius: BorderRadius.circular(12),
@@ -664,13 +681,10 @@ void initState() {
                     width: 48,
                     height: 48,
                     decoration: BoxDecoration(
-                      color: AppColors.primary.withOpacity(0.1),
+                      color: AppColors.primary.withValues(alpha: 0.1),
                       borderRadius: BorderRadius.circular(8),
                     ),
-                    child: const Icon(
-                      Icons.business,
-                      color: AppColors.primary,
-                    ),
+                    child: const Icon(Icons.business, color: AppColors.primary),
                   ),
                   const SizedBox(width: 12),
 
@@ -707,7 +721,7 @@ void initState() {
                       vertical: 4,
                     ),
                     decoration: BoxDecoration(
-                      color: statusColor.withOpacity(0.1),
+                      color: statusColor.withValues(alpha: 0.1),
                       borderRadius: BorderRadius.circular(12),
                     ),
                     child: Text(
@@ -762,7 +776,8 @@ void initState() {
                   const SizedBox(width: 8),
 
                   // Cover Letter Button (if available)
-                  if (application.coverLetter != null && application.coverLetter!.isNotEmpty)
+                  if (application.coverLetter != null &&
+                      application.coverLetter!.isNotEmpty)
                     Expanded(
                       child: OutlinedButton.icon(
                         onPressed: () => _viewCoverLetter(application),
@@ -783,7 +798,7 @@ void initState() {
                         onPressed: () => _withdrawApplication(application),
                         icon: const Icon(Icons.close, color: Colors.red),
                         style: IconButton.styleFrom(
-                          backgroundColor: Colors.red.withOpacity(0.1),
+                          backgroundColor: Colors.red.withValues(alpha: 0.1),
                         ),
                       ),
                     ),
@@ -829,7 +844,7 @@ void initState() {
             Icon(
               Icons.send_outlined,
               size: 80,
-              color: AppColors.textDisabled.withOpacity(0.5),
+              color: AppColors.textDisabled.withValues(alpha: 0.5),
             ),
             const SizedBox(height: 24),
             const Text(
@@ -866,7 +881,7 @@ void initState() {
             Icon(
               Icons.search_off,
               size: 80,
-              color: AppColors.textDisabled.withOpacity(0.5),
+              color: AppColors.textDisabled.withValues(alpha: 0.5),
             ),
             const SizedBox(height: 24),
             const Text(
@@ -903,26 +918,17 @@ void initState() {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const Icon(
-              Icons.error_outline,
-              size: 64,
-              color: Colors.red,
-            ),
+            const Icon(Icons.error_outline, size: 64, color: Colors.red),
             const SizedBox(height: 16),
             const Text(
               'Something went wrong',
-              style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-              ),
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 8),
             Text(
               error,
               textAlign: TextAlign.center,
-              style: const TextStyle(
-                color: AppColors.textSecondary,
-              ),
+              style: const TextStyle(color: AppColors.textSecondary),
             ),
             const SizedBox(height: 24),
             PrimaryButton(

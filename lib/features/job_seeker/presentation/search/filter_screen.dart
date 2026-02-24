@@ -4,7 +4,6 @@ import 'package:job_portal_app/core/constants/app_sizes.dart';
 import 'package:job_portal_app/shared/widgets/buttons/primary_button.dart';
 import 'package:job_portal_app/shared/widgets/buttons/secondary_button.dart';
 
-
 class FilterScreen extends StatefulWidget {
   const FilterScreen({super.key});
 
@@ -88,7 +87,9 @@ class _FilterScreenState extends State<FilterScreen> {
                             selected: selectedJobType == type['value'],
                             onSelected: (selected) {
                               setState(() {
-                                selectedJobType = selected ? type['value'] : null;
+                                selectedJobType = selected
+                                    ? type['value']
+                                    : null;
                               });
                             },
                           ),
@@ -109,7 +110,9 @@ class _FilterScreenState extends State<FilterScreen> {
                             selected: selectedExperience == exp['value'],
                             onSelected: (selected) {
                               setState(() {
-                                selectedExperience = selected ? exp['value'] : null;
+                                selectedExperience = selected
+                                    ? exp['value']
+                                    : null;
                               });
                             },
                           ),
@@ -127,7 +130,9 @@ class _FilterScreenState extends State<FilterScreen> {
                         .map(
                           (category) => FilterChip(
                             label: Text(category['label']!),
-                            selected: selectedCategories.contains(category['value']),
+                            selected: selectedCategories.contains(
+                              category['value'],
+                            ),
                             onSelected: (selected) {
                               setState(() {
                                 if (selected) {
@@ -165,11 +170,15 @@ class _FilterScreenState extends State<FilterScreen> {
                         children: [
                           Chip(
                             label: Text('\$${salaryRange.start.toInt()}'),
-                            backgroundColor: AppColors.primary.withOpacity(0.1),
+                            backgroundColor: AppColors.primary.withValues(
+                              alpha: 0.1,
+                            ),
                           ),
                           Chip(
                             label: Text('\$${salaryRange.end.toInt()}'),
-                            backgroundColor: AppColors.primary.withOpacity(0.1),
+                            backgroundColor: AppColors.primary.withValues(
+                              alpha: 0.1,
+                            ),
                           ),
                         ],
                       ),
@@ -229,10 +238,7 @@ class _FilterScreenState extends State<FilterScreen> {
         children: [
           Text(
             title,
-            style: const TextStyle(
-              fontSize: 16,
-              fontWeight: FontWeight.w600,
-            ),
+            style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
           ),
           const SizedBox(height: AppSizes.md),
           content,
