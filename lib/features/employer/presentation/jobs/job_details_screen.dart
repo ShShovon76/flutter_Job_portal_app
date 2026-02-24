@@ -1128,7 +1128,11 @@ Check out this job opportunity!
         const SizedBox(height: 12),
         OutlinedButton.icon(
           onPressed: () {
-            // Navigate to company profile
+            Navigator.pushNamed(
+              context,
+              RouteNames.companyDetails,
+              arguments: _company!.id, // make sure your company model has id
+            );
           },
           icon: const Icon(Icons.visibility),
           label: const Text('View Company Profile'),

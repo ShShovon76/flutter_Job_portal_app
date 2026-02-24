@@ -39,7 +39,6 @@ class CompanyProvider extends ChangeNotifier {
   Future<T?> _run<T>(Future<T> Function() action) async {
     loading = true;
     error = null;
-    notifyListeners();
 
     try {
       return await action();
@@ -48,7 +47,11 @@ class CompanyProvider extends ChangeNotifier {
       rethrow;
     } finally {
       loading = false;
-      notifyListeners();
+
+      // Only notify if there are listeners (widget is mounted)
+      if (hasListeners) {
+        notifyListeners();
+      }
     }
   }
 
@@ -65,9 +68,7 @@ class CompanyProvider extends ChangeNotifier {
 
     if (!hasMore) return;
 
-    final result = await _run(
-      () => _api.getCompanies(page: page, size: size),
-    );
+    final result = await _run(() => _api.getCompanies(page: page, size: size));
 
     if (result != null) {
       companies.addAll(result.items);
@@ -126,11 +127,13 @@ class CompanyProvider extends ChangeNotifier {
   // =====================================================
 
   Future<void> loadMyCompany(int ownerId) async {
-    final pageData =
-        await _run(() => _api.getCompaniesByOwner(ownerId: ownerId));
+    final pageData = await _run(
+      () => _api.getCompaniesByOwner(ownerId: ownerId),
+    );
 
-    myCompany =
-        pageData?.items.isNotEmpty == true ? pageData!.items.first : null;
+    myCompany = pageData?.items.isNotEmpty == true
+        ? pageData!.items.first
+        : null;
   }
 
   // =====================================================
@@ -138,8 +141,9 @@ class CompanyProvider extends ChangeNotifier {
   // =====================================================
 
   Future<void> createCompany(Company company, {File? logo}) async {
-    myCompany =
-        await _run(() => _api.createCompany(company: company, logo: logo));
+    myCompany = await _run(
+      () => _api.createCompany(company: company, logo: logo),
+    );
   }
 
   // =====================================================
@@ -153,12 +157,14 @@ class CompanyProvider extends ChangeNotifier {
   }) async {
     if (myCompany == null) return;
 
-    myCompany = await _run(() => _api.updateCompany(
-          id: myCompany!.id,
-          request: request,
-          logo: logo,
-          cover: cover,
-        ));
+    myCompany = await _run(
+      () => _api.updateCompany(
+        id: myCompany!.id,
+        request: request,
+        logo: logo,
+        cover: cover,
+      ),
+    );
   }
 
   // =====================================================
@@ -167,14 +173,12 @@ class CompanyProvider extends ChangeNotifier {
 
   Future<void> uploadLogo(File file) async {
     if (myCompany == null) return;
-    myCompany =
-        await _run(() => _api.uploadLogo(myCompany!.id, file));
+    myCompany = await _run(() => _api.uploadLogo(myCompany!.id, file));
   }
 
   Future<void> uploadCover(File file) async {
     if (myCompany == null) return;
-    myCompany =
-        await _run(() => _api.uploadCover(myCompany!.id, file));
+    myCompany = await _run(() => _api.uploadCover(myCompany!.id, file));
   }
 
   Future<void> deleteLogo() async {
@@ -215,11 +219,13 @@ class CompanyProvider extends ChangeNotifier {
     int reviewerId,
     CompanyReview review,
   ) async {
-    await _run(() => _api.addReview(
-          companyId: companyId,
-          reviewerId: reviewerId,
-          review: review,
-        ));
+    await _run(
+      () => _api.addReview(
+        companyId: companyId,
+        reviewerId: reviewerId,
+        review: review,
+      ),
+    );
 
     await loadReviews(companyId, refresh: true);
   }
@@ -229,13 +235,15 @@ class CompanyProvider extends ChangeNotifier {
   // =====================================================
 
   Future<void> verifyCompany(int companyId, int adminId) async {
-    await _run(() =>
-        _api.verifyCompany(companyId: companyId, adminId: adminId));
+    await _run(
+      () => _api.verifyCompany(companyId: companyId, adminId: adminId),
+    );
   }
 
   Future<void> deleteCompany(int companyId, int ownerId) async {
-    await _run(() =>
-        _api.deleteCompany(companyId: companyId, ownerId: ownerId));
+    await _run(
+      () => _api.deleteCompany(companyId: companyId, ownerId: ownerId),
+    );
     myCompany = null;
   }
 }

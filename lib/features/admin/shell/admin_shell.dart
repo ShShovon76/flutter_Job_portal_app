@@ -4,6 +4,7 @@ import 'package:job_portal_app/core/constants/constants.dart';
 import 'package:job_portal_app/features/admin/presentation/admin_dashboard.dart';
 import 'package:job_portal_app/features/admin/presentation/admin_screens.dart';
 import 'package:job_portal_app/features/admin/presentation/analytics_screen.dart';
+import 'package:job_portal_app/features/admin/presentation/approve_jobs.dart';
 import 'package:job_portal_app/features/admin/presentation/categories_screen.dart';
 import 'package:job_portal_app/features/admin/presentation/manage_employer_jobs_screen.dart';
 import 'package:job_portal_app/features/admin/presentation/manage_employers_screen.dart';

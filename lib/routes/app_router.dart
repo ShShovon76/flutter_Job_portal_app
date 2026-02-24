@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:job_portal_app/features/admin/presentation/admin_dashboard.dart';
 import 'package:job_portal_app/features/admin/presentation/admin_screens.dart';
 import 'package:job_portal_app/features/admin/presentation/analytics_screen.dart';
+import 'package:job_portal_app/features/admin/presentation/approve_jobs.dart';
 import 'package:job_portal_app/features/admin/presentation/categories_screen.dart';
 import 'package:job_portal_app/features/admin/presentation/manage_employer_jobs_screen.dart';
 import 'package:job_portal_app/features/admin/presentation/manage_employers_screen.dart';
@@ -30,6 +31,7 @@ import 'package:job_portal_app/features/job_seeker/presentation/profile/experien
 import 'package:job_portal_app/features/job_seeker/presentation/profile/resume_upload_screen.dart';
 import 'package:job_portal_app/features/job_seeker/presentation/shell/job_seeker_shell.dart';
 import 'package:job_portal_app/features/job_seeker/presentation/tracking/applied_jobs_screen.dart';
+import 'package:job_portal_app/features/job_seeker/presentation/tracking/company_details.dart';
 import 'package:job_portal_app/routes/route_names.dart';
 import 'package:job_portal_app/shared/widgets/inputs/error_screen.dart';
 import 'package:job_portal_app/shared/widgets/inputs/no_internet_screen.dart';
@@ -109,6 +111,11 @@ class AppRouter {
         final jobId = settings.arguments as int;
         return MaterialPageRoute(
           builder: (_) => JobDetailsScreen(jobId: jobId),
+        );
+      case RouteNames.companyDetails:
+        final companyId = settings.arguments as int;
+        return MaterialPageRoute(
+          builder: (_) => CompanyDetailsScreen(companyId: companyId),
         );
 
       // Add other job seeker routes here...

@@ -24,6 +24,7 @@ class RouteNames {
   static const String education = '/job-seeker/education';
   static const String experience = '/job-seeker/experience';
   static const String appliedJobs = '/job-seeker/applied-jobs';
+  static const String companyDetails = '/job-seeker/company-profile';
   static const String applicationStatus = '/job-seeker/application-status';
   static const String interviewSchedule = '/job-seeker/interview-schedule';
   static const String notifications = '/job-seeker/notifications';
