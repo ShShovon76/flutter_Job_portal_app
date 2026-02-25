@@ -30,6 +30,14 @@ class _EditCompanyProfileScreenState extends State<EditCompanyProfileScreen> {
   late TextEditingController _phoneController;
   late TextEditingController _addressController;
   late TextEditingController _foundedYearController;
+  final List<String> _companySizeValues = [
+    '1-10',
+    '11-50',
+    '51-200',
+    '201-500',
+    '501-1000',
+    '1000+',
+  ];
 
   // ===================== STATE =====================
   bool _isLoading = false;
@@ -60,7 +68,8 @@ class _EditCompanyProfileScreenState extends State<EditCompanyProfileScreen> {
     _nameController = TextEditingController(text: widget.company.name);
     _industryController = TextEditingController(text: widget.company.industry);
     _companySizeController = TextEditingController(
-      text: widget.company.companySize ?? '',
+      text:
+          widget.company.companySize?.replaceAll(' employees', '').trim() ?? '',
     );
     _aboutController = TextEditingController(text: widget.company.about ?? '');
     _websiteController = TextEditingController(
@@ -77,83 +86,81 @@ class _EditCompanyProfileScreenState extends State<EditCompanyProfileScreen> {
   }
 
   // ===================== SAVE =====================
-Future<void> _saveChanges() async {
-  if (!_formKey.currentState!.validate()) return;
+  Future<void> _saveChanges() async {
+    if (!_formKey.currentState!.validate()) return;
 
-  setState(() => _isLoading = true);
+    setState(() => _isLoading = true);
 
-  try {
-    final companyProvider = Provider.of<CompanyProvider>(
-      context,
-      listen: false,
-    );
+    try {
+      final companyProvider = Provider.of<CompanyProvider>(
+        context,
+        listen: false,
+      );
 
-    // Prepare socialLinks DTOs
-    final socialLinks = widget.company.socialLinks
-        ?.map((link) => SocialLink(type: link.type, url: link.url))
-        .toList();
+      // Prepare socialLinks DTOs
+      final socialLinks = widget.company.socialLinks
+          ?.map((link) => SocialLink(type: link.type, url: link.url))
+          .toList();
 
-    final request = CompanyUpdateRequest(
-      name: _nameController.text.trim(),
-      industry: _industryController.text.trim(),
-      companySize: _companySizeController.text.trim().isNotEmpty
-          ? _companySizeController.text.trim()
-          : widget.company.companySize,
-      about: _aboutController.text.trim().isNotEmpty
-          ? _aboutController.text.trim()
-          : widget.company.about,
-      website: _websiteController.text.trim().isNotEmpty
-          ? _websiteController.text.trim()
-          : widget.company.website,
-      email: _emailController.text.trim().isNotEmpty
-          ? _emailController.text.trim()
-          : widget.company.email,
-      phone: _phoneController.text.trim().isNotEmpty
-          ? _phoneController.text.trim()
-          : widget.company.phone,
-      address: _addressController.text.trim().isNotEmpty
-          ? _addressController.text.trim()
-          : widget.company.address,
-      foundedYear: _foundedYearController.text.trim().isNotEmpty
-          ? int.tryParse(_foundedYearController.text)
-          : widget.company.foundedYear,
-      socialLinks: socialLinks, // ✅ Include social links
-    );
+      final request = CompanyUpdateRequest(
+        name: _nameController.text.trim(),
+        industry: _industryController.text.trim(),
+        companySize: _companySizeController.text.trim().isNotEmpty
+            ? _companySizeController.text.trim()
+            : widget.company.companySize,
+        about: _aboutController.text.trim().isNotEmpty
+            ? _aboutController.text.trim()
+            : widget.company.about,
+        website: _websiteController.text.trim().isNotEmpty
+            ? _websiteController.text.trim()
+            : widget.company.website,
+        email: _emailController.text.trim().isNotEmpty
+            ? _emailController.text.trim()
+            : widget.company.email,
+        phone: _phoneController.text.trim().isNotEmpty
+            ? _phoneController.text.trim()
+            : widget.company.phone,
+        address: _addressController.text.trim().isNotEmpty
+            ? _addressController.text.trim()
+            : widget.company.address,
+        foundedYear: _foundedYearController.text.trim().isNotEmpty
+            ? int.tryParse(_foundedYearController.text)
+            : widget.company.foundedYear,
+        socialLinks: socialLinks, // ✅ Include social links
+      );
 
-    // Call provider
-    await companyProvider.updateCompany(
-      request,
-      logo: null, // optional: selected File
-      cover: null, // optional: selected File
-    );
+      // Call provider
+      await companyProvider.updateCompany(
+        request,
+        logo: null, // optional: selected File
+        cover: null, // optional: selected File
+      );
 
-    if (!mounted) return;
+      if (!mounted) return;
 
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Company profile updated successfully'),
-        backgroundColor: Colors.green,
-      ),
-    );
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Company profile updated successfully'),
+          backgroundColor: Colors.green,
+        ),
+      );
 
-    Navigator.pop(context, true);
-  } catch (e) {
-    if (!mounted) return;
+      Navigator.pop(context, true);
+    } catch (e) {
+      if (!mounted) return;
 
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text('Failed to update: $e'),
-        backgroundColor: Colors.red,
-      ),
-    );
-  } finally {
-    if (mounted) {
-      setState(() => _isLoading = false);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Failed to update: $e'),
+          backgroundColor: Colors.red,
+        ),
+      );
+    } finally {
+      if (mounted) {
+        setState(() => _isLoading = false);
+      }
     }
   }
-}
-
-
 
   // ===================== BUILD UI =====================
   @override
@@ -233,27 +240,22 @@ Future<void> _saveChanges() async {
 
                         // Company Size
                         DropdownButtonFormField<String>(
-                          value: _companySizeController.text.isNotEmpty
+                          value:
+                              _companySizeValues.contains(
+                                _companySizeController.text,
+                              )
                               ? _companySizeController.text
                               : null,
                           decoration: const InputDecoration(
                             labelText: 'Company Size',
                             prefixIcon: Icon(Icons.people),
                           ),
-                          items:
-                              [
-                                '1-10 employees',
-                                '11-50 employees',
-                                '51-200 employees',
-                                '201-500 employees',
-                                '501-1000 employees',
-                                '1000+ employees',
-                              ].map((size) {
-                                return DropdownMenuItem(
-                                  value: size,
-                                  child: Text(size),
-                                );
-                              }).toList(),
+                          items: _companySizeValues.map((size) {
+                            return DropdownMenuItem(
+                              value: size, // backend value
+                              child: Text('$size employees'), // UI label
+                            );
+                          }).toList(),
                           onChanged: (value) {
                             setState(() {
                               _companySizeController.text = value ?? '';

@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:job_portal_app/core/constants/app_colors.dart';
 import 'package:job_portal_app/core/constants/app_sizes.dart';
+import 'package:job_portal_app/core/constants/constants.dart';
 import 'package:job_portal_app/features/employer/presentation/company/provider/company_provider.dart';
 import 'package:job_portal_app/features/job_seeker/provider/job_provider.dart';
 import 'package:job_portal_app/models/company_model.dart';
@@ -211,7 +212,7 @@ class _CompanyDetailsScreenState extends State<CompanyDetailsScreen>
                 // Cover Image
                 _company!.coverImageUrl != null
                     ? Image.network(
-                        _company!.coverImageUrl!,
+                        AppConstants.getImageUrl(_company!.coverImageUrl!),
                         fit: BoxFit.cover,
                         errorBuilder: (_, __, ___) => _buildDefaultCover(),
                       )
@@ -390,7 +391,7 @@ class _CompanyDetailsScreenState extends State<CompanyDetailsScreen>
                   ? ClipRRect(
                       borderRadius: BorderRadius.circular(14),
                       child: Image.network(
-                        _company!.logoUrl!,
+                        AppConstants.getImageUrl(_company!.logoUrl!),
                         fit: BoxFit.cover,
                         errorBuilder: (_, _, _) => _buildDefaultLogo(),
                       ),
@@ -701,7 +702,7 @@ class _CompanyDetailsScreenState extends State<CompanyDetailsScreen>
             ? ClipRRect(
                 borderRadius: BorderRadius.circular(8),
                 child: Image.network(
-                  job.company.logoUrl!,
+                  AppConstants.getImageUrl(job.company.logoUrl!),
                   fit: BoxFit.cover,
                   errorBuilder: (_, __, ___) => const Icon(Icons.business),
                 ),

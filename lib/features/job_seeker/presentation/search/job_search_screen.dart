@@ -5,6 +5,7 @@ import 'package:intl/intl.dart';
 import 'package:job_portal_app/core/api/category_api.dart';
 import 'package:job_portal_app/core/api/search_api.dart';
 import 'package:job_portal_app/core/constants/app_colors.dart';
+import 'package:job_portal_app/core/constants/constants.dart';
 import 'package:job_portal_app/models/category.dart';
 import 'package:job_portal_app/models/job_model.dart';
 import 'package:job_portal_app/models/job_search_filter.dart';
@@ -989,7 +990,7 @@ class _JobSearchScreenState extends State<JobSearchScreen>
                     ? ClipRRect(
                         borderRadius: BorderRadius.circular(8),
                         child: Image.network(
-                          job.company.logoUrl!,
+                          AppConstants.getImageUrl(job.company.logoUrl!),
                           fit: BoxFit.cover,
                           errorBuilder: (_, __, ___) => const Icon(
                             Icons.business,

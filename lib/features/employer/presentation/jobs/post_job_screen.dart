@@ -978,7 +978,7 @@ class _JobPostScreenState extends State<JobPostScreen> {
                 hintText:
                     'Describe the role, responsibilities, and requirements...',
                 prefixIcon: Icon(Icons.text_snippet, size: 20),
-                helperText: 'Minimum 100 characters',
+                helperText: 'Minimum 50 characters',
                 alignLabelWithHint: true,
                 contentPadding: EdgeInsets.symmetric(
                   horizontal: 12,
@@ -990,7 +990,7 @@ class _JobPostScreenState extends State<JobPostScreen> {
                 if (value == null || value.trim().isEmpty) {
                   return 'Job description is required';
                 }
-                if (value.trim().length < 100) {
+                if (value.trim().length < 50) {
                   return 'Description must be at least 100 characters';
                 }
                 return null;

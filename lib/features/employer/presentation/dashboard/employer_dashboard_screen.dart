@@ -607,7 +607,7 @@ class _EmployerDashboardScreenState extends State<EmployerDashboardScreen> {
                 Text(
                   'Welcome back,',
                   style: TextStyle(
-                    fontSize: 14,
+                    fontSize: 13,
                     color: Colors.white.withValues(alpha: 0.9),
                   ),
                 ),
@@ -636,15 +636,6 @@ class _EmployerDashboardScreenState extends State<EmployerDashboardScreen> {
             ),
           ),
           actions: [
-            IconButton(
-              icon: const Icon(
-                Icons.notifications_outlined,
-                color: Colors.white,
-              ),
-              onPressed: () {
-                // Navigate to notifications
-              },
-            ),
             IconButton(
               icon: const Icon(Icons.refresh, color: Colors.white),
               onPressed: _loadDashboardData,

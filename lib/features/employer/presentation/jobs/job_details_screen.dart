@@ -363,25 +363,32 @@ class _JobDetailsScreenState extends State<JobDetailsScreen> {
             : null,
       );
 
-      _showSnackBar('Application submitted successfully!');
+      if (mounted) {
+        Navigator.pop(context); // close bottom sheet
+      }
 
       setState(() {
-        _showApplicationModal = false;
         _hasApplied = true;
         _selectedResumeId = _resumes.isNotEmpty ? _resumes.first.id : null;
         _coverLetterController.clear();
         _newResumeFile = null;
         _newResumeTitleController.clear();
       });
+
+      _showSnackBar('Application submitted successfully!');
     } catch (e) {
       debugPrint('Error submitting application: $e');
 
       if (e.toString().contains('409')) {
-        _showSnackBar('You have already applied for this job', isError: true);
+        if (mounted) {
+          Navigator.pop(context);
+        }
+
         setState(() {
-          _showApplicationModal = false;
           _hasApplied = true;
         });
+
+        _showSnackBar('You have already applied for this job');
       } else {
         _showSnackBar('Failed to submit application', isError: true);
       }
