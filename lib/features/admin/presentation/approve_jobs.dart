@@ -245,9 +245,9 @@ class _ApproveJobsScreenState extends State<ApproveJobsScreen> {
 
         // Filter jobs based on selected filter
         final filteredJobs = jobProvider.jobs.where((job) {
-          if (_selectedFilter == 'Pending') {
+          if (_selectedFilter == 'Approved') {
             return job.status == JobStatus.DRAFT;
-          } else if (_selectedFilter == 'Approved') {
+          } else if (_selectedFilter == 'Pending') {
             return job.status == JobStatus.ACTIVE;
           } else {
             return job.status == JobStatus.CLOSED;
@@ -321,12 +321,20 @@ class _ApproveJobsScreenState extends State<ApproveJobsScreen> {
                         color: const Color(0xFF3B82F6).withValues(alpha: 0.1),
                         borderRadius: BorderRadius.circular(12),
                       ),
-                      child: job.company.logoUrl != null
+                      child:
+                          job.company.logoUrl != null &&
+                              job.company.logoUrl!.isNotEmpty
                           ? ClipRRect(
                               borderRadius: BorderRadius.circular(12),
                               child: Image.network(
-                                AppConstants.getImageUrl(job.company.logoUrl!) ,
+                                AppConstants.getImageUrl(job.company.logoUrl!),
                                 fit: BoxFit.cover,
+                                errorBuilder: (context, error, stackTrace) {
+                                  return const Icon(
+                                    Icons.business,
+                                    color: Color(0xFF3B82F6),
+                                  );
+                                },
                               ),
                             )
                           : const Icon(

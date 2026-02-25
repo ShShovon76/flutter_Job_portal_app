@@ -8,6 +8,7 @@ import 'package:job_portal_app/core/api/job_api.dart';
 import 'package:job_portal_app/core/api/resume_api.dart';
 import 'package:job_portal_app/core/constants/app_colors.dart';
 import 'package:job_portal_app/core/constants/app_sizes.dart';
+import 'package:job_portal_app/core/constants/constants.dart';
 import 'package:job_portal_app/features/auth/provider/auth_provider.dart';
 import 'package:job_portal_app/models/application_model.dart';
 import 'package:job_portal_app/models/job_model.dart';
@@ -17,14 +18,10 @@ import 'package:job_portal_app/shared/widgets/buttons/primary_button.dart';
 import 'package:job_portal_app/shared/widgets/common/loading_overlay.dart';
 import 'package:provider/provider.dart';
 
-
 class ApplicantsListScreen extends StatefulWidget {
   final int jobId;
 
-  const ApplicantsListScreen({
-    super.key,
-    required this.jobId,
-  });
+  const ApplicantsListScreen({super.key, required this.jobId});
 
   @override
   State<ApplicantsListScreen> createState() => _ApplicantsListScreenState();
@@ -223,7 +220,7 @@ class _ApplicantsListScreenState extends State<ApplicantsListScreen> {
             style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
           ),
           const SizedBox(height: 20),
-          
+
           // Status Filter
           const Text('Status', style: TextStyle(fontWeight: FontWeight.w600)),
           const SizedBox(height: 8),
@@ -258,11 +255,14 @@ class _ApplicantsListScreenState extends State<ApplicantsListScreen> {
               }),
             ],
           ),
-          
+
           const SizedBox(height: 16),
-          
+
           // Date Range
-          const Text('Date Range', style: TextStyle(fontWeight: FontWeight.w600)),
+          const Text(
+            'Date Range',
+            style: TextStyle(fontWeight: FontWeight.w600),
+          ),
           const SizedBox(height: 8),
           Row(
             children: [
@@ -271,7 +271,9 @@ class _ApplicantsListScreenState extends State<ApplicantsListScreen> {
                   onPressed: () async {
                     final date = await showDatePicker(
                       context: context,
-                      initialDate: _dateFrom ?? DateTime.now().subtract(const Duration(days: 30)),
+                      initialDate:
+                          _dateFrom ??
+                          DateTime.now().subtract(const Duration(days: 30)),
                       firstDate: DateTime(2020),
                       lastDate: DateTime.now(),
                     );
@@ -315,9 +317,9 @@ class _ApplicantsListScreenState extends State<ApplicantsListScreen> {
               ),
             ],
           ),
-          
+
           const SizedBox(height: 20),
-          
+
           // Apply and Clear Buttons
           Row(
             children: [
@@ -374,8 +376,12 @@ class _ApplicantsListScreenState extends State<ApplicantsListScreen> {
       // Search filter
       if (_searchController.text.isNotEmpty) {
         final searchTerm = _searchController.text.toLowerCase();
-        final nameMatch = (app.jobSeekerName ?? '').toLowerCase().contains(searchTerm);
-        final emailMatch = (app.jobSeekerEmail ?? '').toLowerCase().contains(searchTerm);
+        final nameMatch = (app.jobSeekerName ?? '').toLowerCase().contains(
+          searchTerm,
+        );
+        final emailMatch = (app.jobSeekerEmail ?? '').toLowerCase().contains(
+          searchTerm,
+        );
         if (!(nameMatch || emailMatch)) return false;
       }
 
@@ -389,7 +395,14 @@ class _ApplicantsListScreenState extends State<ApplicantsListScreen> {
         final appliedDate = DateTime.parse(app.appliedAt);
         if (_dateFrom != null && appliedDate.isBefore(_dateFrom!)) return false;
         if (_dateTo != null) {
-          final endOfDay = DateTime(_dateTo!.year, _dateTo!.month, _dateTo!.day, 23, 59, 59);
+          final endOfDay = DateTime(
+            _dateTo!.year,
+            _dateTo!.month,
+            _dateTo!.day,
+            23,
+            59,
+            59,
+          );
           if (appliedDate.isAfter(endOfDay)) return false;
         }
       }
@@ -399,7 +412,10 @@ class _ApplicantsListScreenState extends State<ApplicantsListScreen> {
   }
 
   // ===================== APPLICATION ACTIONS =====================
-  Future<void> _updateApplicationStatus(int applicationId, ApplicationStatus status) async {
+  Future<void> _updateApplicationStatus(
+    int applicationId,
+    ApplicationStatus status,
+  ) async {
     setState(() => _updatingStatus[applicationId] = true);
 
     try {
@@ -434,7 +450,10 @@ class _ApplicantsListScreenState extends State<ApplicantsListScreen> {
 
   Future<void> _bulkUpdateStatus(ApplicationStatus status) async {
     if (_selectedApplications.isEmpty) {
-      _showNotificationMessage('Please select at least one application', 'warning');
+      _showNotificationMessage(
+        'Please select at least one application',
+        'warning',
+      );
       return;
     }
 
@@ -479,9 +498,15 @@ class _ApplicantsListScreenState extends State<ApplicantsListScreen> {
       });
 
       if (failCount == 0) {
-        _showNotificationMessage('Updated $successCount application(s)', 'success');
+        _showNotificationMessage(
+          'Updated $successCount application(s)',
+          'success',
+        );
       } else {
-        _showNotificationMessage('Updated $successCount, failed $failCount', 'warning');
+        _showNotificationMessage(
+          'Updated $successCount, failed $failCount',
+          'warning',
+        );
       }
     }
   }
@@ -568,7 +593,11 @@ class _ApplicantsListScreenState extends State<ApplicantsListScreen> {
   }
 
   // ===================== NOTIFICATION =====================
-  void _showNotificationMessage(String message, String type, {int duration = 3000}) {
+  void _showNotificationMessage(
+    String message,
+    String type, {
+    int duration = 3000,
+  }) {
     _notificationTimer?.cancel();
 
     setState(() {
@@ -629,14 +658,18 @@ class _ApplicantsListScreenState extends State<ApplicantsListScreen> {
 
     if (difference.inDays == 0) {
       if (difference.inHours == 0) {
-        return difference.inMinutes <= 1 ? 'Just now' : '${difference.inMinutes}m ago';
+        return difference.inMinutes <= 1
+            ? 'Just now'
+            : '${difference.inMinutes}m ago';
       }
       return '${difference.inHours}h ago';
     }
     if (difference.inDays == 1) return 'Yesterday';
     if (difference.inDays < 7) return '${difference.inDays}d ago';
-    if (difference.inDays < 30) return '${(difference.inDays / 7).floor()}w ago';
-    if (difference.inDays < 365) return '${(difference.inDays / 30).floor()}mo ago';
+    if (difference.inDays < 30)
+      return '${(difference.inDays / 7).floor()}w ago';
+    if (difference.inDays < 365)
+      return '${(difference.inDays / 30).floor()}mo ago';
     return '${(difference.inDays / 365).floor()}y ago';
   }
 
@@ -689,8 +722,7 @@ class _ApplicantsListScreenState extends State<ApplicantsListScreen> {
             Column(
               children: [
                 // Notification
-                if (_showNotification)
-                  _buildNotification(),
+                if (_showNotification) _buildNotification(),
 
                 // Job Summary
                 if (_job != null) _buildJobSummary(),
@@ -702,25 +734,22 @@ class _ApplicantsListScreenState extends State<ApplicantsListScreen> {
                 _buildSearchBar(),
 
                 // Bulk Actions Bar
-                if (_selectedApplications.isNotEmpty)
-                  _buildBulkActionsBar(),
+                if (_selectedApplications.isNotEmpty) _buildBulkActionsBar(),
 
                 // Applications List
                 Expanded(
                   child: _error != null && _applications.isEmpty
                       ? _buildErrorState()
                       : _applications.isEmpty && !_isLoading
-                          ? _buildEmptyState()
-                          : _buildApplicationsList(),
+                      ? _buildEmptyState()
+                      : _buildApplicationsList(),
                 ),
 
                 // Loading More Indicator
                 if (_isFetchingMore)
                   const Padding(
                     padding: EdgeInsets.all(16),
-                    child: Center(
-                      child: CircularProgressIndicator(),
-                    ),
+                    child: Center(child: CircularProgressIndicator()),
                   ),
               ],
             ),
@@ -733,7 +762,7 @@ class _ApplicantsListScreenState extends State<ApplicantsListScreen> {
   Widget _buildNotification() {
     Color bgColor;
     IconData icon;
-    
+
     switch (_notificationType) {
       case 'success':
         bgColor = Colors.green;
@@ -797,16 +826,23 @@ class _ApplicantsListScreenState extends State<ApplicantsListScreen> {
               color: Colors.white,
               borderRadius: BorderRadius.circular(8),
             ),
-            child: _job?.company.logoUrl != null
+            child:
+                _job!.company.logoUrl != null &&
+                    _job!.company.logoUrl!.isNotEmpty
                 ? ClipRRect(
-                    borderRadius: BorderRadius.circular(8),
+                    borderRadius: BorderRadius.circular(12),
                     child: Image.network(
-                      _job!.company.logoUrl!,
+                      AppConstants.getImageUrl(_job!.company.logoUrl!),
                       fit: BoxFit.cover,
-                      errorBuilder: (_, __, ___) => const Icon(Icons.business),
+                      errorBuilder: (context, error, stackTrace) {
+                        return const Icon(
+                          Icons.business,
+                          color: Color(0xFF3B82F6),
+                        );
+                      },
                     ),
                   )
-                : const Icon(Icons.business, color: AppColors.primary),
+                : const Icon(Icons.business, color: Color(0xFF3B82F6)),
           ),
           const SizedBox(width: 12),
           Expanded(
@@ -864,7 +900,7 @@ class _ApplicantsListScreenState extends State<ApplicantsListScreen> {
           final status = ApplicationStatus.values[index];
           final count = _stats[status.value] ?? 0;
           final color = _getStatusColor(status);
-          
+
           return Container(
             margin: const EdgeInsets.only(right: 8),
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
@@ -887,10 +923,7 @@ class _ApplicantsListScreenState extends State<ApplicantsListScreen> {
                 const SizedBox(width: 6),
                 Text(
                   _getStatusLabel(status),
-                  style: TextStyle(
-                    fontSize: 12,
-                    color: color,
-                  ),
+                  style: TextStyle(fontSize: 12, color: color),
                 ),
                 const SizedBox(width: 4),
                 Text(
@@ -927,9 +960,7 @@ class _ApplicantsListScreenState extends State<ApplicantsListScreen> {
                   icon: const Icon(Icons.clear),
                 )
               : null,
-          border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(8),
-          ),
+          border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
           contentPadding: const EdgeInsets.symmetric(vertical: 0),
         ),
       ),
@@ -938,7 +969,10 @@ class _ApplicantsListScreenState extends State<ApplicantsListScreen> {
 
   Widget _buildBulkActionsBar() {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: AppSizes.md, vertical: AppSizes.sm),
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppSizes.md,
+        vertical: AppSizes.sm,
+      ),
       color: AppColors.primary.withOpacity(0.1),
       child: Row(
         children: [
@@ -1041,7 +1075,8 @@ class _ApplicantsListScreenState extends State<ApplicantsListScreen> {
                 children: [
                   Checkbox(
                     value: isSelected,
-                    onChanged: (_) => _toggleApplicationSelection(application.id),
+                    onChanged: (_) =>
+                        _toggleApplicationSelection(application.id),
                     activeColor: AppColors.primary,
                   ),
                   Expanded(
@@ -1050,18 +1085,24 @@ class _ApplicantsListScreenState extends State<ApplicantsListScreen> {
                         // Profile Picture
                         CircleAvatar(
                           radius: 24,
-                          backgroundImage: application.jobSeekerProfilePicture != null
-                              ? NetworkImage(application.jobSeekerProfilePicture!)
+                          backgroundImage:
+                              application.jobSeekerProfilePicture != null
+                              ? NetworkImage(
+                                  AppConstants.getImageUrl(
+                                    application.jobSeekerProfilePicture!,
+                                  ),
+                                )
                               : null,
                           child: application.jobSeekerProfilePicture == null
                               ? Text(
-                                  application.jobSeekerName?[0].toUpperCase() ?? '?',
+                                  application.jobSeekerName?[0].toUpperCase() ??
+                                      '?',
                                   style: const TextStyle(fontSize: 16),
                                 )
                               : null,
                         ),
                         const SizedBox(width: 12),
-                        
+
                         // Name and Email
                         Expanded(
                           child: Column(
@@ -1094,14 +1135,17 @@ class _ApplicantsListScreenState extends State<ApplicantsListScreen> {
                   ),
                 ],
               ),
-              
+
               const SizedBox(height: 12),
-              
+
               // Status and Date Row
               Row(
                 children: [
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 8,
+                      vertical: 4,
+                    ),
                     decoration: BoxDecoration(
                       color: statusColor.withOpacity(0.1),
                       borderRadius: BorderRadius.circular(12),
@@ -1130,7 +1174,11 @@ class _ApplicantsListScreenState extends State<ApplicantsListScreen> {
                     ),
                   ),
                   const SizedBox(width: 8),
-                  Icon(Icons.access_time, size: 14, color: AppColors.textSecondary),
+                  Icon(
+                    Icons.access_time,
+                    size: 14,
+                    color: AppColors.textSecondary,
+                  ),
                   const SizedBox(width: 4),
                   Text(
                     _getRelativeTime(application.appliedAt),
@@ -1141,9 +1189,9 @@ class _ApplicantsListScreenState extends State<ApplicantsListScreen> {
                   ),
                 ],
               ),
-              
+
               const SizedBox(height: 12),
-              
+
               // Action Buttons Row
               Row(
                 children: [
@@ -1164,7 +1212,9 @@ class _ApplicantsListScreenState extends State<ApplicantsListScreen> {
                             ? const SizedBox(
                                 width: 16,
                                 height: 16,
-                                child: CircularProgressIndicator(strokeWidth: 2),
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                ),
                               )
                             : const Icon(Icons.arrow_drop_down, size: 20),
                         items: ApplicationStatus.values.map((status) {
@@ -1178,12 +1228,15 @@ class _ApplicantsListScreenState extends State<ApplicantsListScreen> {
                         }).toList(),
                         onChanged: isUpdating
                             ? null
-                            : (status) => _updateApplicationStatus(application.id, status!),
+                            : (status) => _updateApplicationStatus(
+                                application.id,
+                                status!,
+                              ),
                       ),
                     ),
                   ),
                   const SizedBox(width: 8),
-                  
+
                   // Download Resume
                   Expanded(
                     child: OutlinedButton(
@@ -1199,14 +1252,17 @@ class _ApplicantsListScreenState extends State<ApplicantsListScreen> {
                               height: 16,
                               child: CircularProgressIndicator(strokeWidth: 2),
                             )
-                          : const Text('Resume', style: TextStyle(fontSize: 12)),
+                          : const Text(
+                              'Resume',
+                              style: TextStyle(fontSize: 12),
+                            ),
                     ),
                   ),
                 ],
               ),
-              
+
               const SizedBox(height: 8),
-              
+
               // Additional Actions Row
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceEvenly,
@@ -1216,17 +1272,24 @@ class _ApplicantsListScreenState extends State<ApplicantsListScreen> {
                     TextButton.icon(
                       onPressed: () => _viewCoverLetter(application),
                       icon: const Icon(Icons.description, size: 16),
-                      label: const Text('Cover Letter', style: TextStyle(fontSize: 11)),
+                      label: const Text(
+                        'Cover Letter',
+                        style: TextStyle(fontSize: 11),
+                      ),
                       style: TextButton.styleFrom(
                         foregroundColor: AppColors.primary,
                       ),
                     ),
-                  
+
                   // View Profile
                   TextButton.icon(
-                    onPressed: () => _viewApplicantProfile(application.jobSeekerId),
+                    onPressed: () =>
+                        _viewApplicantProfile(application.jobSeekerId),
                     icon: const Icon(Icons.person, size: 16),
-                    label: const Text('Profile', style: TextStyle(fontSize: 11)),
+                    label: const Text(
+                      'Profile',
+                      style: TextStyle(fontSize: 11),
+                    ),
                     style: TextButton.styleFrom(
                       foregroundColor: AppColors.primary,
                     ),

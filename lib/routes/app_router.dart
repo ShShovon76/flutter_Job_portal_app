@@ -15,6 +15,7 @@ import 'package:job_portal_app/features/auth/presentation/otp_verification_scree
 import 'package:job_portal_app/features/auth/presentation/register_screen.dart';
 import 'package:job_portal_app/features/auth/presentation/splash_screen.dart';
 import 'package:job_portal_app/features/employer/presentation/candidates/applicants_list_screen.dart';
+import 'package:job_portal_app/features/employer/presentation/candidates/candidate_profile_screen.dart';
 import 'package:job_portal_app/features/employer/presentation/company/company_profile_screen.dart';
 import 'package:job_portal_app/features/employer/presentation/dashboard/employer_dashboard_screen.dart';
 import 'package:job_portal_app/features/employer/presentation/jobs/job_details_screen.dart';
@@ -115,6 +116,17 @@ class AppRouter {
         return MaterialPageRoute(
           builder: (_) => CompanyDetailsScreen(companyId: companyId),
         );
+         case RouteNames.candidateProfile:
+        final args = settings.arguments as Map<String, dynamic>;
+        final userId = args['userId'] as int;
+        final jobId = args['jobId'] as int?; // Optional
+        return MaterialPageRoute(
+          builder: (_) => CandidateProfileScreen(
+            userId: userId,
+            jobId: jobId,
+          ),
+        );
+
 
       // Add other job seeker routes here...
 

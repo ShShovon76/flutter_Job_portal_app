@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:job_portal_app/core/api/analytics_api.dart';
+import 'package:job_portal_app/core/constants/constants.dart';
 import 'package:job_portal_app/features/auth/provider/auth_provider.dart';
 import 'package:job_portal_app/features/job_seeker/provider/job_provider.dart';
 import 'package:job_portal_app/models/analytics_models.dart';
@@ -438,9 +439,9 @@ class _JobCard extends StatelessWidget {
                             AppSizes.radiusSm,
                           ),
                           child: Image.network(
-                            job.company.logoUrl!,
+                            AppConstants.getImageUrl(job.company.logoUrl!),
                             fit: BoxFit.cover,
-                            errorBuilder: (_, __, ___) => _buildDefaultLogo(),
+                            errorBuilder: (_, _, _) => _buildDefaultLogo(),
                           ),
                         )
                       : _buildDefaultLogo(),
