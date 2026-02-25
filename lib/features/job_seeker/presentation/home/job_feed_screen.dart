@@ -1,15 +1,14 @@
+// features/job_seeker/presentation/home/job_feed_screen.dart
 import 'package:flutter/material.dart';
 import 'package:job_portal_app/core/constants/app_colors.dart';
 import 'package:job_portal_app/core/constants/app_sizes.dart';
+import 'package:job_portal_app/core/constants/constants.dart';
 import 'package:job_portal_app/features/job_seeker/provider/job_provider.dart';
 import 'package:job_portal_app/models/category.dart';
 import 'package:job_portal_app/models/job_model.dart';
 import 'package:job_portal_app/models/job_search_filter.dart';
 import 'package:job_portal_app/routes/route_names.dart';
-
-// features/job_seeker/presentation/home/job_feed_screen.dart
 import 'dart:async';
-import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:job_portal_app/shared/widgets/buttons/primary_button.dart';
 import 'package:provider/provider.dart';
@@ -248,7 +247,6 @@ class _JobFeedScreenState extends State<JobFeedScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        
         title: const Text(
           'Job Feed',
           style: TextStyle(fontSize: 20, fontWeight: FontWeight.w600),
@@ -619,7 +617,7 @@ class _JobFeedScreenState extends State<JobFeedScreen> {
                         ? ClipRRect(
                             borderRadius: BorderRadius.circular(11),
                             child: Image.network(
-                              job.company.logoUrl!,
+                              AppConstants.getImageUrl(job.company.logoUrl!),
                               fit: BoxFit.cover,
                               errorBuilder: (_, __, ___) => _buildDefaultLogo(),
                             ),

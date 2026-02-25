@@ -29,6 +29,8 @@ class RouteNames {
   static const String interviewSchedule = '/job-seeker/interview-schedule';
   static const String notifications = '/job-seeker/notifications';
   static const String settings = '/job-seeker/settings';
+  static const String categoryJobs = '/job-seeker/category-jobs';
+  static const String companyJobs = '/job-seeker/company-jobs';
 
   // Employer Routes
   static const String employerShell = '/employer';

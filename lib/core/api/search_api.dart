@@ -5,43 +5,84 @@ import 'package:job_portal_app/models/job_model.dart';
 import 'package:job_portal_app/models/job_search_filter.dart';
 
 class SearchApi {
-  /// POST /api/search/jobs
-  static Future<Pagination<Job>> searchJobs(JobSearchFilter filter) async {
+  static const String base = '/search';
+
+  // ---------------- SEARCH JOBS ----------------
+  static Future<Pagination<Job>> searchJobs(
+    JobSearchFilter filter,
+  ) async {
     final res = await ApiClient.post(
-      '/search/jobs',
+      '$base/jobs?page=${filter.page ?? 0}&size=${filter.size ?? 10}',
       body: filter.toJson(),
+      auth: true,
     );
 
     if (res.statusCode == 200) {
+      final json = jsonDecode(res.body);
       return Pagination.fromJson(
-        jsonDecode(res.body),
+        json,
         (e) => Job.fromJson(e),
       );
     }
-    throw Exception(res.body);
+
+    throw Exception('Failed to search jobs');
   }
 
-  /// GET /api/search/autocomplete/job-titles
-  static Future<List<String>> autocompleteJobTitles(String keyword) async {
+  // ---------------- AUTOCOMPLETE JOB TITLES ----------------
+  static Future<List<String>> autocompleteJobTitles(
+      String keyword) async {
     final res = await ApiClient.get(
-      '/search/autocomplete/job-titles?keyword=$keyword',
+      '$base/autocomplete/job-titles?keyword=$keyword',
+      auth: true,
     );
 
     if (res.statusCode == 200) {
       return List<String>.from(jsonDecode(res.body));
     }
-    throw Exception(res.body);
+
+    throw Exception('Failed to autocomplete job titles');
   }
 
-  /// GET /api/search/categories
-  static Future<List<SimpleCategory>> getCategories() async {
-    final res = await ApiClient.get('/search/categories');
+  // ---------------- AUTOCOMPLETE COMPANIES ----------------
+  static Future<List<String>> autocompleteCompanies(
+      String keyword) async {
+    final res = await ApiClient.get(
+      '$base/autocomplete/companies?keyword=$keyword',
+      auth: true,
+    );
 
     if (res.statusCode == 200) {
-      return (jsonDecode(res.body) as List)
-          .map((e) => SimpleCategory.fromJson(e))
-          .toList();
+      return List<String>.from(jsonDecode(res.body));
     }
-    throw Exception(res.body);
+
+    throw Exception('Failed to autocomplete companies');
+  }
+
+  // ---------------- CATEGORIES ----------------
+  static Future<List<dynamic>> getCategories() async {
+    final res = await ApiClient.get(
+      '$base/categories',
+      auth: true,
+    );
+
+    if (res.statusCode == 200) {
+      return jsonDecode(res.body);
+    }
+
+    throw Exception('Failed to load categories');
+  }
+
+  // ---------------- POPULAR SKILLS ----------------
+  static Future<List<String>> getPopularSkills() async {
+    final res = await ApiClient.get(
+      '$base/popular-skills',
+      auth: true,
+    );
+
+    if (res.statusCode == 200) {
+      return List<String>.from(jsonDecode(res.body));
+    }
+
+    throw Exception('Failed to load popular skills');
   }
 }

@@ -30,6 +30,9 @@ import 'package:job_portal_app/features/job_seeker/presentation/profile/edit_pro
 import 'package:job_portal_app/features/job_seeker/presentation/profile/education_screen.dart';
 import 'package:job_portal_app/features/job_seeker/presentation/profile/experience_screen.dart';
 import 'package:job_portal_app/features/job_seeker/presentation/profile/resume_upload_screen.dart';
+import 'package:job_portal_app/features/job_seeker/presentation/search/category_jobs_screen.dart';
+import 'package:job_portal_app/features/job_seeker/presentation/search/company_jobs_screen.dart';
+import 'package:job_portal_app/features/job_seeker/presentation/search/job_search_screen.dart';
 import 'package:job_portal_app/features/job_seeker/presentation/shell/job_seeker_shell.dart';
 import 'package:job_portal_app/features/job_seeker/presentation/tracking/applied_jobs_screen.dart';
 import 'package:job_portal_app/features/job_seeker/presentation/tracking/company_details.dart';
@@ -46,9 +49,7 @@ class AppRouter {
       case RouteNames.login:
         return MaterialPageRoute(builder: (_) => const LoginScreen());
       case RouteNames.register:
-        return MaterialPageRoute(
-          builder: (_) => const RegisterJobSeekerScreen(),
-        );
+        return MaterialPageRoute(builder: (_) => const RegisterScreen());
       case RouteNames.forgotPassword:
         return MaterialPageRoute(builder: (_) => const ForgotPasswordScreen());
       case RouteNames.otpVerification:
@@ -116,18 +117,34 @@ class AppRouter {
         return MaterialPageRoute(
           builder: (_) => CompanyDetailsScreen(companyId: companyId),
         );
-         case RouteNames.candidateProfile:
+      case RouteNames.candidateProfile:
         final args = settings.arguments as Map<String, dynamic>;
         final userId = args['userId'] as int;
         final jobId = args['jobId'] as int?; // Optional
         return MaterialPageRoute(
-          builder: (_) => CandidateProfileScreen(
-            userId: userId,
-            jobId: jobId,
+          builder: (_) => CandidateProfileScreen(userId: userId, jobId: jobId),
+        );
+
+      case RouteNames.jobSearch:
+        final args = settings.arguments as Map<String, dynamic>?;
+        return MaterialPageRoute(
+          builder: (_) => JobSearchScreen(
+            initialCategory: args?['category'],
+            initialQuery: args?['query'],
           ),
         );
 
+      case RouteNames.categoryJobs:
+        final categoryId = settings.arguments as int;
+        return MaterialPageRoute(
+          builder: (_) => CategoryJobsScreen(categoryId: categoryId),
+        );
 
+      case RouteNames.companyJobs:
+        final companyId = settings.arguments as int;
+        return MaterialPageRoute(
+          builder: (_) => CompanyJobsScreen(companyId: companyId),
+        );
       // Add other job seeker routes here...
 
       // Employer Routes
