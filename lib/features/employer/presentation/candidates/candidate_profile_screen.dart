@@ -16,10 +16,10 @@ import 'package:url_launcher/url_launcher.dart';
 import 'package:provider/provider.dart';
 
 class CandidateProfileScreen extends StatefulWidget {
-  final int userId;
+  final int profileId;
   final int? jobId;
 
-  const CandidateProfileScreen({super.key, required this.userId, this.jobId});
+  const CandidateProfileScreen({super.key, required this.profileId, this.jobId});
 
   @override
   State<CandidateProfileScreen> createState() => _CandidateProfileScreenState();
@@ -71,7 +71,7 @@ class _CandidateProfileScreenState extends State<CandidateProfileScreen>
         context,
         listen: false,
       );
-      await provider.loadApplicantProfile(widget.userId);
+      await provider.loadApplicantProfile(widget.profileId);
 
       setState(() {
         _profile = provider.applicantProfile;

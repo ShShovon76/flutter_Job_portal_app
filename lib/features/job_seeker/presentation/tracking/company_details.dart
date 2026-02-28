@@ -528,8 +528,6 @@ class _CompanyDetailsScreenState extends State<CompanyDetailsScreen>
   }
 
   Widget _buildTabs() {
-    _tabController = TabController(length: 3, vsync: this);
-
     return Container(
       color: Colors.white,
       child: TabBar(
@@ -547,13 +545,12 @@ class _CompanyDetailsScreenState extends State<CompanyDetailsScreen>
   }
 
   Widget _buildTabContent() {
-    return Container(
-      padding: const EdgeInsets.all(AppSizes.md),
-      child: _tabController.index == 0
-          ? _buildAboutTab()
-          : _tabController.index == 1
-          ? _buildJobsTab()
-          : _buildContactTab(),
+    return SizedBox(
+      height: 600, // or calculated height
+      child: TabBarView(
+        controller: _tabController,
+        children: [_buildAboutTab(), _buildJobsTab(), _buildContactTab()],
+      ),
     );
   }
 
@@ -871,7 +868,7 @@ class _CompanyDetailsScreenState extends State<CompanyDetailsScreen>
           ),
         ),
 
-        const SizedBox(height: 24),
+        const SizedBox(height: 8),
 
         // Social Links
         if (_company!.socialLinks.isNotEmpty) ...[

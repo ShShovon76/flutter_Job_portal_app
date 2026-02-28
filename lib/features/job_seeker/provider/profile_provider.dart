@@ -71,11 +71,11 @@ Future<void> searchProfiles({
 
 ApplicantProfile? applicantProfile;
 
-Future<void> loadApplicantProfile(int userId) async {
+Future<void> loadApplicantProfile(int profileId) async {
   _setLoading(true);
   try {
     applicantProfile =
-        await JobSeekerProfileApi.getApplicantProfile(userId);
+        await JobSeekerProfileApi.getApplicantProfile(profileId);
   } catch (e) {
     _setError(e.toString());
   } finally {

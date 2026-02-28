@@ -511,11 +511,11 @@ class _ApplicantsListScreenState extends State<ApplicantsListScreen> {
     }
   }
 
-  void _viewApplicantProfile(int userId) {
+  void _viewApplicantProfile(int profileId) {
     Navigator.pushNamed(
       context,
       RouteNames.candidateProfile,
-      arguments: {'userId': userId, 'jobId': widget.jobId},
+      arguments: {'profileId': profileId, 'jobId': widget.jobId},
     );
   }
 

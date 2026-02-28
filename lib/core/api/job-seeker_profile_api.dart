@@ -38,14 +38,10 @@ class JobSeekerProfileApi {
   // GET APPLICANT PROFILE (EMPLOYER)
   // GET /api/job-seekers/applicant/{userId}
   // ==================================================
-  static Future<ApplicantProfile> getApplicantProfile(int jobseekerId) async {
+  static Future<ApplicantProfile> getApplicantProfile(int profileId) async {
     final res = await ApiClient.get(
-      '$_base/Jobseeker/$jobseekerId',
-      auth: true,
-    );
-    print('Response status: ${res.statusCode}');
-    print('Response body: ${res.body}');
-
+      '$_base/applicant/$profileId', 
+      auth: true);
     if (res.statusCode == 200) {
       return ApplicantProfile.fromJson(jsonDecode(res.body));
     }

@@ -180,13 +180,14 @@ class Certification {
       'expiryDate': expiryDate != null ? _formatDate(expiryDate!) : null,
       'credentialUrl': credentialUrl,
     };
-    
+
     if (id != null) {
       map['id'] = id;
     }
     return map;
   }
 }
+
 extension CertificationCopy on Certification {
   Certification copyWith({
     int? id,
@@ -235,21 +236,21 @@ class Experience {
     );
   }
 
- Map<String, dynamic> toJson() {
-  final Map<String, dynamic> map = {
-    'companyName': companyName,
-    'jobTitle': jobTitle,
-    'startDate': _formatDate(startDate),
-    'endDate': endDate != null ? _formatDate(endDate!) : null,
-    'responsibilities': responsibilities,
-  };
+  Map<String, dynamic> toJson() {
+    final Map<String, dynamic> map = {
+      'companyName': companyName,
+      'jobTitle': jobTitle,
+      'startDate': _formatDate(startDate),
+      'endDate': endDate != null ? _formatDate(endDate!) : null,
+      'responsibilities': responsibilities,
+    };
 
-  if (id != null) {
-    map['id'] = id;
+    if (id != null) {
+      map['id'] = id;
+    }
+
+    return map;
   }
-
-  return map;
-}
 }
 
 extension ExperienceCopy on Experience {
@@ -300,21 +301,21 @@ class Education {
     );
   }
 
- Map<String, dynamic> toJson() {
-  final Map<String, dynamic> map = {
-    'degree': degree,
-    'institution': institution,
-    'startDate': _formatDate(startDate),
-    'endDate': endDate != null ? _formatDate(endDate!) : null,
-    'grade': grade,
-  };
+  Map<String, dynamic> toJson() {
+    final Map<String, dynamic> map = {
+      'degree': degree,
+      'institution': institution,
+      'startDate': _formatDate(startDate),
+      'endDate': endDate != null ? _formatDate(endDate!) : null,
+      'grade': grade,
+    };
 
-  if (id != null) {
-    map['id'] = id;
+    if (id != null) {
+      map['id'] = id;
+    }
+
+    return map;
   }
-
-  return map;
-}
 }
 
 String _formatDate(DateTime date) {
@@ -343,14 +344,13 @@ extension EducationCopy on Education {
   }
 }
 
-
 class ApplicantProfile {
   final int? userId;
   final String fullName;
   final String email;
   final String? phone;
   final String? profilePictureUrl;
-
+  final int? profileId;
   final String? headline;
   final String? summary;
 
@@ -369,6 +369,7 @@ class ApplicantProfile {
     required this.email,
     this.phone,
     this.profilePictureUrl,
+    this.profileId,
     this.headline,
     this.summary,
     required this.skills,
@@ -387,6 +388,7 @@ class ApplicantProfile {
       email: json['email'],
       phone: json['phone'],
       profilePictureUrl: json['profilePictureUrl'],
+      profileId: json['profileId'] as int?,
       headline: json['headline'],
       summary: json['summary'],
       skills: List<String>.from(json['skills'] ?? []),
@@ -414,6 +416,7 @@ class ApplicantProfile {
       'email': email,
       'phone': phone,
       'profilePictureUrl': profilePictureUrl,
+      'profileId': profileId,
       'headline': headline,
       'summary': summary,
       'skills': skills,

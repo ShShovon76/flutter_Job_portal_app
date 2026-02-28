@@ -119,10 +119,10 @@ class AppRouter {
         );
       case RouteNames.candidateProfile:
         final args = settings.arguments as Map<String, dynamic>;
-        final userId = args['userId'] as int;
+        final profileId = args['profileId'] as int;
         final jobId = args['jobId'] as int?; // Optional
         return MaterialPageRoute(
-          builder: (_) => CandidateProfileScreen(userId: userId, jobId: jobId),
+          builder: (_) => CandidateProfileScreen(profileId: profileId, jobId: jobId),
         );
 
       case RouteNames.jobSearch:
